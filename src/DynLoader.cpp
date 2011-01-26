@@ -9,7 +9,6 @@
 //      Andrei Salnikov
 //
 //------------------------------------------------------------------------
-#include "SITConfig/SITConfig.h"
 
 //-----------------------
 // This Class's Header --
@@ -36,6 +35,7 @@ namespace {
   const char logger[] = "DynLoader";
   
   typedef psana::Module* (*mod_factory)(const std::string& name);
+  typedef psana::InputModule* (*input_mod_factory)(const std::string& name);
 }
 
 //		----------------------------------------
@@ -51,6 +51,32 @@ namespace psana {
 Module* 
 DynLoader::loadModule(const std::string& name) const
 {
+  // Load function
+  void* sym = loadFactoryFunction(name, "_psana_module_");
+  ::mod_factory factory = (::mod_factory)sym;
+  
+  // call factory function
+  return factory(name);
+}
+
+/**
+ *  Load one input module. The name of the module has a format 
+ *  Package.Class[:name]
+ */
+InputModule* 
+DynLoader::loadInputModule(const std::string& name) const
+{
+  // Load function
+  void* sym = loadFactoryFunction(name, "_psana_input_module_");
+  ::input_mod_factory factory = (::input_mod_factory)sym;
+  
+  // call factory function
+  return factory(name);
+}
+
+void* 
+DynLoader::loadFactoryFunction(const std::string& name, const std::string& factory) const
+{
   // get package name and module class name
   std::string::size_type p1 = name.find('.');
   if (p1 == std::string::npos) throw ExceptionModuleName(name);
@@ -63,8 +89,27 @@ DynLoader::loadModule(const std::string& name) const
     className = name.substr(p1+1, p2-p1-1);
   }
 
+  // load the library
+  void* ldh = loadPackageLib(package);
+  
+  // find the symbol
+  std::string symname = factory + className;
+  void* sym = dlsym(ldh, symname.c_str());
+  if ( not sym ) {
+    throw ExceptionDlerror("failed to locate symbol "+symname);
+  }
+  
+  return sym;
+}
+
+/**
+ *  Load the library for a package 
+ */
+void* 
+DynLoader::loadPackageLib(const std::string& packageName) const
+{
   // build library name
-  std::string lib = "lib" + package + ".so";
+  std::string lib = "lib" + packageName + ".so";
   
   // load the library
   MsgLog(logger, trace, "loading library " << lib);
@@ -73,17 +118,7 @@ DynLoader::loadModule(const std::string& name) const
     throw ExceptionDlerror("failed to load dynamic library "+lib);
   }
   
-  // find the symbol
-  std::string symname = "_psana_module_" + className;
-  void* sym = dlsym(ldh, symname.c_str());
-  if ( not sym ) {
-    throw ExceptionDlerror("failed to locate symbol "+symname);
-  }
-  
-  // call factory function
-  ::mod_factory factory = (::mod_factory)sym;
-  return factory(name);
+  return ldh;
 }
-
 
 } // namespace psana

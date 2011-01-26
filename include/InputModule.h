@@ -1,12 +1,12 @@
-#ifndef PSANA_MODULE_H
-#define PSANA_MODULE_H
+#ifndef PSANA_INPUTMODULE_H
+#define PSANA_INPUTMODULE_H
 
 //--------------------------------------------------------------------------
 // File and Version Information:
 // 	$Id$
 //
 // Description:
-//	Class Module.
+//	Class InputModule.
 //
 //------------------------------------------------------------------------
 
@@ -14,6 +14,7 @@
 // C/C++ Headers --
 //-----------------
 #include <string>
+#include <iosfwd>
 #include <boost/utility.hpp>
 
 //----------------------
@@ -43,10 +44,10 @@ using namespace PsEvt;
 #undef PSANACAT2_
 #endif
 #define PSANACAT2_(a,b) a ## b
-#define PSANA_MODULE_FACTORY(UserModule) \
+#define PSANA_INPUT_MODULE_FACTORY(UserModule) \
   extern "C" \
-  psana::Module* \
-  PSANACAT2_(_psana_module_,UserModule)(const std::string& name) {\
+  psana::InputModule* \
+  PSANACAT2_(_psana_input_module_,UserModule)(const std::string& name) {\
     return new UserModule(name);\
   }
 
@@ -54,11 +55,10 @@ using namespace PsEvt;
 // 		-- Class Interface --
 //		---------------------
 
-
 namespace psana {
 
 /**
- *  @brief Base class for user modules in PSANA
+ *  @brief Base class for PSANA input modules.
  *
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.
@@ -70,18 +70,22 @@ namespace psana {
  *  @author Andrei Salnikov
  */
 
-class Module : boost::noncopyable, protected Configurable {
+class InputModule : boost::noncopyable, protected Configurable {
 public:
 
   /// Event processing status
-  enum Status { OK, 
+  enum Status { BeginRun,
+                BeginCalibCycle,
+                DoEvent,
+                EndCalibCycle,
+                EndRun,
                 Skip,   ///< skip all remaining modules for this event
                 Stop,   ///< finish with the events
                 Abort   ///< abort immediately, no finalization
   };
-  
+
   // Destructor
-  virtual ~Module () ;
+  virtual ~InputModule () ;
 
   /// get the name of the module
   using Configurable::name;
@@ -93,38 +97,26 @@ public:
   virtual void beginJob(Env& env);
   
   /// Method which is called with event data
-  virtual void event(Event& evt, Env& env) = 0;
+  virtual Status event(Event& evt, Env& env) = 0;
   
   /// Method which is called once at the end of the job
   virtual void endJob(Env& env);
-
-  /// reset module status
-  void reset() { m_status = OK; }
-  
-  /// get status
-  Status status() const { return m_status; }
   
 protected:
 
-  // constructor needs module name
-  Module (const std::string& name) ;
-
-  /// change the status
-  void skip() { m_status = Skip; }
-  void stop() { m_status = Stop; }
-  void abort() { m_status = Abort; }
+  // Standard constructor
+  InputModule (const std::string& name) ;
 
 private:
 
   // Data members
-  Status m_status;
-
+  
 };
 
 // formatting for enum
 std::ostream&
-operator<<(std::ostream& out, Module::Status stat);
+operator<<(std::ostream& out, InputModule::Status stat);
 
 } // namespace psana
 
-#endif // PSANA_MODULE_H
+#endif // PSANA_INPUTMODULE_H

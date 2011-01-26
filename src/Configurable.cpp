@@ -3,7 +3,7 @@
 // 	$Id$
 //
 // Description:
-//	Class Module...
+//	Class Configurable...
 //
 // Author List:
 //      Andrei Salnikov
@@ -13,7 +13,7 @@
 //-----------------------
 // This Class's Header --
 //-----------------------
-#include "psana/Module.h"
+#include "psana/Configurable.h"
 
 //-----------------
 // C/C++ Headers --
@@ -36,52 +36,22 @@ namespace psana {
 //----------------
 // Constructors --
 //----------------
-Module::Module (const std::string& name)
-  : Configurable(name)
-  , m_status(OK)
+Configurable::Configurable (const std::string& name)
+  : m_name(name)
+  , m_className(name)
 {
+  // get class name from module name
+  std::string::size_type p = m_className.find(':');
+  if (p != std::string::npos) {
+    m_className.erase(p);
+  }
 }
 
 //--------------
 // Destructor --
 //--------------
-Module::~Module ()
+Configurable::~Configurable ()
 {
-}
-
-/// Method which is called once at the beginning of the job
-void 
-Module::beginJob(Env& env)
-{
-}
-
-/// Method which is called once at the end of the job
-void 
-Module::endJob(Env& env)
-{
-}
-
-
-// formatting for enum
-std::ostream&
-operator<<(std::ostream& out, Module::Status stat)
-{
-  const char* str = "???";
-  switch (stat) {
-  case Module::OK:
-    str = "OK";
-    break;
-  case Module::Skip:
-    str = "Skip";
-    break;
-  case Module::Stop:
-    str = "Stop";
-    break;
-  case Module::Abort:
-    str = "Abort";
-    break;
-  }
-  return out << str;
 }
 
 } // namespace psana

@@ -23,6 +23,7 @@
 // Collaborating Class Headers --
 //-------------------------------
 #include "psana/Module.h"
+#include "psana/InputModule.h"
 
 //------------------------------------
 // Collaborating Class Declarations --
@@ -56,8 +57,34 @@ public:
    */
   Module* loadModule(const std::string& name) const;
   
+  /**
+   *  Load one input module. The name of the module has a format 
+   *  Package.Class[:name]
+   */
+  InputModule* loadInputModule(const std::string& name) const;
+  
 protected:
 
+  /**
+   *  Load the library for a package 
+   *  
+   *  @param[in] packageName  Package name.
+   *  @return Library handle.
+   */
+  void* loadPackageLib(const std::string& packageName) const;
+  
+  /**
+   *  Load the library and find factory symbol
+   *  
+   *  @param[in] name String in the same format as accepted by loadModule().
+   *  @param[in] factory Prefix for factory function name, like "_psana_module_"
+   *  @return pointer to factory function.
+   *  
+   *  @throw ExceptionModuleName
+   *  @throw ExceptionDlerror
+   */
+  void* loadFactoryFunction(const std::string& name, const std::string& factory) const;
+  
 private:
 
 };

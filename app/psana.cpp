@@ -9,7 +9,6 @@
 //      Andrei Salnikov
 //
 //------------------------------------------------------------------------
-#include "SITConfig/SITConfig.h"
 
 //-----------------
 // C/C++ Headers --
@@ -33,6 +32,9 @@
 #include "ConfigSvc/ConfigSvcImplFile.h"
 #include "MsgLogger/MsgLogger.h"
 #include "psana/DynLoader.h"
+#include "PsEnv/Env.h"
+#include "PsEvt/Event.h"
+#include "PsEvt/ProxyDict.h"
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
@@ -110,8 +112,23 @@ psanaapp::runApp ()
   // max number of events
   unsigned maxEvents = cfgsvc.get("psana", "events", 0xFFFFFFFFU);
   
-  // instantiate all user modules
   DynLoader loader;
+
+  // Load input module, fixed name for now
+  const std::string& iname = "PsXtcInput.XtcInputModule";
+  psana::InputModule* input = loader.loadInputModule(iname);
+  MsgLogRoot(info, "Loaded input module " << iname);
+
+  // pass file names to the configuration so that input module can find them
+  typedef AppUtils::AppCmdArgList<std::string>::const_iterator FileIter;
+  std::string flist;
+  for (FileIter it = m_files.begin(); it != m_files.end(); ++it ) {
+    if (not flist.empty()) flist += " ";
+    flist += *it;
+  }
+  cfgsvc.put(iname, "files", flist);
+  
+  // instantiate all user modules
   std::vector<Module*> modules;
   for ( std::list<std::string>::const_iterator it = moduleNames.begin(); it != moduleNames.end() ; ++ it ) {
     Module* m = loader.loadModule(*it);
@@ -119,13 +136,26 @@ psanaapp::runApp ()
     MsgLogRoot(info, "Loaded module " << m->name());
   }
   
+  // Setup environment
+  PsEnv::Env env;
+  
+  // Start with beginJob for everyone
+  input->beginJob(env);
+  for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
+    (*it)->beginJob(env);
+  }
+  
   // event loop
   bool stop = false ;
   while ( maxEvents > 0 and not stop) {
     
-    // get event from input module
-    // Event evt;
-    // EventType evtType = input.event(evt, env);
+    // Create event object
+    boost::shared_ptr<PsEvt::ProxyDict> dict(new PsEvt::ProxyDict);
+    Event evt(dict);
+    
+    // run input module to populate event
+    InputModule::Status istat = input->event(evt, env);
+    MsgLogRoot(debug, "input.event() returned " << istat)
     
     for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
       Module& mod = *(*it);
@@ -134,22 +164,23 @@ psanaapp::runApp ()
       mod.reset();
       
       // dispatch event to particular method based on vent type
-      mod.event();
+      mod.event(evt, env);
       
       // check what module wants to tell us
-      Module::Status stat = mod.status();
-      if (stat == Module::Skip) {
+      switch (mod.status()) {
+      case Module::Skip:
         MsgLogRoot(info, "module " << mod.name() << " requested skip");
         break;
-      }
-      if (stat == Module::Stop) {
+      case Module::Stop:
         MsgLogRoot(info, "module " << mod.name() << " requested stop");
         stop = true;
         break;
-      }
-      if (stat == Module::Abort) {
+      case Module::Abort:
         MsgLogRoot(info, "module " << mod.name() << " requested abort");
         ::abort();
+        break;
+      case Module::OK:
+        break;
       }
       
     }
@@ -158,6 +189,12 @@ psanaapp::runApp ()
   }
   
   
+  // End with endJob for everyone, note that the order is the same
+  input->endJob(env);
+  for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
+    (*it)->endJob(env);
+  }
+
   // return 0 on success, other values for error (like main())
   return 0 ;
 }

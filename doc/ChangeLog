@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-00-02
+2011-01-26 Andrei Salnikov
+- added base class for input modules, loading of the input modules
+
 Tag: V00-00-01
 2010-09-28 Andrei Salnikov
 - first commit to repository

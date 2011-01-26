@@ -3,7 +3,7 @@
 // 	$Id$
 //
 // Description:
-//	Class Module...
+//	Class InputModule...
 //
 // Author List:
 //      Andrei Salnikov
@@ -13,7 +13,7 @@
 //-----------------------
 // This Class's Header --
 //-----------------------
-#include "psana/Module.h"
+#include "psana/InputModule.h"
 
 //-----------------
 // C/C++ Headers --
@@ -36,48 +36,58 @@ namespace psana {
 //----------------
 // Constructors --
 //----------------
-Module::Module (const std::string& name)
+InputModule::InputModule (const std::string& name)
   : Configurable(name)
-  , m_status(OK)
 {
 }
 
 //--------------
 // Destructor --
 //--------------
-Module::~Module ()
+InputModule::~InputModule ()
 {
 }
 
 /// Method which is called once at the beginning of the job
 void 
-Module::beginJob(Env& env)
+InputModule::beginJob(Env& env)
 {
 }
 
 /// Method which is called once at the end of the job
 void 
-Module::endJob(Env& env)
+InputModule::endJob(Env& env)
 {
 }
 
-
 // formatting for enum
 std::ostream&
-operator<<(std::ostream& out, Module::Status stat)
+operator<<(std::ostream& out, InputModule::Status stat)
 {
   const char* str = "???";
   switch (stat) {
-  case Module::OK:
-    str = "OK";
+  case InputModule::BeginRun:
+    str = "BeginRun";
     break;
-  case Module::Skip:
+  case InputModule::BeginCalibCycle:
+    str = "BeginCalibCycle";
+    break;
+  case InputModule::DoEvent:
+    str = "DoEvent";
+    break;
+  case InputModule::EndCalibCycle:
+    str = "EndCalibCycle";
+    break;
+  case InputModule::EndRun:
+    str = "EndRun";
+    break;
+  case InputModule::Skip:
     str = "Skip";
     break;
-  case Module::Stop:
+  case InputModule::Stop:
     str = "Stop";
     break;
-  case Module::Abort:
+  case InputModule::Abort:
     str = "Abort";
     break;
   }
