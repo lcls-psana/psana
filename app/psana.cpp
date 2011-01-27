@@ -157,6 +157,13 @@ psanaapp::runApp ()
     InputModule::Status istat = input->event(evt, env);
     MsgLogRoot(debug, "input.event() returned " << istat)
     
+    if (istat == InputModule::Skip) continue;
+    if (istat == InputModule::Stop) break;
+    if (istat == InputModule::Abort) {
+      MsgLogRoot(info, "Input module requested abort");
+      return 1;
+    }
+    
     for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
       Module& mod = *(*it);
       
@@ -164,12 +171,21 @@ psanaapp::runApp ()
       mod.reset();
       
       // dispatch event to particular method based on vent type
-      mod.event(evt, env);
+      if (istat == InputModule::BeginRun) {
+        mod.beginRun(env);
+      } else if (istat == InputModule::BeginCalibCycle) {
+        mod.beginCalibCycle(env);
+      } else if (istat == InputModule::DoEvent) {
+        mod.event(evt, env);
+      } else if (istat == InputModule::EndCalibCycle) {
+        mod.endCalibCycle(env);
+      } else if (istat == InputModule::EndRun) {
+        mod.endRun(env);
+      }
       
       // check what module wants to tell us
       switch (mod.status()) {
       case Module::Skip:
-        MsgLogRoot(info, "module " << mod.name() << " requested skip");
         break;
       case Module::Stop:
         MsgLogRoot(info, "module " << mod.name() << " requested stop");
@@ -177,7 +193,7 @@ psanaapp::runApp ()
         break;
       case Module::Abort:
         MsgLogRoot(info, "module " << mod.name() << " requested abort");
-        ::abort();
+        return 1;
         break;
       case Module::OK:
         break;
@@ -195,6 +211,12 @@ psanaapp::runApp ()
     (*it)->endJob(env);
   }
 
+  // cleanup
+  delete input;
+  for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
+    delete *it;
+  }
+  
   // return 0 on success, other values for error (like main())
   return 0 ;
 }

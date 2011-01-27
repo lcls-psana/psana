@@ -92,9 +92,21 @@ public:
   /// Method which is called once at the beginning of the job
   virtual void beginJob(Env& env);
   
+  /// Method which is called at the beginning of the run
+  virtual void beginRun(Env& env);
+  
+  /// Method which is called at the beginning of the calibration cycle
+  virtual void beginCalibCycle(Env& env);
+  
   /// Method which is called with event data
   virtual void event(Event& evt, Env& env) = 0;
   
+  /// Method which is called at the end of the calibration cycle
+  virtual void endCalibCycle(Env& env);
+
+  /// Method which is called at the end of the run
+  virtual void endRun(Env& env);
+
   /// Method which is called once at the end of the job
   virtual void endJob(Env& env);
 

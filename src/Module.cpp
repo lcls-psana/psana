@@ -55,6 +55,30 @@ Module::beginJob(Env& env)
 {
 }
 
+/// Method which is called at the beginning of the run
+void 
+Module::beginRun(Env& env)
+{
+}
+
+/// Method which is called at the beginning of the calibration cycle
+void 
+Module::beginCalibCycle(Env& env)
+{
+}
+
+/// Method which is called at the end of the calibration cycle
+void 
+Module::endCalibCycle(Env& env)
+{
+}
+
+/// Method which is called at the end of the run
+void 
+Module::endRun(Env& env)
+{
+}
+
 /// Method which is called once at the end of the job
 void 
 Module::endJob(Env& env)
