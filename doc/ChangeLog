@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-00-03
+2011-01-27 Andrei Salnikov
+- main loop is now driven by the codes from input module
+- module interface got few new methods
+
 Tag: V00-00-02
 2011-01-26 Andrei Salnikov
 - added base class for input modules, loading of the input modules
