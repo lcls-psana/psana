@@ -32,9 +32,9 @@
 #include "ConfigSvc/ConfigSvcImplFile.h"
 #include "MsgLogger/MsgLogger.h"
 #include "psana/DynLoader.h"
-#include "PsEnv/Env.h"
-#include "PsEvt/Event.h"
-#include "PsEvt/ProxyDict.h"
+#include "PSEnv/Env.h"
+#include "PSEvt/Event.h"
+#include "PSEvt/ProxyDict.h"
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
@@ -137,7 +137,7 @@ psanaapp::runApp ()
   }
   
   // Setup environment
-  PsEnv::Env env;
+  PSEnv::Env env;
   
   // Start with beginJob for everyone
   input->beginJob(env);
@@ -150,7 +150,7 @@ psanaapp::runApp ()
   while ( maxEvents > 0 and not stop) {
     
     // Create event object
-    boost::shared_ptr<PsEvt::ProxyDict> dict(new PsEvt::ProxyDict);
+    boost::shared_ptr<PSEvt::ProxyDict> dict(new PSEvt::ProxyDict);
     Event evt(dict);
     
     // run input module to populate event
@@ -171,12 +171,12 @@ psanaapp::runApp ()
       mod.reset();
       
       // dispatch event to particular method based on vent type
-      if (istat == InputModule::BeginRun) {
+      if (istat == InputModule::DoEvent) {
+        mod.event(evt, env);
+      } else if (istat == InputModule::BeginRun) {
         mod.beginRun(env);
       } else if (istat == InputModule::BeginCalibCycle) {
         mod.beginCalibCycle(env);
-      } else if (istat == InputModule::DoEvent) {
-        mod.event(evt, env);
       } else if (istat == InputModule::EndCalibCycle) {
         mod.endCalibCycle(env);
       } else if (istat == InputModule::EndRun) {

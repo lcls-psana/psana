@@ -24,8 +24,8 @@
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
-#include "PsEnv/Env.h"
-#include "PsEvt/Event.h"
+#include "PSEnv/Env.h"
+#include "PSEvt/Event.h"
 
 //------------------------------------
 // Collaborating Class Declarations --
@@ -36,8 +36,8 @@
 
 namespace psana {}
 using namespace psana;
-using namespace PsEnv;
-using namespace PsEvt;
+using namespace PSEnv;
+using namespace PSEvt;
 
 #if defined(PSANACAT2_)
 #undef PSANACAT2_

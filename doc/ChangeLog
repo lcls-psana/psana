@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-00-04
+2011-01-31 Andrei Salnikov
+- some packages were renamed, fixing their names here
+- use ErrSvc::Issue as base class for exceptions
+
 Tag: V00-00-03
 2011-01-27 Andrei Salnikov
 - main loop is now driven by the codes from input module

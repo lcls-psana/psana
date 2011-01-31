@@ -13,11 +13,11 @@
 //-----------------
 // C/C++ Headers --
 //-----------------
-#include <stdexcept>
 
 //----------------------
 // Base Class Headers --
 //----------------------
+#include "ErrSvc/Issue.h"
 
 //-------------------------------
 // Collaborating Class Headers --
@@ -46,11 +46,11 @@ namespace psana {
  *  @author Andrei Salnikov
  */
 
-class Exception : public std::runtime_error {
+class Exception : public ErrSvc::Issue {
 public:
 
   /// Constructor takes the reason for an exception
-  Exception ( const std::string& what ) ;
+  Exception ( const ErrSvc::Context& ctx, const std::string& what ) ;
 
 };
 
@@ -59,7 +59,7 @@ class ExceptionModuleName : public Exception {
 public:
 
   /// Constructor takes the name of the module
-  ExceptionModuleName ( const std::string& module ) ;
+  ExceptionModuleName ( const ErrSvc::Context& ctx, const std::string& module ) ;
 
 };
 
@@ -67,7 +67,7 @@ class ExceptionErrno : public Exception {
 public:
 
   /// Constructor takes the reason for an exception
-  ExceptionErrno ( const std::string& what ) ;
+  ExceptionErrno ( const ErrSvc::Context& ctx, const std::string& what ) ;
 
 };
 
@@ -75,7 +75,7 @@ class ExceptionDlerror : public Exception {
 public:
 
   /// Constructor takes the reason for an exception
-  ExceptionDlerror ( const std::string& what ) ;
+  ExceptionDlerror ( const ErrSvc::Context& ctx, const std::string& what ) ;
 
 };
 

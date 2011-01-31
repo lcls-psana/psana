@@ -79,7 +79,7 @@ DynLoader::loadFactoryFunction(const std::string& name, const std::string& facto
 {
   // get package name and module class name
   std::string::size_type p1 = name.find('.');
-  if (p1 == std::string::npos) throw ExceptionModuleName(name);
+  if (p1 == std::string::npos) throw ExceptionModuleName(ERR_LOC, name);
   std::string package(name, 0, p1);
   std::string className;
   std::string::size_type p2 = name.find(':', p1+1);
@@ -96,7 +96,7 @@ DynLoader::loadFactoryFunction(const std::string& name, const std::string& facto
   std::string symname = factory + className;
   void* sym = dlsym(ldh, symname.c_str());
   if ( not sym ) {
-    throw ExceptionDlerror("failed to locate symbol "+symname);
+    throw ExceptionDlerror(ERR_LOC, "failed to locate symbol "+symname);
   }
   
   return sym;
@@ -115,7 +115,7 @@ DynLoader::loadPackageLib(const std::string& packageName) const
   MsgLog(logger, trace, "loading library " << lib);
   void* ldh = dlopen(lib.c_str(), RTLD_NOW | RTLD_GLOBAL);
   if ( not ldh ) {
-    throw ExceptionDlerror("failed to load dynamic library "+lib);
+    throw ExceptionDlerror(ERR_LOC, "failed to load dynamic library "+lib);
   }
   
   return ldh;

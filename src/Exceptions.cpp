@@ -36,23 +36,23 @@
 
 namespace psana {
 
-Exception::Exception( const std::string& what )
-  : std::runtime_error( "psana::Exception: " + what )
+Exception::Exception( const ErrSvc::Context& ctx, const std::string& what )
+  : ErrSvc::Issue( ctx, "psana::Exception: " + what )
 {
 }
 
-ExceptionModuleName::ExceptionModuleName ( const std::string& module )
-  : Exception( "invalid module name: " + module)
+ExceptionModuleName::ExceptionModuleName ( const ErrSvc::Context& ctx, const std::string& module )
+  : Exception( ctx, "invalid module name: " + module)
 {  
 }
 
-ExceptionErrno::ExceptionErrno ( const std::string& what )
-  : Exception( what + ": " + strerror(errno) )
+ExceptionErrno::ExceptionErrno ( const ErrSvc::Context& ctx, const std::string& what )
+  : Exception( ctx, what + ": " + strerror(errno) )
 {
 }
 
-ExceptionDlerror::ExceptionDlerror ( const std::string& what )
-  : Exception( what + ": " + dlerror() )
+ExceptionDlerror::ExceptionDlerror ( const ErrSvc::Context& ctx, const std::string& what )
+  : Exception( ctx, what + ": " + dlerror() )
 {
 }
 
