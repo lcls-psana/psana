@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-00-06
+2011-03-21 Andrei Salnikov
+- added EventKeys module which dumps the keys in event and config store
+- modules from psana package do not need psana. prefix
+
 Tag: V00-00-05
 2011-03-20 Andrei Salnikov
 - added -m option to specify module list on command line

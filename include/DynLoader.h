@@ -53,13 +53,13 @@ public:
 
   /**
    *  Load one user module. The name of the module has a format 
-   *  Package.Class[:name]
+   *  [Package.]Class[:name]
    */
   Module* loadModule(const std::string& name) const;
   
   /**
    *  Load one input module. The name of the module has a format 
-   *  Package.Class[:name]
+   *  [Package.]Class[:name]
    */
   InputModule* loadInputModule(const std::string& name) const;
   
@@ -76,14 +76,14 @@ protected:
   /**
    *  Load the library and find factory symbol
    *  
-   *  @param[in] name String in the same format as accepted by loadModule().
+   *  @param[in] name String in the format Package.Class
    *  @param[in] factory Prefix for factory function name, like "_psana_module_"
    *  @return pointer to factory function.
    *  
    *  @throw ExceptionModuleName
    *  @throw ExceptionDlerror
    */
-  void* loadFactoryFunction(const std::string& name, const std::string& factory) const;
+  void* loadFactoryFunction(const std::string& className, const std::string& factory) const;
   
 private:
 

@@ -51,12 +51,24 @@ namespace psana {
 Module* 
 DynLoader::loadModule(const std::string& name) const
 {
+  // make class name, use psana for package name if not given
+  std::string fullName = name;
+  std::string className = name;
+  std::string::size_type p1 = className.find(':');
+  if (p1 != std::string::npos) {
+    className.erase(p1);
+  }
+  if (className.find('.') == std::string::npos) {
+    className = "psana." + className;
+    fullName = "psana." + fullName;
+  }
+  
   // Load function
-  void* sym = loadFactoryFunction(name, "_psana_module_");
+  void* sym = loadFactoryFunction(className, "_psana_module_");
   ::mod_factory factory = (::mod_factory)sym;
   
   // call factory function
-  return factory(name);
+  return factory(fullName);
 }
 
 /**
@@ -66,12 +78,24 @@ DynLoader::loadModule(const std::string& name) const
 InputModule* 
 DynLoader::loadInputModule(const std::string& name) const
 {
+  // make class name, use psana for package name if not given
+  std::string fullName = name;
+  std::string className = name;
+  std::string::size_type p1 = className.find(':');
+  if (p1 != std::string::npos) {
+    className.erase(p1);
+  }
+  if (className.find('.') == std::string::npos) {
+    className = "psana." + className;
+    fullName = "psana." + fullName;
+  }
+  
   // Load function
-  void* sym = loadFactoryFunction(name, "_psana_input_module_");
+  void* sym = loadFactoryFunction(className, "_psana_input_module_");
   ::input_mod_factory factory = (::input_mod_factory)sym;
   
   // call factory function
-  return factory(name);
+  return factory(fullName);
 }
 
 void* 
@@ -81,13 +105,7 @@ DynLoader::loadFactoryFunction(const std::string& name, const std::string& facto
   std::string::size_type p1 = name.find('.');
   if (p1 == std::string::npos) throw ExceptionModuleName(ERR_LOC, name);
   std::string package(name, 0, p1);
-  std::string className;
-  std::string::size_type p2 = name.find(':', p1+1);
-  if (p2 == std::string::npos) {
-    className = name.substr(p1+1);
-  } else {
-    className = name.substr(p1+1, p2-p1-1);
-  }
+  std::string className(name, p1+1);
 
   // load the library
   void* ldh = loadPackageLib(package);
