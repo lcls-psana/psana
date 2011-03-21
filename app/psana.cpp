@@ -28,6 +28,7 @@
 //-------------------------------
 #include "AppUtils/AppCmdArgList.h"
 #include "AppUtils/AppCmdOpt.h"
+#include "AppUtils/AppCmdOptList.h"
 #include "ConfigSvc/ConfigSvc.h"
 #include "ConfigSvc/ConfigSvcImplFile.h"
 #include "MsgLogger/MsgLogger.h"
@@ -69,6 +70,7 @@ private:
 
   // more command line options and arguments
   AppUtils::AppCmdOpt<std::string> m_configOpt ;
+  AppUtils::AppCmdOptList<std::string>  m_modulesOpt;
   AppUtils::AppCmdArgList<std::string>  m_files;
 
 
@@ -79,10 +81,12 @@ private:
 //----------------
 psanaapp::psanaapp ( const std::string& appName )
   : AppUtils::AppBase( appName )
-  , m_configOpt( 'c', "config", "path", "configuration file, def: psana.cfg", "psana.cfg" )
-  , m_files  ( "data-file",   "file name(s) with input data", std::list<std::string>() )
+  , m_configOpt( 'c', "config", "path", "configuration file, def: psana.cfg", "" )
+  , m_modulesOpt( 'm', "module", "name", "module name, more than one possible" )
+  , m_files( "data-file",   "file name(s) with input data", std::list<std::string>() )
 {
   addOption( m_configOpt ) ;
+  addOption( m_modulesOpt ) ;
   addArgument( m_files ) ;
 }
 
@@ -99,13 +103,36 @@ psanaapp::~psanaapp ()
 int
 psanaapp::runApp ()
 {
+  // if neither -m nor -c specified then try to read psana.cfg
+  std::string cfgFile = m_configOpt.value();
+  if (cfgFile.empty() and m_modulesOpt.value().empty()) {
+    cfgFile = "psana.cfg";
+  } 
+  
   // start with reading configuration file
-  std::auto_ptr<ConfigSvc::ConfigSvcImplI> cfgImpl ( 
-      new ConfigSvc::ConfigSvcImplFile(m_configOpt.value()) );
+  std::auto_ptr<ConfigSvc::ConfigSvcImplI> cfgImpl;
+  if (cfgFile.empty()) {
+    cfgImpl.reset( new ConfigSvc::ConfigSvcImplFile() );
+  } else {
+    cfgImpl.reset( new ConfigSvc::ConfigSvcImplFile(cfgFile) );
+  }
+  
   // initialize config service
   ConfigSvc::ConfigSvc::init(cfgImpl);
   ConfigSvc::ConfigSvc cfgsvc;
-  
+
+  // command-line -m options override config file values
+  if (not m_modulesOpt.value().empty()) {
+    std::string modlist;
+    const std::list<std::string>& modules = m_modulesOpt.value();
+    for(std::list<std::string>::const_iterator it = modules.begin(); it != modules.end(); ++ it) {
+      if (not modlist.empty()) modlist += ' ';
+      modlist += *it;
+    }
+    MsgLogRoot(trace, "set module list to '" << modlist << "'");
+    cfgsvc.put("psana", "modules", modlist);
+  } 
+
   // get list of modules to load
   std::list<std::string> moduleNames = cfgsvc.getList("psana", "modules");
   
@@ -115,7 +142,7 @@ psanaapp::runApp ()
   DynLoader loader;
 
   // Load input module, fixed name for now
-  const std::string& iname = "PsXtcInput.XtcInputModule";
+  const std::string& iname = "PSXtcInput.XtcInputModule";
   psana::InputModule* input = loader.loadInputModule(iname);
   MsgLogRoot(info, "Loaded input module " << iname);
 
