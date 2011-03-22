@@ -87,7 +87,7 @@ void
 PrintEventId::event(Event& evt, Env& env)
 {
   // get event ID
-  boost::shared_ptr<EventId> eventId = evt.get<EventId>();
+  shared_ptr<EventId> eventId = evt.get();
   if (not eventId.get()) {
     MsgLog(logger, info, name() << ": event ID not found");    
   } else {

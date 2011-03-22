@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-00-08
+2011-03-21 Andrei Salnikov
+- Event::get() method does not need template parameter any more
+
 Tag: V00-00-07
 2011-03-21 Andrei Salnikov
 - added PrintEventId module
