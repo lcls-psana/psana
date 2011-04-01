@@ -31,6 +31,7 @@
 #include "AppUtils/AppCmdOptList.h"
 #include "ConfigSvc/ConfigSvc.h"
 #include "ConfigSvc/ConfigSvcImplFile.h"
+#include "MsgLogger/MsgFormatter.h"
 #include "MsgLogger/MsgLogger.h"
 #include "psana/DynLoader.h"
 #include "PSEnv/Env.h"
@@ -60,6 +61,12 @@ public:
   ~psanaapp () ;
 
 protected :
+
+  /**
+   *  Method called before runApp, can be overriden in subclasses.
+   *  Usually if you override it, call base class method too.
+   */
+  virtual int preRunApp () ;
 
   /**
    *  Main method which runs the whole application
@@ -95,6 +102,30 @@ psanaapp::psanaapp ( const std::string& appName )
 //--------------
 psanaapp::~psanaapp ()
 {
+}
+
+/**
+ *  Method called before runApp, can be overriden in subclasses.
+ *  Usually if you override it, call base class method too.
+ */
+int 
+psanaapp::preRunApp () 
+{
+  AppBase::preRunApp();
+
+  // use different formatting for messages
+  const char* fmt = "[%(level):%(logger)] %(message)" ;
+  const char* errfmt = "[%(level):%(time):%(file):%(line)] %(message)" ;
+  const char* trcfmt = "[%(level):%(time):%(logger)] %(message)" ;
+  const char* dbgfmt = errfmt ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( fmt ) ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( MsgLogger::MsgLogLevel::debug, dbgfmt ) ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( MsgLogger::MsgLogLevel::trace, trcfmt ) ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( MsgLogger::MsgLogLevel::warning, errfmt ) ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( MsgLogger::MsgLogLevel::error, errfmt ) ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( MsgLogger::MsgLogLevel::fatal, errfmt ) ;
+  
+  return 0;
 }
 
 /**
@@ -144,7 +175,7 @@ psanaapp::runApp ()
   // Load input module, fixed name for now
   const std::string& iname = "PSXtcInput.XtcInputModule";
   psana::InputModule* input = loader.loadInputModule(iname);
-  MsgLogRoot(info, "Loaded input module " << iname);
+  MsgLogRoot(trace, "Loaded input module " << iname);
 
   // pass file names to the configuration so that input module can find them
   typedef AppUtils::AppCmdArgList<std::string>::const_iterator FileIter;
@@ -160,7 +191,7 @@ psanaapp::runApp ()
   for ( std::list<std::string>::const_iterator it = moduleNames.begin(); it != moduleNames.end() ; ++ it ) {
     Module* m = loader.loadModule(*it);
     modules.push_back(m);
-    MsgLogRoot(info, "Loaded module " << m->name());
+    MsgLogRoot(trace, "Loaded module " << m->name());
   }
   
   // Setup environment

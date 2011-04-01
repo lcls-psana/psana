@@ -32,13 +32,6 @@
 using namespace psana;
 PSANA_MODULE_FACTORY(PrintEventId)
 
-namespace {
-  
-  // name of the logger to be used with MsgLogger
-  const char* logger = "PrintEventId"; 
-  
-}
-
 //		----------------------------------------
 // 		-- Public Function Member Definitions --
 //		----------------------------------------
@@ -64,21 +57,21 @@ PrintEventId::~PrintEventId ()
 void 
 PrintEventId::beginJob(Env& env)
 {
-  MsgLog(logger, info, name() << ": in beginJob()");
+  MsgLog(name(), info, "in beginJob()");
 }
 
 /// Method which is called at the beginning of the run
 void 
 PrintEventId::beginRun(Env& env)
 {
-  MsgLog(logger, info, name() << ": in beginRun()");
+  MsgLog(name(), info, "in beginRun()");
 }
 
 /// Method which is called at the beginning of the calibration cycle
 void 
 PrintEventId::beginCalibCycle(Env& env)
 {
-  MsgLog(logger, info, name() << ": in beginCalibCycle()");
+  MsgLog(name(), info, "in beginCalibCycle()");
 }
 
 /// Method which is called with event data, this is the only required 
@@ -89,9 +82,9 @@ PrintEventId::event(Event& evt, Env& env)
   // get event ID
   shared_ptr<EventId> eventId = evt.get();
   if (not eventId.get()) {
-    MsgLog(logger, info, name() << ": event ID not found");    
+    MsgLog(name(), info, "event ID not found");
   } else {
-    MsgLog(logger, info, name() << ": event ID: " << *eventId);
+    MsgLog(name(), info, "event ID: " << *eventId);
   }
 }
   
@@ -99,21 +92,21 @@ PrintEventId::event(Event& evt, Env& env)
 void 
 PrintEventId::endCalibCycle(Env& env)
 {
-  MsgLog(logger, info, name() << ": in endCalibCycle()");
+  MsgLog(name(), info, "in endCalibCycle()");
 }
 
 /// Method which is called at the end of the run
 void 
 PrintEventId::endRun(Env& env)
 {
-  MsgLog(logger, info, name() << ": in endRun()");
+  MsgLog(name(), info, "in endRun()");
 }
 
 /// Method which is called once at the end of the job
 void 
 PrintEventId::endJob(Env& env)
 {
-  MsgLog(logger, info, name() << ": in endJob()");
+  MsgLog(name(), info, "in endJob()");
 }
 
 } // namespace psana

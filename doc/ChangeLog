@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-00-09
+2011-04-01 Andrei Salnikov
+- new module PrintSeparator
+- changed formatting for message logger
+
 Tag: V00-00-08
 2011-03-21 Andrei Salnikov
 - Event::get() method does not need template parameter any more
