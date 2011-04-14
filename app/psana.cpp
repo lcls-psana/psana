@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include <unistd.h>
+#include "boost/filesystem.hpp"
 
 //----------------------
 // Base Class Headers --
@@ -77,6 +78,7 @@ private:
 
   // more command line options and arguments
   AppUtils::AppCmdOpt<std::string> m_configOpt ;
+  AppUtils::AppCmdOpt<std::string> m_jobNameOpt ;
   AppUtils::AppCmdOptList<std::string>  m_modulesOpt;
   AppUtils::AppCmdArgList<std::string>  m_files;
 
@@ -89,10 +91,12 @@ private:
 psanaapp::psanaapp ( const std::string& appName )
   : AppUtils::AppBase( appName )
   , m_configOpt( 'c', "config", "path", "configuration file, def: psana.cfg", "" )
+  , m_jobNameOpt( 'j', "job-name", "string", "job name, def: from input files", "" )
   , m_modulesOpt( 'm', "module", "name", "module name, more than one possible" )
   , m_files( "data-file",   "file name(s) with input data", std::list<std::string>() )
 {
   addOption( m_configOpt ) ;
+  addOption( m_jobNameOpt ) ;
   addOption( m_modulesOpt ) ;
   addArgument( m_files ) ;
 }
@@ -194,8 +198,16 @@ psanaapp::runApp ()
     MsgLogRoot(trace, "Loaded module " << m->name());
   }
   
+  // get/build job name
+  std::string jobName = m_jobNameOpt.value();
+  if (jobName.empty() and not m_files.empty()) {
+    boost::filesystem::path path = *m_files.begin();
+    jobName = path.stem();
+  }
+  MsgLogRoot(debug, "job name = " << jobName);
+  
   // Setup environment
-  PSEnv::Env env;
+  PSEnv::Env env(jobName);
   
   // Start with beginJob for everyone
   input->beginJob(env);

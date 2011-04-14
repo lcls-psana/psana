@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-00-10
+2011-04-14 Andrei Salnikov
+- add -j option to psana to change job name
+- add using RootHistoManager::AxisDef to Mofule.h
+
 Tag: V00-00-09
 2011-04-01 Andrei Salnikov
 - new module PrintSeparator

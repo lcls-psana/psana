@@ -38,6 +38,7 @@ namespace psana {}
 using namespace psana;
 using namespace PSEnv;
 using namespace PSEvt;
+using RootHistoManager::AxisDef;
 using boost::shared_ptr;
 
 #if defined(PSANACAT2_)
