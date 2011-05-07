@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-00-11
+2011-05-06 Andrei Salnikov
+- generate doxygen docs, fix/extend comments
+
 Tag: V00-00-10
 2011-04-14 Andrei Salnikov
 - add -j option to psana to change job name

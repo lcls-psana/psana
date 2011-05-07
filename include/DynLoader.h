@@ -36,14 +36,14 @@
 namespace psana {
 
 /**
- *  Class which can load modules from dynamic libraries.
+ *  @ingroup psana
+ *  
+ *  @brief Class which can load modules from dynamic libraries.
  *
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.
  *
- *  @see AdditionalClass
- *
- *  @version $Id$
+ *  @version \$Id$
  *
  *  @author Andrei Salnikov
  */
@@ -52,13 +52,13 @@ class DynLoader  {
 public:
 
   /**
-   *  Load one user module. The name of the module has a format 
+   *  @brief Load one user module. The name of the module has a format 
    *  [Package.]Class[:name]
    */
   Module* loadModule(const std::string& name) const;
   
   /**
-   *  Load one input module. The name of the module has a format 
+   *  @brief Load one input module. The name of the module has a format 
    *  [Package.]Class[:name]
    */
   InputModule* loadInputModule(const std::string& name) const;
@@ -66,7 +66,7 @@ public:
 protected:
 
   /**
-   *  Load the library for a package 
+   *  @brief Load the library for a package 
    *  
    *  @param[in] packageName  Package name.
    *  @return Library handle.
@@ -74,9 +74,9 @@ protected:
   void* loadPackageLib(const std::string& packageName) const;
   
   /**
-   *  Load the library and find factory symbol
+   *  @brief Load the library and find factory symbol
    *  
-   *  @param[in] name String in the format Package.Class
+   *  @param[in] className String in the format Package.Class
    *  @param[in] factory Prefix for factory function name, like "_psana_module_"
    *  @return pointer to factory function.
    *  

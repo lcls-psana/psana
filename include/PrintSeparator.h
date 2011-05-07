@@ -34,14 +34,13 @@
 namespace psana {
 
 /**
- *  @brief Simple psana module that only prints separator line on every event
+ *  @brief Simple psana module that only prints separator line on every event,
+ *  may be useful to make event boundaries visible in the log file.
  *
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.
  *
- *  @see AdditionalClass
- *
- *  @version $Id$
+ *  @version \$Id$
  *
  *  @author Andrei Salnikov
  */

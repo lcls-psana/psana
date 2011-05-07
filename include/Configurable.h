@@ -35,7 +35,10 @@
 namespace psana {
 
 /**
- *  @brief class representing an object that can be configured.
+ *  @ingroup psana
+ *  
+ *  @brief Class that provides a simplified interface to a framework's 
+ *  configuration service. 
  *  
  *  This object can be used either as a base class or a member of other 
  *  classes. It does not define any virtual methods (even destructor)
@@ -44,9 +47,9 @@ namespace psana {
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.
  *
- *  @see AdditionalClass
+ *  @see ConfigSvc::ConfigSvc
  *
- *  @version $Id$
+ *  @version \$Id$
  *
  *  @author Andrei Salnikov
  */
@@ -57,7 +60,9 @@ public:
   /**
    *  @brief Constructor takes a name.
    *  
-   *  It accept names in the format "ClassName" or "ClassName:InstanceName".
+   *  It accept names in the format "Package.ClassName" or "Package.ClassName:InstanceName".
+   *  The configuration will be read from a section corresponding to this name if present
+   *  of from a section without instance name.
    *  
    *  @param[in] name Name of this configurable.
    */
@@ -66,7 +71,14 @@ public:
   // Destructor
   ~Configurable();
 
-  // get the value of a single parameter, will throw if parameter is not there
+  /**
+   *  @brief Get the value of a single parameter, this method can be used for numeric types only.
+   *  
+   *  @param[in] param  Name of the parameter  
+   *  @return Parameter value
+   *  
+   *  @throw ConfigSvc::ExceptionMissing thrown if parameter or section is not found
+   */
   ConfigSvc::ConfigSvc::Result config(const std::string& param) const
   {
     ConfigSvc::ConfigSvc cfg;
@@ -76,6 +88,15 @@ public:
       return cfg.get(className(), param);
     }
   }
+
+  /**
+   *  @brief Get the value of a single parameter as a string.
+   *  
+   *  @param[in] param  Name of the parameter  
+   *  @return Parameter value
+   *  
+   *  @throw ConfigSvc::ExceptionMissing thrown if parameter or section is not found
+   */
   std::string configStr(const std::string& param) const
   {
     ConfigSvc::ConfigSvc cfg;
@@ -86,7 +107,15 @@ public:
     }
   }
 
-  // get the value of a single parameter, use default if not there
+  /**
+   *  @brief Get the value of a single parameter, this method can be used for numeric types only.
+   *  
+   *  Returns default value if parameter is not found. 
+   *  
+   *  @param[in] param  Name of the parameter  
+   *  @param[in] def    Default value to return if parameter is not there  
+   *  @return Parameter value or default value
+   */
   template <typename T>
   T config(const std::string& param, const T& def) const
   {
@@ -97,6 +126,16 @@ public:
       return cfg.get<T>(className(), param, def);
     }    
   }
+
+  /**
+   *  @brief Get the value of a single parameter as a string.
+   *  
+   *  Returns default value if parameter is not found. 
+   *  
+   *  @param[in] param  Name of the parameter  
+   *  @param[in] def    Default value to return if parameter is not there
+   *  @return Parameter value or default value
+   */
   std::string configStr(const std::string& param, const std::string& def) const
   {
     ConfigSvc::ConfigSvc cfg;
@@ -107,7 +146,15 @@ public:
     }    
   }
 
-  // get the value of a single parameter as sequence, will throw if parameter is not there
+  /**
+   *  @brief Get the value of a parameter as a sequence.
+   *  
+   *  @param[in] param  Name of the parameter  
+   *  @return The object that is convertible to sequence type such as std::list<<std::string>
+   *          or std::vector<int>
+   *  
+   *  @throw ConfigSvc::ExceptionMissing thrown if parameter or section is not found
+   */
   ConfigSvc::ConfigSvc::ResultList configList(const std::string& param) const
   {
     ConfigSvc::ConfigSvc cfg;
@@ -118,7 +165,16 @@ public:
     }
   }
   
-  // get the value of a single parameter as sequence, or return default value 
+  /**
+   *  @brief Get the value of a parameter as a sequence.
+   *  
+   *  Returns default value if parameter is not found. 
+   *  
+   *  @param[in] param  Name of the parameter
+   *  @param[in] def    Default value to return if parameter is not there
+   *  @return The object that is convertible to sequence type such as std::list<<std::string>
+   *          or std::vector<int>
+   */
   template <typename T>
   std::list<T> configList(const std::string& param, const std::list<T>& def) const
   {

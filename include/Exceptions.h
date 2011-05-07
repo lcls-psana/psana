@@ -34,14 +34,12 @@
 namespace psana {
 
 /**
- *  Exception classes for psana package.
+ * @brief Base class for exceptions for psana package.
  *
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.
  *
- *  @see AdditionalClass
- *
- *  @version $Id$
+ *  @version \$Id$
  *
  *  @author Andrei Salnikov
  */
@@ -54,7 +52,7 @@ public:
 
 };
 
-// exception thrown when module name is incorrect
+/// Exception thrown when module name is incorrect
 class ExceptionModuleName : public Exception {
 public:
 
@@ -63,6 +61,7 @@ public:
 
 };
 
+/// Exception class which extracts error infor from errno.
 class ExceptionErrno : public Exception {
 public:
 
@@ -71,6 +70,7 @@ public:
 
 };
 
+/// Exception thrown for dlopen/dlsym errors.
 class ExceptionDlerror : public Exception {
 public:
 

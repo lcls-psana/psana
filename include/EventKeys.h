@@ -41,7 +41,7 @@ namespace psana {
  *
  *  @see AdditionalClass
  *
- *  @version $Id$
+ *  @version \$Id$
  *
  *  @author Andrei Salnikov
  */

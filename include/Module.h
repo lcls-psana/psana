@@ -41,6 +41,7 @@ using namespace PSEvt;
 using RootHistoManager::AxisDef;
 using boost::shared_ptr;
 
+// define macro for definition of the factory function
 #if defined(PSANACAT2_)
 #undef PSANACAT2_
 #endif
@@ -60,14 +61,28 @@ using boost::shared_ptr;
 namespace psana {
 
 /**
- *  @brief Base class for user modules in PSANA
+ *  @ingroup psana
+ *  
+ *  @brief Base class for user modules in psana framework.
+ *  
+ *  This is the major customization point available to users. All analysis
+ *  code should inherit from this class and provide implementation of 
+ *  one or few methods which have access to all event and non-event data
+ *  being processed by framework. 
+ *  
+ *  User modules have some influence on the framework event loop, by calling 
+ *  one of the skip(), stop(), or abort() methods user module can signal the
+ *  framework to either skip the processing of the current event, stop
+ *  analysis gracefully (after closing all output files) or abort anaylis
+ *  immediately.
+ *  
+ *  Subclasses must implement at least event() method, other methods have 
+ *  default implementation which does nothing useful.
  *
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.
  *
- *  @see AdditionalClass
- *
- *  @version $Id$
+ *  @version \$Id$
  *
  *  @author Andrei Salnikov
  */
@@ -75,8 +90,12 @@ namespace psana {
 class Module : boost::noncopyable, protected Configurable {
 public:
 
-  /// Event processing status
-  enum Status { OK, 
+  /**
+   *  @brief Event processing status.
+   *  
+   *  The value returned from status() signals to framework what it should do next.
+   */
+  enum Status { OK,     ///< processing finished normally
                 Skip,   ///< skip all remaining modules for this event
                 Stop,   ///< finish with the events
                 Abort   ///< abort immediately, no finalization
@@ -120,18 +139,21 @@ public:
   
 protected:
 
-  // constructor needs module name
+  /// The one and only constructor, needs module name.
   Module (const std::string& name) ;
 
-  /// change the status
+  /// Signal framework to skip event (do not call any other modules)
   void skip() { m_status = Skip; }
+  
+  /// Signal framework to stop event loop and finish job gracefully.
   void stop() { m_status = Stop; }
+  
+  /// Signal framework to terminate immediately.
   void abort() { m_status = Abort; }
 
 private:
 
-  // Data members
-  Status m_status;
+  Status m_status;  ///< Current event processing status
 
 };
 
