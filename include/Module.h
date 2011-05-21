@@ -110,26 +110,67 @@ public:
   /// get the class name of the module
   using Configurable::className;
   
-  /// Method which is called once at the beginning of the job
-  virtual void beginJob(Env& env);
+  /**
+   *  @brief Method which is called once at the beginning of the job
+   *  
+   *  @param[in,out] evt  Event object. In this call it does not have any event 
+   *                      data but can be used to pass information between modules.
+   *  @param[in] env  Environment object. 
+   */
+  virtual void beginJob(Event& evt, Env& env);
   
-  /// Method which is called at the beginning of the run
-  virtual void beginRun(Env& env);
+  /**
+   *  @brief Method which is called at the beginning of new run
+   *  
+   *  @param[in,out] evt  Event object. In this call it does not have any event 
+   *                      data but can be used to pass information between modules.
+   *  @param[in] env  Environment object. 
+   */
+  virtual void beginRun(Event& evt, Env& env);
   
-  /// Method which is called at the beginning of the calibration cycle
-  virtual void beginCalibCycle(Env& env);
+  /**
+   *  @brief Method which is called at the beginning of new calibration cycle (scan)
+   *  
+   *  @param[in,out] evt  Event object. In this call it does not have any event 
+   *                      data but can be used to pass information between modules.
+   *  @param[in] env  Environment object. 
+   */
+  virtual void beginCalibCycle(Event& evt, Env& env);
   
-  /// Method which is called with event data
+  /**
+   *  @brief Method which is called with event data
+   *  
+   *  @param[in,out] evt  Event object.
+   *  @param[in] env  Environment object. 
+   */
   virtual void event(Event& evt, Env& env) = 0;
   
-  /// Method which is called at the end of the calibration cycle
-  virtual void endCalibCycle(Env& env);
+  /**
+   *  @brief Method which is called at the end of the calibration cycle (scan)
+   *  
+   *  @param[in,out] evt  Event object. In this call it does not have any event 
+   *                      data but can be used to pass information between modules.
+   *  @param[in] env  Environment object. 
+   */
+  virtual void endCalibCycle(Event& evt, Env& env);
 
-  /// Method which is called at the end of the run
-  virtual void endRun(Env& env);
+  /**
+   *  @brief Method which is called at the end of the run
+   *  
+   *  @param[in,out] evt  Event object. In this call it does not have any event 
+   *                      data but can be used to pass information between modules.
+   *  @param[in] env  Environment object. 
+   */
+  virtual void endRun(Event& evt, Env& env);
 
-  /// Method which is called once at the end of the job
-  virtual void endJob(Env& env);
+  /**
+   *  @brief Method which is called once at the end of the job
+   *  
+   *  @param[in,out] evt  Event object. In this call it does not have any event 
+   *                      data but can be used to pass information between modules.
+   *  @param[in] env  Environment object. 
+   */
+  virtual void endJob(Event& evt, Env& env);
 
   /// reset module status
   void reset() { m_status = OK; }

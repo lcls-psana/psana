@@ -67,7 +67,7 @@ EventKeys::~EventKeys ()
 
 /// Method which is called once at the beginning of the job
 void 
-EventKeys::beginJob(Env& env)
+EventKeys::beginJob(Event& evt, Env& env)
 {
   MsgLog(logger, info, name() << ": in beginJob()");
   
@@ -77,7 +77,7 @@ EventKeys::beginJob(Env& env)
 
 /// Method which is called at the beginning of the run
 void 
-EventKeys::beginRun(Env& env)
+EventKeys::beginRun(Event& evt, Env& env)
 {
   MsgLog(logger, info, name() << ": in beginRun()");
   
@@ -87,7 +87,7 @@ EventKeys::beginRun(Env& env)
 
 /// Method which is called at the beginning of the calibration cycle
 void 
-EventKeys::beginCalibCycle(Env& env)
+EventKeys::beginCalibCycle(Event& evt, Env& env)
 {
   MsgLog(logger, info, name() << ": in beginCalibCycle()");
   

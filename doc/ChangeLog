@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-01-00
+2011-05-21 Andrei Salnikov
+- changed Module interface, now all methods take Event parameter
+  so that modules can exchange information at any stage, not just event()
+
 Tag: V00-00-11
 2011-05-06 Andrei Salnikov
 - generate doxygen docs, fix/extend comments

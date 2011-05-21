@@ -210,11 +210,15 @@ psanaapp::runApp ()
   PSEnv::Env env(jobName);
   
   // Start with beginJob for everyone
-  input->beginJob(env);
-  for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
-    (*it)->beginJob(env);
+  {
+    input->beginJob(env);
+    boost::shared_ptr<PSEvt::ProxyDict> dict(new PSEvt::ProxyDict);
+    Event evt(dict);
+    for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
+      (*it)->beginJob(evt, env);
+    }
   }
-  
+    
   // event loop
   bool stop = false ;
   while ( maxEvents > 0 and not stop) {
@@ -240,17 +244,17 @@ psanaapp::runApp ()
       // clear module status
       mod.reset();
       
-      // dispatch event to particular method based on vent type
+      // dispatch event to particular method based on event type
       if (istat == InputModule::DoEvent) {
         mod.event(evt, env);
       } else if (istat == InputModule::BeginRun) {
-        mod.beginRun(env);
+        mod.beginRun(evt, env);
       } else if (istat == InputModule::BeginCalibCycle) {
-        mod.beginCalibCycle(env);
+        mod.beginCalibCycle(evt, env);
       } else if (istat == InputModule::EndCalibCycle) {
-        mod.endCalibCycle(env);
+        mod.endCalibCycle(evt, env);
       } else if (istat == InputModule::EndRun) {
-        mod.endRun(env);
+        mod.endRun(evt, env);
       }
       
       // check what module wants to tell us
@@ -276,9 +280,13 @@ psanaapp::runApp ()
   
   
   // End with endJob for everyone, note that the order is the same
-  input->endJob(env);
-  for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
-    (*it)->endJob(env);
+  {
+    input->endJob(env);
+    boost::shared_ptr<PSEvt::ProxyDict> dict(new PSEvt::ProxyDict);
+    Event evt(dict);
+    for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
+      (*it)->endJob(evt, env);
+    }
   }
 
   // cleanup

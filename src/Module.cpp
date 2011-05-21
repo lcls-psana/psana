@@ -49,39 +49,39 @@ Module::~Module ()
 {
 }
 
-/// Method which is called once at the beginning of the job
+// Method which is called once at the beginning of the job
 void 
-Module::beginJob(Env& env)
+Module::beginJob(Event& evt, Env& env)
 {
 }
 
-/// Method which is called at the beginning of the run
+// Method which is called at the beginning of the run
 void 
-Module::beginRun(Env& env)
+Module::beginRun(Event& evt, Env& env)
 {
 }
 
-/// Method which is called at the beginning of the calibration cycle
+// Method which is called at the beginning of the calibration cycle
 void 
-Module::beginCalibCycle(Env& env)
+Module::beginCalibCycle(Event& evt, Env& env)
 {
 }
 
-/// Method which is called at the end of the calibration cycle
+// Method which is called at the end of the calibration cycle
 void 
-Module::endCalibCycle(Env& env)
+Module::endCalibCycle(Event& evt, Env& env)
 {
 }
 
-/// Method which is called at the end of the run
+// Method which is called at the end of the run
 void 
-Module::endRun(Env& env)
+Module::endRun(Event& evt, Env& env)
 {
 }
 
-/// Method which is called once at the end of the job
+// Method which is called once at the end of the job
 void 
-Module::endJob(Env& env)
+Module::endJob(Event& evt, Env& env)
 {
 }
 

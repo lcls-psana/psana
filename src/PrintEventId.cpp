@@ -55,21 +55,21 @@ PrintEventId::~PrintEventId ()
 
 /// Method which is called once at the beginning of the job
 void 
-PrintEventId::beginJob(Env& env)
+PrintEventId::beginJob(Event& evt, Env& env)
 {
   MsgLog(name(), info, "in beginJob()");
 }
 
 /// Method which is called at the beginning of the run
 void 
-PrintEventId::beginRun(Env& env)
+PrintEventId::beginRun(Event& evt, Env& env)
 {
   MsgLog(name(), info, "in beginRun()");
 }
 
 /// Method which is called at the beginning of the calibration cycle
 void 
-PrintEventId::beginCalibCycle(Env& env)
+PrintEventId::beginCalibCycle(Event& evt, Env& env)
 {
   MsgLog(name(), info, "in beginCalibCycle()");
 }
@@ -90,21 +90,21 @@ PrintEventId::event(Event& evt, Env& env)
   
 /// Method which is called at the end of the calibration cycle
 void 
-PrintEventId::endCalibCycle(Env& env)
+PrintEventId::endCalibCycle(Event& evt, Env& env)
 {
   MsgLog(name(), info, "in endCalibCycle()");
 }
 
 /// Method which is called at the end of the run
 void 
-PrintEventId::endRun(Env& env)
+PrintEventId::endRun(Event& evt, Env& env)
 {
   MsgLog(name(), info, "in endRun()");
 }
 
 /// Method which is called once at the end of the job
 void 
-PrintEventId::endJob(Env& env)
+PrintEventId::endJob(Event& evt, Env& env)
 {
   MsgLog(name(), info, "in endJob()");
 }
