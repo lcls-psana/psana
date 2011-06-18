@@ -43,6 +43,40 @@
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
 //-----------------------------------------------------------------------
 
+namespace fs = boost::filesystem ;
+
+namespace {
+
+  enum FileType { Unknown=-1, Mixed=0, XTC, HDF5 };
+
+  template <typename Iter>
+  FileType guessType(Iter begin, Iter end) {
+    
+    FileType type = Unknown;
+    
+    for ( ; begin != end; ++ begin) {
+      
+      std::string ext = fs::path(*begin).extension();
+      FileType ftype = Unknown;
+      if (ext == ".h5") {
+        ftype = HDF5;
+      } else if (ext == ".xtc") {
+        ftype = XTC;
+      }
+      
+      if (ftype == Unknown) return ftype;
+      if (type == Unknown) {
+        type = ftype;
+      } else if (type == XTC or type == HDF5) {
+        if (ftype != type) return Mixed;
+      }      
+    }
+
+    return type;
+  }
+  
+}
+    
 //		----------------------------------------
 // 		-- Public Function Member Definitions --
 //		----------------------------------------
@@ -176,8 +210,16 @@ psanaapp::runApp ()
   
   DynLoader loader;
 
-  // Load input module, fixed name for now
-  const std::string& iname = "PSXtcInput.XtcInputModule";
+  // Load input module, by default use XTC input even if cannot correctly 
+  // guess types of the input files
+  std::string iname = "PSXtcInput.XtcInputModule";
+  FileType ftype = ::guessType(m_files.begin(), m_files.end());
+  if (ftype == Mixed) {
+    MsgLogRoot(error, "Mixed input file types");
+    return -1;
+  } else if (ftype == HDF5) {
+    iname = "PSHdf5Input.Hdf5InputModule";
+  }
   psana::InputModule* input = loader.loadInputModule(iname);
   MsgLogRoot(trace, "Loaded input module " << iname);
 
@@ -187,6 +229,9 @@ psanaapp::runApp ()
   for (FileIter it = m_files.begin(); it != m_files.end(); ++it ) {
     if (not flist.empty()) flist += " ";
     flist += *it;
+  }
+  if (flist.empty()) {
+    flist = cfgsvc.getStr("psana", "files", "");
   }
   cfgsvc.put(iname, "files", flist);
   
