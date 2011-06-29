@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-01-02
+2011-06-29 Andy Salnikov
+- add 'using PSHist::Axis' to Module.h
+
 Tag: V00-01-01
 2011-06-17 Andrei Salnikov
 - fix for reading input files from config fles

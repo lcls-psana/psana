@@ -39,6 +39,7 @@ using namespace psana;
 using namespace PSEnv;
 using namespace PSEvt;
 using RootHistoManager::AxisDef;
+using PSHist::Axis;
 using boost::shared_ptr;
 
 // define macro for definition of the factory function
