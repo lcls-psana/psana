@@ -17,7 +17,8 @@
 #include <string>
 #include <vector>
 #include <unistd.h>
-#include "boost/filesystem.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 //----------------------
 // Base Class Headers --
@@ -37,6 +38,9 @@
 #include "psana/DynLoader.h"
 #include "PSEnv/Env.h"
 #include "PSEvt/Event.h"
+#include "psana/Exceptions.h"
+#include "psana/ExpNameFromConfig.h"
+#include "psana/ExpNameFromXtc.h"
 #include "PSEvt/ProxyDict.h"
 
 //-----------------------------------------------------------------------
@@ -112,8 +116,11 @@ private:
 
   // more command line options and arguments
   AppUtils::AppCmdOpt<std::string> m_configOpt ;
+  AppUtils::AppCmdOpt<std::string> m_expNameOpt ;
   AppUtils::AppCmdOpt<std::string> m_jobNameOpt ;
   AppUtils::AppCmdOptList<std::string>  m_modulesOpt;
+  AppUtils::AppCmdOpt<unsigned> m_maxEventsOpt ;
+  AppUtils::AppCmdOpt<unsigned> m_skipEventsOpt ;
   AppUtils::AppCmdArgList<std::string>  m_files;
 
 
@@ -125,13 +132,19 @@ private:
 psanaapp::psanaapp ( const std::string& appName )
   : AppUtils::AppBase( appName )
   , m_configOpt( 'c', "config", "path", "configuration file, def: psana.cfg", "" )
+  , m_expNameOpt( 'e', "experiment", "string", "experiment name, format: XPP:xpp12311 or xpp12311", "" )
   , m_jobNameOpt( 'j', "job-name", "string", "job name, def: from input files", "" )
   , m_modulesOpt( 'm', "module", "name", "module name, more than one possible" )
+  , m_maxEventsOpt( 'n', "num-events", "number", "maximum number of events to process, def: all", 0U )
+  , m_skipEventsOpt( 's', "skip-events", "number", "number of events to skip, def: 0", 0U )
   , m_files( "data-file",   "file name(s) with input data", std::list<std::string>() )
 {
   addOption( m_configOpt ) ;
+  addOption( m_expNameOpt ) ;
   addOption( m_jobNameOpt ) ;
   addOption( m_modulesOpt ) ;
+  addOption( m_maxEventsOpt ) ;
+  addOption( m_skipEventsOpt ) ;
   addArgument( m_files ) ;
 }
 
@@ -200,20 +213,56 @@ psanaapp::runApp ()
     }
     MsgLogRoot(trace, "set module list to '" << modlist << "'");
     cfgsvc.put("psana", "modules", modlist);
-  } 
+  }
+
+  // set instrument and experiment names if specified
+  if (not m_expNameOpt.value().empty()) {
+      std::string instrName;
+      std::string expName = m_expNameOpt.value();
+      std::string::size_type pos = expName.find(':');
+      if (pos == std::string::npos) {
+          instrName = expName.substr(0, 3);
+          boost::to_upper(instrName);
+      } else {
+          instrName = expName.substr(0, pos);
+          expName.erase(0, pos+1);
+      }
+      MsgLogRoot(debug, "cmd line: instrument = " << instrName << " experiment = " << expName);
+      cfgsvc.put("psana", "instrument", instrName);
+      cfgsvc.put("psana", "experiment", expName);
+  }
+
+  // set event numbers
+  if (m_maxEventsOpt.value()) {
+      cfgsvc.put("psana", "events", boost::lexical_cast<std::string>(m_maxEventsOpt.value()));
+  }
+  if (m_skipEventsOpt.value()) {
+      MsgLogRoot(warning, "skip-events options is not supported at the moment");
+      cfgsvc.put("psana", "skip-events", boost::lexical_cast<std::string>(m_skipEventsOpt.value()));
+  }
 
   // get list of modules to load
   std::list<std::string> moduleNames = cfgsvc.getList("psana", "modules");
   
   // max number of events
   unsigned maxEvents = cfgsvc.get("psana", "events", 0xFFFFFFFFU);
+
+  // list of files could come from config file and overriden by command line
+  std::list<std::string> files(m_files.begin(), m_files.end());
+  if (files.empty()) {
+	cfgsvc.getList("psana", "files", std::list<std::string>());
+  }
+  if (files.empty()) {
+    MsgLogRoot(error, "no input data specified");
+    return 2;
+  }
   
   DynLoader loader;
 
   // Load input module, by default use XTC input even if cannot correctly 
   // guess types of the input files
   std::string iname = "PSXtcInput.XtcInputModule";
-  FileType ftype = ::guessType(m_files.begin(), m_files.end());
+  FileType ftype = ::guessType(files.begin(), files.end());
   if (ftype == Mixed) {
     MsgLogRoot(error, "Mixed input file types");
     return -1;
@@ -226,12 +275,9 @@ psanaapp::runApp ()
   // pass file names to the configuration so that input module can find them
   typedef AppUtils::AppCmdArgList<std::string>::const_iterator FileIter;
   std::string flist;
-  for (FileIter it = m_files.begin(); it != m_files.end(); ++it ) {
+  for (FileIter it = files.begin(); it != files.end(); ++it ) {
     if (not flist.empty()) flist += " ";
     flist += *it;
-  }
-  if (flist.empty()) {
-    flist = cfgsvc.getStr("psana", "files", "");
   }
   cfgsvc.put(iname, "files", flist);
   
@@ -245,14 +291,25 @@ psanaapp::runApp ()
   
   // get/build job name
   std::string jobName = m_jobNameOpt.value();
-  if (jobName.empty() and not m_files.empty()) {
-    boost::filesystem::path path = *m_files.begin();
+  if (jobName.empty() and not files.empty()) {
+    boost::filesystem::path path = files.front();
     jobName = path.stem();
   }
   MsgLogRoot(debug, "job name = " << jobName);
   
   // Setup environment
-  PSEnv::Env env(jobName);
+  boost::shared_ptr<PSEnv::IExpNameProvider> expNameProvider;
+  if(not cfgsvc.getStr("psana", "experiment", "").empty()) {
+    const std::string& instr = cfgsvc.getStr("psana", "instrument", "");
+    const std::string& exp = cfgsvc.getStr("psana", "experiment", "");
+    expNameProvider.reset(new ExpNameFromConfig (instr, exp));
+  } else if (ftype == XTC) {
+    expNameProvider.reset(new ExpNameFromXtc(files));
+  } else {
+    expNameProvider.reset(new ExpNameFromConfig ("", ""));
+  }
+  PSEnv::Env env(jobName, expNameProvider);
+  MsgLogRoot(debug, "instrument = " << env.instrument() << " experiment = " << env.experiment());
   
   // Start with beginJob for everyone
   {

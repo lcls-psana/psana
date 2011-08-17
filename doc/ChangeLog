@@ -11,6 +11,14 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-01-03
+2011-07-17 Andy Salnikov
+- adding support for obtaining instrument and experiment names in psana
+- two new classes ExpNameFromXtc and ExpNameFromConfig which implement
+  PSEnv::IExpNameProvider interface
+- psana instantiates one of these two depending on the input parameters 
+  and file names and passes the instance to PSEnv constructor
+
 Tag: V00-01-02
 2011-06-29 Andy Salnikov
 - add 'using PSHist::Axis' to Module.h
