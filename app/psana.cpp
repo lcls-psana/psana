@@ -53,6 +53,7 @@ namespace {
 
   enum FileType { Unknown=-1, Mixed=0, XTC, HDF5 };
 
+  // Function which tries to guess input data type from file name extensions
   template <typename Iter>
   FileType guessType(Iter begin, Iter end) {
     
@@ -115,6 +116,7 @@ protected :
 private:
 
   // more command line options and arguments
+  AppUtils::AppCmdOpt<std::string> m_calibDirOpt ;
   AppUtils::AppCmdOpt<std::string> m_configOpt ;
   AppUtils::AppCmdOpt<std::string> m_expNameOpt ;
   AppUtils::AppCmdOpt<std::string> m_jobNameOpt ;
@@ -131,6 +133,7 @@ private:
 //----------------
 psanaapp::psanaapp ( const std::string& appName )
   : AppUtils::AppBase( appName )
+  , m_calibDirOpt( 'b', "calib-dir", "path", "calibration directory name, may include {exp} and {instr}", "" )
   , m_configOpt( 'c', "config", "path", "configuration file, def: psana.cfg", "" )
   , m_expNameOpt( 'e', "experiment", "string", "experiment name, format: XPP:xpp12311 or xpp12311", "" )
   , m_jobNameOpt( 'j', "job-name", "string", "job name, def: from input files", "" )
@@ -139,6 +142,7 @@ psanaapp::psanaapp ( const std::string& appName )
   , m_skipEventsOpt( 's', "skip-events", "number", "number of events to skip, def: 0", 0U )
   , m_files( "data-file",   "file name(s) with input data", std::list<std::string>() )
 {
+  addOption( m_calibDirOpt ) ;
   addOption( m_configOpt ) ;
   addOption( m_expNameOpt ) ;
   addOption( m_jobNameOpt ) ;
@@ -241,6 +245,11 @@ psanaapp::runApp ()
       cfgsvc.put("psana", "skip-events", boost::lexical_cast<std::string>(m_skipEventsOpt.value()));
   }
 
+  // set calib dir name if specified
+  if (not m_calibDirOpt.value().empty()) {
+    cfgsvc.put("psana", "calib-dir", m_calibDirOpt.value());
+  }
+
   // get list of modules to load
   std::list<std::string> moduleNames = cfgsvc.getList("psana", "modules");
   
@@ -297,7 +306,10 @@ psanaapp::runApp ()
   }
   MsgLogRoot(debug, "job name = " << jobName);
   
-  // Setup environment
+  // get calib directory name
+  std::string calibDir = cfgsvc.getStr("psana", "calib-dir", "/reg/d/psdm/{instr}/{exp}/calib");
+
+  // instantiate experiment name provider
   boost::shared_ptr<PSEnv::IExpNameProvider> expNameProvider;
   if(not cfgsvc.getStr("psana", "experiment", "").empty()) {
     const std::string& instr = cfgsvc.getStr("psana", "instrument", "");
@@ -308,8 +320,11 @@ psanaapp::runApp ()
   } else {
     expNameProvider.reset(new ExpNameFromConfig ("", ""));
   }
-  PSEnv::Env env(jobName, expNameProvider);
+
+  // Setup environment
+  PSEnv::Env env(jobName, expNameProvider, calibDir);
   MsgLogRoot(debug, "instrument = " << env.instrument() << " experiment = " << env.experiment());
+  MsgLogRoot(debug, "calibDir = " << env.calibDir());
   
   // Start with beginJob for everyone
   {
@@ -331,7 +346,7 @@ psanaapp::runApp ()
     
     // run input module to populate event
     InputModule::Status istat = input->event(evt, env);
-    MsgLogRoot(debug, "input.event() returned " << istat)
+    MsgLogRoot(debug, "input.event() returned " << istat);
     
     if (istat == InputModule::Skip) continue;
     if (istat == InputModule::Stop) break;
