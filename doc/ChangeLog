@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-01-05
+2011-09-14 Andy Salnikov
+- psana did not recognize skip() method called in modules
+
 Tag: V00-01-04
 2011-09-01 Andy Salnikov
 - add an option to specify calibration directory name on the command line 

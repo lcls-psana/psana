@@ -375,21 +375,16 @@ psanaapp::runApp ()
       }
       
       // check what module wants to tell us
-      switch (mod.status()) {
-      case Module::Skip:
+      if (mod.status() == Module::Skip) {
         break;
-      case Module::Stop:
+      } else if (mod.status() == Module::Stop) {
         MsgLogRoot(info, "module " << mod.name() << " requested stop");
         stop = true;
         break;
-      case Module::Abort:
+      } else if (mod.status() == Module::Abort) {
         MsgLogRoot(info, "module " << mod.name() << " requested abort");
         return 1;
-        break;
-      case Module::OK:
-        break;
       }
-      
     }
     
     --maxEvents;
