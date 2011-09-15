@@ -11,6 +11,9 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+2011-09-14 Andy Salnikov
+- psana did not recognize skip() method called in modules
+
 Tag: V00-01-03
 2011-07-17 Andy Salnikov
 - adding support for obtaining instrument and experiment names in psana
