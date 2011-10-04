@@ -73,6 +73,8 @@ EventKeys::beginJob(Event& evt, Env& env)
   
   std::cout << "Config keys:\n";
   ::printKeys(std::cout, env.configStore().keys());
+  std::cout << "Calib keys:\n";
+  ::printKeys(std::cout, env.calibStore().keys());
 }
 
 /// Method which is called at the beginning of the run
@@ -83,6 +85,8 @@ EventKeys::beginRun(Event& evt, Env& env)
   
   std::cout << "Config keys:\n";
   ::printKeys(std::cout, env.configStore().keys());
+  std::cout << "Calib keys:\n";
+  ::printKeys(std::cout, env.calibStore().keys());
 }
 
 /// Method which is called at the beginning of the calibration cycle
@@ -93,6 +97,8 @@ EventKeys::beginCalibCycle(Event& evt, Env& env)
   
   std::cout << "Config keys:\n";
   ::printKeys(std::cout, env.configStore().keys());
+  std::cout << "Calib keys:\n";
+  ::printKeys(std::cout, env.calibStore().keys());
 }
 
 /// Method which is called with event data, this is the only required 
