@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-01-07
+2011-10-05 Andy Salnikov
+- bug fix in Configurable::configList
+
 Tag: V00-01-06
 2011-10-04 Andy Salnikov
 - EventKeys module now prints calibStore keys too

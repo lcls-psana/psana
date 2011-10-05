@@ -182,7 +182,7 @@ public:
     try {
       return cfg.getList(name(), param);
     } catch (const ConfigSvc::ExceptionMissing& ex) {
-      return cfg.getList<T>(className(), param, def);
+      return cfg.getList(className(), param, def);
     }
   }
 
