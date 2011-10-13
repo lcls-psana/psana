@@ -75,6 +75,8 @@ EventKeys::beginJob(Event& evt, Env& env)
   ::printKeys(std::cout, env.configStore().keys());
   std::cout << "Calib keys:\n";
   ::printKeys(std::cout, env.calibStore().keys());
+  std::cout << "Event keys:\n";
+  ::printKeys(std::cout, evt.keys());
 }
 
 /// Method which is called at the beginning of the run
@@ -87,6 +89,8 @@ EventKeys::beginRun(Event& evt, Env& env)
   ::printKeys(std::cout, env.configStore().keys());
   std::cout << "Calib keys:\n";
   ::printKeys(std::cout, env.calibStore().keys());
+  std::cout << "Event keys:\n";
+  ::printKeys(std::cout, evt.keys());
 }
 
 /// Method which is called at the beginning of the calibration cycle
@@ -99,6 +103,8 @@ EventKeys::beginCalibCycle(Event& evt, Env& env)
   ::printKeys(std::cout, env.configStore().keys());
   std::cout << "Calib keys:\n";
   ::printKeys(std::cout, env.calibStore().keys());
+  std::cout << "Event keys:\n";
+  ::printKeys(std::cout, evt.keys());
 }
 
 /// Method which is called with event data, this is the only required 
@@ -109,5 +115,36 @@ EventKeys::event(Event& evt, Env& env)
   std::cout << "Event keys:\n";
   ::printKeys(std::cout, evt.keys());
 }
+
+/// Method which is called at the end of the calibration cycle (scan)
+void
+EventKeys::endCalibCycle(Event& evt, Env& env)
+{
+  MsgLog(logger, info, name() << ": in endCalibCycle()");
+
+  std::cout << "Event keys:\n";
+  ::printKeys(std::cout, evt.keys());
+}
+
+/// Method which is called at the end of the run
+void
+EventKeys::endRun(Event& evt, Env& env)
+{
+  MsgLog(logger, info, name() << ": in endRun()");
+
+  std::cout << "Event keys:\n";
+  ::printKeys(std::cout, evt.keys());
+}
+
+/// Method which is called once at the end of the job
+void
+EventKeys::endJob(Event& evt, Env& env)
+{
+  MsgLog(logger, info, name() << ": in endJob()");
+
+  std::cout << "Event keys:\n";
+  ::printKeys(std::cout, evt.keys());
+}
+
 
 } // namespace psana

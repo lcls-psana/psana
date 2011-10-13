@@ -67,6 +67,15 @@ public:
   /// Method which is called with event data
   virtual void event(Event& evt, Env& env);
 
+  /// Method which is called at the end of the calibration cycle (scan)
+  virtual void endCalibCycle(Event& evt, Env& env);
+
+  /// Method which is called at the end of the run
+  virtual void endRun(Event& evt, Env& env);
+
+  /// Method which is called once at the end of the job
+  virtual void endJob(Event& evt, Env& env);
+
 protected:
 
 private:

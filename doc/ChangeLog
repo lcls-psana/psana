@@ -11,6 +11,13 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-02-00
+2011-10-13 Andy Salnikov
+- correct implementation of event skipping and max event number
+- all job is actually done by input module itself, psana logic 
+  is simplified
+- EventKeys module now print event keys in all methods
+
 Tag: V00-01-07
 2011-10-05 Andy Salnikov
 - bug fix in Configurable::configList

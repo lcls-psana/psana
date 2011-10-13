@@ -241,7 +241,6 @@ psanaapp::runApp ()
       cfgsvc.put("psana", "events", boost::lexical_cast<std::string>(m_maxEventsOpt.value()));
   }
   if (m_skipEventsOpt.value()) {
-      MsgLogRoot(warning, "skip-events options is not supported at the moment");
       cfgsvc.put("psana", "skip-events", boost::lexical_cast<std::string>(m_skipEventsOpt.value()));
   }
 
@@ -253,9 +252,6 @@ psanaapp::runApp ()
   // get list of modules to load
   std::list<std::string> moduleNames = cfgsvc.getList("psana", "modules");
   
-  // max number of events
-  unsigned maxEvents = cfgsvc.get("psana", "events", 0xFFFFFFFFU);
-
   // list of files could come from config file and overriden by command line
   std::list<std::string> files(m_files.begin(), m_files.end());
   if (files.empty()) {
@@ -338,7 +334,7 @@ psanaapp::runApp ()
     
   // event loop
   bool stop = false ;
-  while ( maxEvents > 0 and not stop) {
+  while (not stop) {
     
     // Create event object
     boost::shared_ptr<PSEvt::ProxyDict> dict(new PSEvt::ProxyDict);
@@ -354,7 +350,8 @@ psanaapp::runApp ()
       MsgLogRoot(info, "Input module requested abort");
       return 1;
     }
-    
+
+    // call each user module's corresponding method
     for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
       Module& mod = *(*it);
       
@@ -386,11 +383,9 @@ psanaapp::runApp ()
         return 1;
       }
     }
-    
-    --maxEvents;
+
   }
-  
-  
+
   // End with endJob for everyone, note that the order is the same
   {
     input->endJob(env);
