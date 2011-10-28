@@ -191,7 +191,7 @@ protected:
   void stop() { m_status = Stop; }
   
   /// Signal framework to terminate immediately.
-  void abort() { m_status = Abort; }
+  void terminate() { m_status = Abort; }
 
 private:
 

@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-03-00
+2011-10-28 Andy Salnikov
+- renamed Module::abort() method to Module::terminate() to avoid any
+  confusion with std::abort().
+
 Tag: V00-02-00
 2011-10-13 Andy Salnikov
 - correct implementation of event skipping and max event number
