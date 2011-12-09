@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-03-01
+2011-13-09 Andy Salnikov
+- insignificant change in doc/mainpage.dox
+
 Tag: V00-03-00
 2011-10-28 Andy Salnikov
 - renamed Module::abort() method to Module::terminate() to avoid any
