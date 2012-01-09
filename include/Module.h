@@ -184,13 +184,29 @@ protected:
   /// The one and only constructor, needs module name.
   Module (const std::string& name) ;
 
-  /// Signal framework to skip event (do not call any other modules)
+  /**
+   *   @brief Signal framework to skip current event and do not call other downstream modules.
+   *
+   *   Note that this method does not skip code in the current module, control is
+   *   returned back to the module. If you want to stop processing after this call
+   *   then add a return statement.
+   */
   void skip() { m_status = Skip; }
   
-  /// Signal framework to stop event loop and finish job gracefully.
+  /**
+   *   @brief Signal framework to stop event loop and finish job gracefully.
+   *
+   *   Note that this method does not cause terminate processing in the current module.
+   *   If you want to stop processing after this call then add a return statement.
+   */
   void stop() { m_status = Stop; }
   
-  /// Signal framework to terminate immediately.
+  /**
+   *  @brief Signal framework to terminate immediately.
+   *
+   *   Note that this method does not cause terminate processing in the current module.
+   *   If you want to stop processing after this call then add a return statement.
+   */
   void terminate() { m_status = Abort; }
 
 private:

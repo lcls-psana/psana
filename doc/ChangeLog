@@ -11,6 +11,12 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-03-02
+2012-01-09 Andy Salnikov
+- bug fix, file names from config file were not used
+- improve comments for Module::skip() and friends, state explicitely
+  that these methods return control back to the module
+
 Tag: V00-03-01
 2011-13-09 Andy Salnikov
 - insignificant change in doc/mainpage.dox

@@ -255,7 +255,7 @@ psanaapp::runApp ()
   // list of files could come from config file and overriden by command line
   std::list<std::string> files(m_files.begin(), m_files.end());
   if (files.empty()) {
-	cfgsvc.getList("psana", "files", std::list<std::string>());
+	files = cfgsvc.getList("psana", "files", std::list<std::string>());
   }
   if (files.empty()) {
     MsgLogRoot(error, "no input data specified");
