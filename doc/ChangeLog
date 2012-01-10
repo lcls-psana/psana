@@ -11,6 +11,12 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-04-00
+2012-01-09 Andy Salnikov
+- re-implemented event loop so that transitions now open and
+  close correctly and in order. Fixing issue #123
+  (https://pswww.slac.stanford.edu/trac/psdm/ticket/123)
+
 Tag: V00-03-02
 2012-01-09 Andy Salnikov
 - bug fix, file names from config file were not used

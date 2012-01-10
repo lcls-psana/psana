@@ -14,6 +14,7 @@
 // C/C++ Headers --
 //-----------------
 #include <string>
+#include <boost/shared_ptr.hpp>
 
 //----------------------
 // Base Class Headers --
@@ -55,13 +56,13 @@ public:
    *  @brief Load one user module. The name of the module has a format 
    *  [Package.]Class[:name]
    */
-  Module* loadModule(const std::string& name) const;
+  boost::shared_ptr<Module> loadModule(const std::string& name) const;
   
   /**
    *  @brief Load one input module. The name of the module has a format 
    *  [Package.]Class[:name]
    */
-  InputModule* loadInputModule(const std::string& name) const;
+  boost::shared_ptr<InputModule> loadInputModule(const std::string& name) const;
   
 protected:
 

@@ -16,7 +16,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <stack>
 #include <unistd.h>
+#include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -115,6 +117,25 @@ protected :
 
 private:
 
+  typedef void (Module::*ModuleMethod)(Event& evt, Env& env);
+
+  /**
+   *  Calls a method on all modules and returns summary  status.
+   *
+   *  @param[in] modules  List of modules
+   *  @param[in] method   Pointer to the member function
+   *  @param[in] evt      Event object
+   *  @param[in] env      Environment object
+   *  @param[in] ignoreSkip Should be set to false for event() method, true for all others
+   */
+  Module::Status callModuleMethod(ModuleMethod method, Event& evt, Env& env, bool ignoreSkip);
+
+  enum State {None, Configured, Running, Scanning, NumStates};
+
+  Module::Status newState(State state, Event& evt, Env& env);
+  Module::Status closeState(Event& evt, Env& env);
+  Module::Status unwind(State newState, Event& evt, Env& env, bool ignoreStatus = false);
+
   // more command line options and arguments
   AppUtils::AppCmdOpt<std::string> m_calibDirOpt ;
   AppUtils::AppCmdOpt<std::string> m_configOpt ;
@@ -124,8 +145,10 @@ private:
   AppUtils::AppCmdOpt<unsigned> m_maxEventsOpt ;
   AppUtils::AppCmdOpt<unsigned> m_skipEventsOpt ;
   AppUtils::AppCmdArgList<std::string>  m_files;
-
-
+  std::vector<boost::shared_ptr<Module> > m_modules;
+  std::stack<State> m_state;
+  ModuleMethod m_newStateMethods[NumStates];
+  ModuleMethod m_closeStateMethods[NumStates];
 };
 
 //----------------
@@ -141,6 +164,8 @@ psanaapp::psanaapp ( const std::string& appName )
   , m_maxEventsOpt( 'n', "num-events", "number", "maximum number of events to process, def: all", 0U )
   , m_skipEventsOpt( 's', "skip-events", "number", "number of events to skip, def: 0", 0U )
   , m_files( "data-file",   "file name(s) with input data", std::list<std::string>() )
+  , m_modules()
+  , m_state()
 {
   addOption( m_calibDirOpt ) ;
   addOption( m_configOpt ) ;
@@ -150,6 +175,16 @@ psanaapp::psanaapp ( const std::string& appName )
   addOption( m_maxEventsOpt ) ;
   addOption( m_skipEventsOpt ) ;
   addArgument( m_files ) ;
+
+  m_newStateMethods[None] = 0;
+  m_newStateMethods[Configured] = &Module::beginJob;
+  m_newStateMethods[Running] = &Module::beginRun;
+  m_newStateMethods[Scanning] = &Module::beginCalibCycle;
+
+  m_closeStateMethods[None] = 0;
+  m_closeStateMethods[Configured] = &Module::endJob;
+  m_closeStateMethods[Running] = &Module::endRun;
+  m_closeStateMethods[Scanning] = &Module::endCalibCycle;
 }
 
 //--------------
@@ -274,7 +309,7 @@ psanaapp::runApp ()
   } else if (ftype == HDF5) {
     iname = "PSHdf5Input.Hdf5InputModule";
   }
-  psana::InputModule* input = loader.loadInputModule(iname);
+  boost::shared_ptr<psana::InputModule> input(loader.loadInputModule(iname));
   MsgLogRoot(trace, "Loaded input module " << iname);
 
   // pass file names to the configuration so that input module can find them
@@ -287,11 +322,9 @@ psanaapp::runApp ()
   cfgsvc.put(iname, "files", flist);
   
   // instantiate all user modules
-  std::vector<Module*> modules;
   for ( std::list<std::string>::const_iterator it = moduleNames.begin(); it != moduleNames.end() ; ++ it ) {
-    Module* m = loader.loadModule(*it);
-    modules.push_back(m);
-    MsgLogRoot(trace, "Loaded module " << m->name());
+    m_modules.push_back(loader.loadModule(*it));
+    MsgLogRoot(trace, "Loaded module " << m_modules.back()->name());
   }
   
   // get/build job name
@@ -327,9 +360,9 @@ psanaapp::runApp ()
     input->beginJob(env);
     boost::shared_ptr<PSEvt::ProxyDict> dict(new PSEvt::ProxyDict);
     Event evt(dict);
-    for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
-      (*it)->beginJob(evt, env);
-    }
+    Module::Status stat = callModuleMethod(&Module::beginJob, evt, env, true);
+    if (stat != Module::OK) return 1;
+    m_state.push(Configured);
   }
     
   // event loop
@@ -343,7 +376,8 @@ psanaapp::runApp ()
     // run input module to populate event
     InputModule::Status istat = input->event(evt, env);
     MsgLogRoot(debug, "input.event() returned " << istat);
-    
+
+    // check input status
     if (istat == InputModule::Skip) continue;
     if (istat == InputModule::Stop) break;
     if (istat == InputModule::Abort) {
@@ -351,59 +385,117 @@ psanaapp::runApp ()
       return 1;
     }
 
-    // call each user module's corresponding method
-    for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
-      Module& mod = *(*it);
-      
-      // clear module status
-      mod.reset();
-      
-      // dispatch event to particular method based on event type
-      if (istat == InputModule::DoEvent) {
-        mod.event(evt, env);
-      } else if (istat == InputModule::BeginRun) {
-        mod.beginRun(evt, env);
-      } else if (istat == InputModule::BeginCalibCycle) {
-        mod.beginCalibCycle(evt, env);
-      } else if (istat == InputModule::EndCalibCycle) {
-        mod.endCalibCycle(evt, env);
-      } else if (istat == InputModule::EndRun) {
-        mod.endRun(evt, env);
-      }
-      
-      // check what module wants to tell us
-      if (mod.status() == Module::Skip) {
-        break;
-      } else if (mod.status() == Module::Stop) {
-        MsgLogRoot(info, "module " << mod.name() << " requested stop");
-        stop = true;
-        break;
-      } else if (mod.status() == Module::Abort) {
-        MsgLogRoot(info, "module " << mod.name() << " requested abort");
-        return 1;
-      }
-    }
+    // dispatch event to particular method based on event type
+    if (istat == InputModule::DoEvent) {
 
+      Module::Status stat = callModuleMethod(&Module::event, evt, env, false);
+      if (stat == Module::Abort) return 1;
+      if (stat == Module::Stop) break;
+
+    } else {
+
+      State unwindTo = None;
+      State newState = None;
+      if (istat == InputModule::BeginRun) {
+        unwindTo = Configured;
+        newState = Running;
+      } else if (istat == InputModule::BeginCalibCycle) {
+        unwindTo = Running;
+        newState = Scanning;
+      } else if (istat == InputModule::EndCalibCycle) {
+        unwindTo = Running;
+      } else if (istat == InputModule::EndRun) {
+        unwindTo = Configured;
+      }
+
+      Module::Status stat = unwind(unwindTo, evt, env);
+      if (stat == Module::Abort) return 1;
+      if (stat == Module::Stop) break;
+      if (newState != None) {
+        stat = this->newState(newState, evt, env);
+        if (stat == Module::Abort) return 1;
+        if (stat == Module::Stop) break;
+      }
+
+    }
   }
 
-  // End with endJob for everyone, note that the order is the same
+  // close all transitions
   {
     input->endJob(env);
     boost::shared_ptr<PSEvt::ProxyDict> dict(new PSEvt::ProxyDict);
     Event evt(dict);
-    for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
-      (*it)->endJob(evt, env);
-    }
+    unwind(None, evt, env, true);
   }
 
   // cleanup
-  delete input;
-  for (std::vector<Module*>::iterator it = modules.begin() ; it != modules.end() ; ++it) {
-    delete *it;
-  }
+  m_modules.clear();
   
   // return 0 on success, other values for error (like main())
   return 0 ;
+}
+
+
+Module::Status
+psanaapp::newState(State state, Event& evt, Env& env)
+{
+  m_state.push(state);
+  return callModuleMethod(m_newStateMethods[state], evt, env, true);
+}
+
+
+Module::Status
+psanaapp::closeState(Event& evt, Env& env)
+{
+  State state = m_state.top();
+  m_state.pop();
+  return callModuleMethod(m_closeStateMethods[state], evt, env, true);
+}
+
+
+Module::Status
+psanaapp::unwind(State newState, Event& evt, Env& env, bool ignoreStatus)
+{
+  while (not m_state.empty() and m_state.top() > newState) {
+    Module::Status stat = closeState(evt, env);
+    if (not ignoreStatus and stat != Module::OK) return stat;
+  }
+  return Module::OK;
+}
+
+
+Module::Status
+psanaapp::callModuleMethod(ModuleMethod method, Event& evt, Env& env, bool ignoreSkip)
+{
+  Module::Status stat = Module::OK;
+
+  // call each user module's corresponding method
+  for (std::vector<boost::shared_ptr<Module> >::const_iterator it = m_modules.begin() ; it != m_modules.end() ; ++it) {
+    boost::shared_ptr<Module> mod = *it;
+
+    // clear module status
+    mod->reset();
+
+    // call the method
+    ((*mod).*method)(evt, env);
+
+    // check what module wants to tell us
+    if (mod->status() == Module::Skip and not ignoreSkip) {
+      MsgLogRoot(trace, "module " << mod->name() << " requested skip");
+      if (stat == Module::OK) stat = Module::Skip;
+      break;
+    } else if (mod->status() == Module::Stop) {
+      MsgLogRoot(info, "module " << mod->name() << " requested stop");
+      stat = Module::Stop;
+      if (not ignoreSkip) break;
+    } else if (mod->status() == Module::Abort) {
+      MsgLogRoot(info, "module " << mod->name() << " requested abort");
+      stat = Module::Abort;
+      break;
+    }
+  }
+
+  return stat;
 }
 
 } // namespace psana

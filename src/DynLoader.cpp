@@ -48,7 +48,7 @@ namespace psana {
  *  Load one user module. The name of the module has a format 
  *  Package.Class[:name]
  */
-Module* 
+boost::shared_ptr<Module>
 DynLoader::loadModule(const std::string& name) const
 {
   // make class name, use psana for package name if not given
@@ -68,14 +68,14 @@ DynLoader::loadModule(const std::string& name) const
   ::mod_factory factory = (::mod_factory)sym;
   
   // call factory function
-  return factory(fullName);
+  return boost::shared_ptr<Module>(factory(fullName));
 }
 
 /**
  *  Load one input module. The name of the module has a format 
  *  Package.Class[:name]
  */
-InputModule* 
+boost::shared_ptr<InputModule>
 DynLoader::loadInputModule(const std::string& name) const
 {
   // make class name, use psana for package name if not given
@@ -95,7 +95,7 @@ DynLoader::loadInputModule(const std::string& name) const
   ::input_mod_factory factory = (::input_mod_factory)sym;
   
   // call factory function
-  return factory(fullName);
+  return boost::shared_ptr<InputModule>(factory(fullName));
 }
 
 void* 
