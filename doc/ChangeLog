@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-04-01
+2012-02-14 Andy Salnikov
+- update comments in Module class
+
 Tag: V00-04-00
 2012-01-09 Andy Salnikov
 - re-implemented event loop so that transitions now open and

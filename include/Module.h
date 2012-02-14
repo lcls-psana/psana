@@ -72,7 +72,7 @@ namespace psana {
  *  being processed by framework. 
  *  
  *  User modules have some influence on the framework event loop, by calling 
- *  one of the skip(), stop(), or abort() methods user module can signal the
+ *  one of the skip(), stop(), or terminate() methods user module can signal the
  *  framework to either skip the processing of the current event, stop
  *  analysis gracefully (after closing all output files) or abort anaylis
  *  immediately.
@@ -196,7 +196,7 @@ protected:
   /**
    *   @brief Signal framework to stop event loop and finish job gracefully.
    *
-   *   Note that this method does not cause terminate processing in the current module.
+   *   Note that this method does not terminate processing in the current module.
    *   If you want to stop processing after this call then add a return statement.
    */
   void stop() { m_status = Stop; }
@@ -204,7 +204,7 @@ protected:
   /**
    *  @brief Signal framework to terminate immediately.
    *
-   *   Note that this method does not cause terminate processing in the current module.
+   *   Note that this method does not terminate processing in the current module.
    *   If you want to stop processing after this call then add a return statement.
    */
   void terminate() { m_status = Abort; }
