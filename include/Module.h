@@ -178,11 +178,14 @@ public:
   
   /// get status
   Status status() const { return m_status; }
+
+  /// Returns true if this module is interested in all events including skipped
+  bool observeAllEvents() const { return m_observeAllEvents; }
   
 protected:
 
   /// The one and only constructor, needs module name.
-  Module (const std::string& name) ;
+  Module (const std::string& name, bool observeAllEvents = false) ;
 
   /**
    *   @brief Signal framework to skip current event and do not call other downstream modules.
@@ -212,6 +215,7 @@ protected:
 private:
 
   Status m_status;  ///< Current event processing status
+  bool m_observeAllEvents; ///< If true then this module will receive all events, event skipped ones
 
 };
 

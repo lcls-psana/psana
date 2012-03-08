@@ -50,13 +50,13 @@ InputModule::~InputModule ()
 
 /// Method which is called once at the beginning of the job
 void 
-InputModule::beginJob(Env& env)
+InputModule::beginJob(Event& evt, Env& env)
 {
 }
 
 /// Method which is called once at the end of the job
 void 
-InputModule::endJob(Env& env)
+InputModule::endJob(Event& evt, Env& env)
 {
 }
 

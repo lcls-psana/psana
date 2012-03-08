@@ -36,9 +36,10 @@ namespace psana {
 //----------------
 // Constructors --
 //----------------
-Module::Module (const std::string& name)
+Module::Module (const std::string& name, bool observeAllEvents)
   : Configurable(name)
   , m_status(OK)
+  , m_observeAllEvents(observeAllEvents)
 {
 }
 

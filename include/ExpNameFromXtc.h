@@ -59,22 +59,21 @@ public:
   virtual ~ExpNameFromXtc();
 
   /// Returns instrument name
-  virtual const std::string& instrument() const;
+  virtual const std::string& instrument() const { return m_instr; }
 
   /// Returns experiment name
-  virtual const std::string& experiment() const;
+  virtual const std::string& experiment() const { return m_exp; }
+
+  /// Returns experiment number or 0
+  virtual unsigned expNum() const { return m_expNum; }
 
 protected:
 
-  // one-time intilization
-  void init() const;
-
 private:
   
-  const std::list<std::string> m_files;
-  mutable bool m_init;
-  mutable std::string m_instr;
-  mutable std::string m_exp;
+  std::string m_instr;
+  std::string m_exp;
+  unsigned m_expNum;
 
 };
 

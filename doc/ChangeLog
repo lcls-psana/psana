@@ -11,9 +11,23 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-05-00
+2012-03-08 Andy Salnikov
+- modifications to support XTC output
+- when module decides to skip event psana adds integer number to event
+  with key "__psana_skip_event__"
+- Module class gets new method observeAllEvents() which returns false 
+  by default, if it returns true then psana calls module's event() 
+  method for all events including skipped. Module can check 
+  "__psana_skip_event__" flag in event to see if event is skipped.
+- above changes are needed to support new module for XTC output 
+- reimplement ExpNameFromXtc and ExpNameFromConfig with new 
+  class ExpNameDb/ExpNameDatabase, both classes have new method
+  expNum() which returns experiment number
+
 Tag: V00-04-01
 2012-02-14 Andy Salnikov
-- update comments in Module class
+- update comments in Module class 
 
 Tag: V00-04-00
 2012-01-09 Andy Salnikov

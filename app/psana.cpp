@@ -19,6 +19,7 @@
 #include <stack>
 #include <unistd.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -343,11 +344,11 @@ psanaapp::runApp ()
   if(not cfgsvc.getStr("psana", "experiment", "").empty()) {
     const std::string& instr = cfgsvc.getStr("psana", "instrument", "");
     const std::string& exp = cfgsvc.getStr("psana", "experiment", "");
-    expNameProvider.reset(new ExpNameFromConfig (instr, exp));
+    expNameProvider = boost::make_shared<ExpNameFromConfig>(instr, exp);
   } else if (ftype == XTC) {
-    expNameProvider.reset(new ExpNameFromXtc(files));
+    expNameProvider = boost::make_shared<ExpNameFromXtc>(files);
   } else {
-    expNameProvider.reset(new ExpNameFromConfig ("", ""));
+    expNameProvider = boost::make_shared<ExpNameFromConfig>("", "");
   }
 
   // Setup environment
@@ -357,9 +358,8 @@ psanaapp::runApp ()
   
   // Start with beginJob for everyone
   {
-    input->beginJob(env);
-    boost::shared_ptr<PSEvt::ProxyDict> dict(new PSEvt::ProxyDict);
-    Event evt(dict);
+    Event evt(boost::make_shared<PSEvt::ProxyDict>());
+    input->beginJob(evt, env);
     Module::Status stat = callModuleMethod(&Module::beginJob, evt, env, true);
     if (stat != Module::OK) return 1;
     m_state.push(Configured);
@@ -370,8 +370,7 @@ psanaapp::runApp ()
   while (not stop) {
     
     // Create event object
-    boost::shared_ptr<PSEvt::ProxyDict> dict(new PSEvt::ProxyDict);
-    Event evt(dict);
+    Event evt(boost::make_shared<PSEvt::ProxyDict>());
     
     // run input module to populate event
     InputModule::Status istat = input->event(evt, env);
@@ -422,9 +421,8 @@ psanaapp::runApp ()
 
   // close all transitions
   {
-    input->endJob(env);
-    boost::shared_ptr<PSEvt::ProxyDict> dict(new PSEvt::ProxyDict);
-    Event evt(dict);
+    Event evt(boost::make_shared<PSEvt::ProxyDict>());
+    input->endJob(evt, env);
     unwind(None, evt, env, true);
   }
 
@@ -463,36 +461,84 @@ psanaapp::unwind(State newState, Event& evt, Env& env, bool ignoreStatus)
   return Module::OK;
 }
 
-
+//
+// Call given method for all defined modules, ignoreSkip should be set
+// to false for event() method, true for everything else
+//
 Module::Status
 psanaapp::callModuleMethod(ModuleMethod method, Event& evt, Env& env, bool ignoreSkip)
 {
   Module::Status stat = Module::OK;
 
-  // call each user module's corresponding method
-  for (std::vector<boost::shared_ptr<Module> >::const_iterator it = m_modules.begin() ; it != m_modules.end() ; ++it) {
-    boost::shared_ptr<Module> mod = *it;
+  if (ignoreSkip) {
 
-    // clear module status
-    mod->reset();
+    // call all modules, do not skip any one of them
 
-    // call the method
-    ((*mod).*method)(evt, env);
+    for (std::vector<boost::shared_ptr<Module> >::const_iterator it = m_modules.begin() ; it != m_modules.end() ; ++it) {
+      boost::shared_ptr<Module> mod = *it;
 
-    // check what module wants to tell us
-    if (mod->status() == Module::Skip and not ignoreSkip) {
-      MsgLogRoot(trace, "module " << mod->name() << " requested skip");
-      if (stat == Module::OK) stat = Module::Skip;
-      break;
-    } else if (mod->status() == Module::Stop) {
-      MsgLogRoot(info, "module " << mod->name() << " requested stop");
-      stat = Module::Stop;
-      if (not ignoreSkip) break;
-    } else if (mod->status() == Module::Abort) {
-      MsgLogRoot(info, "module " << mod->name() << " requested abort");
-      stat = Module::Abort;
-      break;
+      // clear module status
+      mod->reset();
+
+      // call the method
+      ((*mod).*method)(evt, env);
+
+      // check what module wants to tell us
+      if (mod->status() == Module::Skip) {
+        // silently ignore Skip
+      } else if (mod->status() == Module::Stop) {
+        // set the flag but continue
+        MsgLogRoot(info, "module " << mod->name() << " requested stop");
+        stat = Module::Stop;
+      } else if (mod->status() == Module::Abort) {
+        // abort immediately
+        MsgLogRoot(info, "module " << mod->name() << " requested abort");
+        stat = Module::Abort;
+        break;
+      }
     }
+
+  } else {
+
+    // call all modules, respect Skip flag
+
+    for (std::vector<boost::shared_ptr<Module> >::const_iterator it = m_modules.begin() ; it != m_modules.end() ; ++it) {
+      boost::shared_ptr<Module> mod = *it;
+
+      // clear module status
+      mod->reset();
+
+      // call the method, skip regular modules if skip status is set, but
+      // still call special modules which are interested in all events
+      if (stat == Module::OK or mod->observeAllEvents()) {
+        ((*mod).*method)(evt, env);
+      }
+
+      // check what module wants to tell us
+      if (mod->status() == Module::Skip) {
+
+        // Set the skip flag but continue as there may be modules interested in every event
+        MsgLogRoot(trace, "module " << mod->name() << " requested skip");
+        if (stat == Module::OK) stat = Module::Skip;
+
+        // add special flag to event
+        if (not evt.exists<int>("__psana_skip_event__")) {
+          evt.put(boost::make_shared<int>(1), "__psana_skip_event__");
+        }
+
+      } else if (mod->status() == Module::Stop) {
+        // stop right here
+        MsgLogRoot(info, "module " << mod->name() << " requested stop");
+        stat = Module::Stop;
+        break;
+      } else if (mod->status() == Module::Abort) {
+        // abort immediately
+        MsgLogRoot(info, "module " << mod->name() << " requested abort");
+        stat = Module::Abort;
+        break;
+      }
+    }
+
   }
 
   return stat;

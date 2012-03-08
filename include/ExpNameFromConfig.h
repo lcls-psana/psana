@@ -66,12 +66,16 @@ public:
   /// Returns experiment name
   virtual const std::string& experiment() const { return m_exp; }
 
+  /// Returns experiment number or 0
+  virtual unsigned expNum() const { return m_expNum; }
+
 protected:
 
 private:
 
   std::string m_instr;  ///< Name of instrument
   std::string m_exp;    ///< Name of experiment
+  unsigned m_expNum;    ///< Experiment number
 
 };
 

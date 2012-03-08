@@ -112,9 +112,10 @@ public:
    *  Input module is supposed to populate environment with the configuration
    *  objects and EPICS data from Configure transition.
    *  
+   *  @param[out] evt    Event object
    *  @param[out] env    Environment object
    */ 
-  virtual void beginJob(Env& env);
+  virtual void beginJob(Event& evt, Env& env);
   
   /**
    *  @brief Method which is called for the next event in the event loop.
@@ -135,9 +136,10 @@ public:
    *  Input module can stop reading data and close/reset its sources. It does
    *  not need to update environment but can use some data from it.
    *  
+   *  @param[out] evt    Event object
    *  @param[out] env    Environment object
    */
-  virtual void endJob(Env& env);
+  virtual void endJob(Event& evt, Env& env);
   
 protected:
 
