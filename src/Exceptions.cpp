@@ -56,4 +56,14 @@ ExceptionDlerror::ExceptionDlerror ( const ErrSvc::Context& ctx, const std::stri
 {
 }
 
+ExceptionPyLoadError::ExceptionPyLoadError(const ErrSvc::Context& ctx, const std::string& what)
+  : Exception(ctx, what)
+{
+}
+
+ExceptionGenericPyError::ExceptionGenericPyError(const ErrSvc::Context& ctx, const std::string& what)
+  : Exception(ctx, what)
+{
+}
+
 } // namespace psana

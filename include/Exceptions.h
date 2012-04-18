@@ -61,7 +61,7 @@ public:
 
 };
 
-/// Exception class which extracts error infor from errno.
+/// Exception class which extracts error info from errno.
 class ExceptionErrno : public Exception {
 public:
 
@@ -75,7 +75,25 @@ class ExceptionDlerror : public Exception {
 public:
 
   /// Constructor takes the reason for an exception
-  ExceptionDlerror ( const ErrSvc::Context& ctx, const std::string& what ) ;
+  ExceptionDlerror(const ErrSvc::Context& ctx, const std::string& what);
+
+};
+
+/// Exception thrown for Python import errors.
+class ExceptionPyLoadError : public Exception {
+public:
+
+  /// Constructor takes the reason for an exception
+  ExceptionPyLoadError(const ErrSvc::Context& ctx, const std::string& what);
+
+};
+
+/// Exception thrown for Python import errors.
+class ExceptionGenericPyError : public Exception {
+public:
+
+  /// Constructor takes the reason for an exception
+  ExceptionGenericPyError(const ErrSvc::Context& ctx, const std::string& what);
 
 };
 

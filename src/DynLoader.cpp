@@ -24,6 +24,7 @@
 // Collaborating Class Headers --
 //-------------------------------
 #include "psana/Exceptions.h"
+#include "psana/PyLoader.h"
 #include "MsgLogger/MsgLogger.h"
 
 //-----------------------------------------------------------------------
@@ -46,11 +47,16 @@ namespace psana {
 
 /**
  *  Load one user module. The name of the module has a format 
- *  Package.Class[:name]
+ *  [py:][Package.]Class[:name]
  */
 boost::shared_ptr<Module>
 DynLoader::loadModule(const std::string& name) const
 {
+  if (name.compare(0, 3, "py:") == 0) {
+    // explicitly requested Python module
+    return PyLoader().loadModule(name.substr(3));
+  }
+
   // make class name, use psana for package name if not given
   std::string fullName = name;
   std::string className = name;
@@ -62,11 +68,11 @@ DynLoader::loadModule(const std::string& name) const
     className = "psana." + className;
     fullName = "psana." + fullName;
   }
-  
+
   // Load function
   void* sym = loadFactoryFunction(className, "_psana_module_");
   ::mod_factory factory = (::mod_factory)sym;
-  
+
   // call factory function
   return boost::shared_ptr<Module>(factory(fullName));
 }

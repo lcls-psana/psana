@@ -54,7 +54,7 @@ public:
 
   /**
    *  @brief Load one user module. The name of the module has a format 
-   *  [Package.]Class[:name]
+   *  [py:][Package.]Class[:name]
    */
   boost::shared_ptr<Module> loadModule(const std::string& name) const;
   

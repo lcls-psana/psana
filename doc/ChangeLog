@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: andy-20120418-01
+2012-04-18 Andy Salnikov
+- start working on Python integration, initial implementation 
+  of the loader for Python modules, very limited for now
+
 Tag: V00-05-00
 2012-03-08 Andy Salnikov
 - modifications to support XTC output
