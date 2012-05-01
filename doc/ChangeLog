@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-05-01
+2012-04-30 Andy Salnikov
+- moved PSAnaApp class to a separate file and into the library
+  to make it callable by Misha's request
+
 Tag: andy-20120418-01
 2012-04-18 Andy Salnikov
 - start working on Python integration, initial implementation 
