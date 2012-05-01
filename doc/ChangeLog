@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-05-02
+2012-05-01 Andy Salnikov
+- upgrading to boost 1.49.0, some return types have changed in 
+  boost::filesystem
+
 Tag: V00-05-01
 2012-04-30 Andy Salnikov
 - moved PSAnaApp class to a separate file and into the library

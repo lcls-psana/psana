@@ -55,7 +55,7 @@ namespace {
 
     for ( ; begin != end; ++ begin) {
 
-      std::string ext = fs::path(*begin).extension();
+      std::string ext = fs::path(*begin).extension().string();
       FileType ftype = Unknown;
       if (ext == ".h5") {
         ftype = HDF5;
@@ -301,7 +301,7 @@ PSAnaApp::runApp ()
   std::string jobName = m_jobNameOpt.value();
   if (jobName.empty() and not files.empty()) {
     boost::filesystem::path path = files.front();
-    jobName = path.stem();
+    jobName = path.stem().string();
   }
   MsgLogRoot(debug, "job name = " << jobName);
 
