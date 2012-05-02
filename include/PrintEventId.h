@@ -77,6 +77,9 @@ public:
 
 protected:
 
+  /// fetch and print event ID
+  void printId(Event& evt);
+
 private:
 };
 
