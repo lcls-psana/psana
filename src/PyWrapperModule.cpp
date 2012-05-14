@@ -10,6 +10,9 @@
 //
 //------------------------------------------------------------------------
 
+// Set this to 1 to use (and create dependency on) the psddl_pypsana package.
+#define PSDDL_PYPSANA_SUPPORT 1
+
 //-----------------------
 // This Class's Header --
 //-----------------------
@@ -25,6 +28,9 @@
 #include "MsgLogger/MsgLogger.h"
 #include "psana/Exceptions.h"
 #include "PSEvt/EventId.h"
+#if PSDDL_PYPSANA_SUPPORT
+#include "psddl_pypsana/PyWrapper.h"
+#endif
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
@@ -69,6 +75,10 @@ PyWrapperModule::PyWrapperModule (const std::string& name, PyObject* instance)
   m_endCalibCycle = PyObject_GetAttrString(m_instance, "endCalibCycle");
   m_endRun = PyObject_GetAttrString(m_instance, "endRun");
   m_endJob = PyObject_GetAttrString(m_instance, "endJob");
+
+#if PSDDL_PYPSANA_SUPPORT
+  Psana::createWrappers();
+#endif
 }
 
 //--------------
@@ -142,10 +152,14 @@ PyWrapperModule::call(PyObject* method, Event& evt, Env& env)
 {
   if (not method) return;
 
+#if PSDDL_PYPSANA_SUPPORT
+  PyObjPtr res(Psana::call(method, evt, env));
+#else
   PyObjPtr args(PyTuple_New(2), PyRefDelete());
   PyTuple_SET_ITEM(args.get(), 0, PyDict_New());
   PyTuple_SET_ITEM(args.get(), 1, PyDict_New());
   PyObjPtr res(PyObject_Call(method, args.get(), NULL), PyRefDelete());
+#endif
   if (not res) {
     PyErr_Print();
     throw ExceptionGenericPyError(ERR_LOC, "exception raised while calling Python method");
