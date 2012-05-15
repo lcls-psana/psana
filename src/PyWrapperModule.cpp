@@ -77,6 +77,12 @@ PyWrapperModule::PyWrapperModule (const std::string& name, PyObject* instance)
   m_endJob = PyObject_GetAttrString(m_instance, "endJob");
 
 #if PSDDL_PYPSANA_SUPPORT
+  if (! m_beginJob) m_beginJob = PyObject_GetAttrString(m_instance, "beginjob");
+  if (! m_beginRun) m_beginRun = PyObject_GetAttrString(m_instance, "beginrun");
+  if (! m_beginCalibCycle) m_beginCalibCycle = PyObject_GetAttrString(m_instance, "begincalibcycle");
+  if (! m_endCalibCycle) m_endCalibCycle = PyObject_GetAttrString(m_instance, "endcalibcycle");
+  if (! m_endRun) m_endRun = PyObject_GetAttrString(m_instance, "endrun");
+  if (! m_endJob) m_endJob = PyObject_GetAttrString(m_instance, "endjob");
   Psana::createWrappers();
 #endif
 }
