@@ -10,9 +10,6 @@
 //
 //------------------------------------------------------------------------
 
-// Set this to 1 to use (and create dependency on) the psddl_pypsana package.
-#define PSDDL_PYPSANA_SUPPORT 1
-
 //-----------------------
 // This Class's Header --
 //-----------------------
@@ -28,9 +25,8 @@
 #include "MsgLogger/MsgLogger.h"
 #include "psana/Exceptions.h"
 #include "PSEvt/EventId.h"
-#if PSDDL_PYPSANA_SUPPORT
 #include "psddl_pypsana/PyWrapper.h"
-#endif
+#include <cstdio>
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
@@ -56,6 +52,13 @@ namespace psana {
 //----------------
 // Constructors --
 //----------------
+void PyWrapperModule::checkMethodName(char* pyanaMethodName, char* psanaMethodName) {
+  if (PyObject_GetAttrString(m_instance, pyanaMethodName)) {
+    fprintf(stderr, "Error: module %s defines pyana-style methods (e.g. \"%s\") instead of psana-style methods (e.g. \"%s\").\n", name().c_str(), pyanaMethodName, psanaMethodName);
+    exit(1);
+  }
+}
+
 PyWrapperModule::PyWrapperModule (const std::string& name, PyObject* instance)
   : Module(name)
   , m_instance(instance)
@@ -67,6 +70,14 @@ PyWrapperModule::PyWrapperModule (const std::string& name, PyObject* instance)
   , m_endRun(0)
   , m_endJob(0)
 {
+  // make sure no pyana-style methods are defined
+  checkMethodName("beginjob", "beginJob");
+  checkMethodName("beginrun", "beginRun");
+  checkMethodName("begincalibcycle", "beginCalibCycle");
+  checkMethodName("endcalibcycle", "endCalibCycle");
+  checkMethodName("endrun", "endRun");
+  checkMethodName("endjob", "endJob");
+
   // get all methods
   m_beginJob = PyObject_GetAttrString(m_instance, "beginJob");
   m_beginRun = PyObject_GetAttrString(m_instance, "beginRun");
@@ -76,15 +87,7 @@ PyWrapperModule::PyWrapperModule (const std::string& name, PyObject* instance)
   m_endRun = PyObject_GetAttrString(m_instance, "endRun");
   m_endJob = PyObject_GetAttrString(m_instance, "endJob");
 
-#if PSDDL_PYPSANA_SUPPORT
-  if (! m_beginJob) m_beginJob = PyObject_GetAttrString(m_instance, "beginjob");
-  if (! m_beginRun) m_beginRun = PyObject_GetAttrString(m_instance, "beginrun");
-  if (! m_beginCalibCycle) m_beginCalibCycle = PyObject_GetAttrString(m_instance, "begincalibcycle");
-  if (! m_endCalibCycle) m_endCalibCycle = PyObject_GetAttrString(m_instance, "endcalibcycle");
-  if (! m_endRun) m_endRun = PyObject_GetAttrString(m_instance, "endrun");
-  if (! m_endJob) m_endJob = PyObject_GetAttrString(m_instance, "endjob");
   Psana::createWrappers();
-#endif
 }
 
 //--------------
@@ -158,14 +161,7 @@ PyWrapperModule::call(PyObject* method, Event& evt, Env& env)
 {
   if (not method) return;
 
-#if PSDDL_PYPSANA_SUPPORT
-  PyObjPtr res(Psana::call(method, evt, env));
-#else
-  PyObjPtr args(PyTuple_New(2), PyRefDelete());
-  PyTuple_SET_ITEM(args.get(), 0, PyDict_New());
-  PyTuple_SET_ITEM(args.get(), 1, PyDict_New());
-  PyObjPtr res(PyObject_Call(method, args.get(), NULL), PyRefDelete());
-#endif
+  PyObjPtr res(Psana::call(method, evt, env, name(), className()));
   if (not res) {
     PyErr_Print();
     throw ExceptionGenericPyError(ERR_LOC, "exception raised while calling Python method");

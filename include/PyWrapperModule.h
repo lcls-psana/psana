@@ -88,6 +88,10 @@ protected:
 
 private:
 
+  // fail if a pyana-style method is defined
+  void checkMethodName(char* pyanaMethodName, char* psanaMethodName);
+
+  const std::string m_moduleName;
   PyObject* m_instance;   // Instance of Python class
   PyObject* m_beginJob;
   PyObject* m_beginRun;
