@@ -27,6 +27,7 @@
 #include "PSEvt/EventId.h"
 #include "psddl_pypsana/PyWrapper.h"
 #include <cstdio>
+#include <cctype>
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
@@ -59,6 +60,19 @@ void PyWrapperModule::checkMethodName(char* pyanaMethodName, char* psanaMethodNa
   }
 }
 
+static PyObject* getMethodByName(PyObject* instance, char* name) {
+  PyObject* method = PyObject_GetAttrString(instance, name);
+  if (method == NULL) {
+    const int size = strlen(name) + 1;
+    char lname[size];
+    for (int i = 0; i < size; i++) {
+      lname[i] = tolower(name[i]);
+    }
+    method = PyObject_GetAttrString(instance, lname);
+  }
+  return method;
+}
+
 PyWrapperModule::PyWrapperModule (const std::string& name, PyObject* instance)
   : Module(name)
   , m_instance(instance)
@@ -70,6 +84,7 @@ PyWrapperModule::PyWrapperModule (const std::string& name, PyObject* instance)
   , m_endRun(0)
   , m_endJob(0)
 {
+#if 0
   // make sure no pyana-style methods are defined
   checkMethodName("beginjob", "beginJob");
   checkMethodName("beginrun", "beginRun");
@@ -86,6 +101,15 @@ PyWrapperModule::PyWrapperModule (const std::string& name, PyObject* instance)
   m_endCalibCycle = PyObject_GetAttrString(m_instance, "endCalibCycle");
   m_endRun = PyObject_GetAttrString(m_instance, "endRun");
   m_endJob = PyObject_GetAttrString(m_instance, "endJob");
+#else
+  m_beginJob = getMethodByName(m_instance, "beginJob");
+  m_beginRun = getMethodByName(m_instance, "beginRun");
+  m_beginCalibCycle = getMethodByName(m_instance, "beginCalibCycle");
+  m_event = getMethodByName(m_instance, "event");
+  m_endCalibCycle = getMethodByName(m_instance, "endCalibCycle");
+  m_endRun = getMethodByName(m_instance, "endRun");
+  m_endJob = getMethodByName(m_instance, "endJob");
+#endif
 
   Psana::createWrappers();
 }

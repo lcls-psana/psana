@@ -72,7 +72,8 @@ namespace psana {
 boost::shared_ptr<Module>
 PyLoader::loadModule(const std::string& name) const
 {
-  // make class name and module name, use psana for package name if not given
+  // Make class name and module name. Use psana for package name if not given.
+  // Full name should be package name . class name.
   std::string fullName = name;
   std::string moduleName = name;
   std::string::size_type p1 = moduleName.find(':');
@@ -111,12 +112,30 @@ PyLoader::loadModule(const std::string& name) const
   }
 
   // make an instance
-  PyObjPtr args(PyTuple_New(1), PyRefDelete());
-  PyTuple_SET_ITEM(args.get(), 0, PyString_FromString(fullName.c_str()));
-  PyObject* instance = PyObject_Call(cls.get(), args.get(), NULL);
+
+  // Create empty positional args list.
+  PyObjPtr args(PyTuple_New(0), PyRefDelete());
+
+  // Create keyword args list.
+  PyObjPtr kwargs(PyDict_New(), PyRefDelete());
+  ConfigSvc::ConfigSvc cfg;
+  list<string> keys = cfg.getKeys(fullName);
+  list<string>::iterator it;
+  for (it = keys.begin(); it != keys.end(); it++) {
+    const string& key = *it;
+    const char* value = cfg.getStr(fullName, key).c_str();
+    PyDict_SetItemString(kwargs.get(), key.c_str(), PyString_FromString(value));
+  }
+
+  // Create the instance by calling the constructor
+  PyObject* instance = PyObject_Call(cls.get(), args.get(), kwargs.get());
   if (not instance) {
     throw ExceptionPyLoadError(ERR_LOC, "error making an instance of class " + className + ": " + ::pyExcStr());
   }
+
+  // Set m_className and m_fullName attributes.
+  PyObject_SetAttr(instance, PyString_FromString("m_className"), PyString_FromString(className.c_str()));
+  PyObject_SetAttr(instance, PyString_FromString("m_fullName"), PyString_FromString(fullName.c_str()));
 
   // check that instance has at least an event() method
   if (not PyObject_HasAttrString(instance, "event")) {
