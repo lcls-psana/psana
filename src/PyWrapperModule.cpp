@@ -25,7 +25,7 @@
 #include "MsgLogger/MsgLogger.h"
 #include "psana/Exceptions.h"
 #include "PSEvt/EventId.h"
-#include "psddl_pypsana/PyWrapper.h"
+#include <psana_python/PyWrapper.h>
 #include <cstdio>
 #include <cctype>
 
