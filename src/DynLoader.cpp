@@ -26,6 +26,7 @@
 #include "psana/Exceptions.h"
 #include "psana/PyLoader.h"
 #include "MsgLogger/MsgLogger.h"
+#include "psana/GenericWrapperModule.h"
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
@@ -54,7 +55,12 @@ DynLoader::loadModule(const std::string& name) const
 {
   if (name.compare(0, 3, "py:") == 0) {
     // explicitly requested Python module
-    return PyLoader().loadModule(name.substr(3));
+#if 0
+    return X_loadModule(name.substr(3));
+#else
+    GenericWrapper* wrapper = X_loadWrapper(name.substr(3));
+    return boost::make_shared<GenericWrapperModule>(wrapper);
+#endif
   }
 
   // make class name, use psana for package name if not given

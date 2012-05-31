@@ -14,18 +14,18 @@
 // This Class's Header --
 //-----------------------
 #include "psana/PyLoader.h"
+#include "psana_python/PyWrapper.h"
 
 //-----------------
 // C/C++ Headers --
 //-----------------
-#include <boost/make_shared.hpp>
 #include "python/Python.h"
 
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
 #include "psana/Exceptions.h"
-#include "psana/PyWrapperModule.h"
+#include "psana/GenericWrapperModule.h" ////
 #include "MsgLogger/MsgLogger.h"
 
 //-----------------------------------------------------------------------
@@ -69,8 +69,7 @@ namespace {
 namespace psana {
 
 // Load one user module. The name of the module has a format [Package.]Class[:name]
-boost::shared_ptr<Module>
-PyLoader::loadModule(const std::string& name) const
+GenericWrapper* X_loadWrapper(const std::string& name)
 {
   // Make class name and module name. Use psana for package name if not given.
   // Full name should be package name . class name.
@@ -143,7 +142,7 @@ PyLoader::loadModule(const std::string& name) const
     throw ExceptionPyLoadError(ERR_LOC, "Python class " + className + " does not define event() method");
   }
 
-  return boost::make_shared<PyWrapperModule>(fullName, instance);
+  GenericWrapper* wrapper = new PyWrapper(fullName, instance);
+  return wrapper;
 }
-
 } // namespace psana
