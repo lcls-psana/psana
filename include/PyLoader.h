@@ -2,8 +2,6 @@
 #define PSANA_PYLOADER_H
 
 #include <string>
-//#include <boost/shared_ptr.hpp>
-//#include "psana/Module.h"
 #include <GenericWrapper/GenericWrapper.h>
 
 namespace psana {
