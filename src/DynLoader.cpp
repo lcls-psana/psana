@@ -24,9 +24,7 @@
 // Collaborating Class Headers --
 //-------------------------------
 #include "psana/Exceptions.h"
-#include "psana_python/PyLoader.h"
 #include "MsgLogger/MsgLogger.h"
-#include "psana/GenericWrapperModule.h"
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
@@ -38,6 +36,8 @@ namespace {
   
   typedef psana::Module* (*mod_factory)(const std::string& name);
   typedef psana::InputModule* (*input_mod_factory)(const std::string& name);
+
+  //  typedef psana::GenericWrapper* (*wrapper_factory)(const std::string& name);
 }
 
 //		----------------------------------------
@@ -55,8 +55,30 @@ DynLoader::loadModule(const std::string& name) const
 {
   if (name.compare(0, 3, "py:") == 0) {
     // explicitly requested Python module
-    GenericWrapper* wrapper = X_loadWrapper(name.substr(3));
+    std::string package = "psana_python";
+    void* ldh = loadPackageLib(package);
+    printf("loadPackageLib(\"psana_python\") -> %p\n", ldh);
+
+#if 1
+    std::string symname = "moduleFactory";
+    printf("~~~ dlsym(%s) from %s\n", symname.c_str(), package.c_str());
+    void* sym = dlsym(ldh, symname.c_str());
+    if ( not sym ) {
+      throw ExceptionDlerror(ERR_LOC, "failed to locate symbol " + symname);
+    }
+    ::mod_factory factory = (::mod_factory) sym;
+    return boost::shared_ptr<Module>(factory(name.substr(3)));
+#else
+    std::string symname = "wrapperFactory";
+    printf("~~~ dlsym(%s) from %s\n", symname.c_str(), package.c_str());
+    void* sym = dlsym(ldh, symname.c_str());
+    if ( not sym ) {
+      throw ExceptionDlerror(ERR_LOC, "failed to locate symbol " + symname);
+    }
+    ::wrapper_factory factory = (::wrapper_factory) sym;
+    GenericWrapper* wrapper = factory(name.substr(3));
     return boost::make_shared<GenericWrapperModule>(wrapper);
+#endif
   }
 
   // make class name, use psana for package name if not given
