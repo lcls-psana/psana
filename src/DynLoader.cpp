@@ -57,7 +57,7 @@ DynLoader::loadModule(const std::string& name) const
     language = "python";
     module = name.substr(3);
   } else if (name.compare(0, 4, "php:") == 0) {
-    language = "php"; // not really implemnented; just an example
+    language = "php"; // not really implemented; just an example
     module = name.substr(4);
   }
   if (language != "") {
