@@ -36,8 +36,6 @@ namespace {
   
   typedef psana::Module* (*mod_factory)(const std::string& name);
   typedef psana::InputModule* (*input_mod_factory)(const std::string& name);
-
-  //  typedef psana::GenericWrapper* (*wrapper_factory)(const std::string& name);
 }
 
 //		----------------------------------------
@@ -53,32 +51,26 @@ namespace psana {
 boost::shared_ptr<Module>
 DynLoader::loadModule(const std::string& name) const
 {
+  std::string language = "";
+  std::string module = "";
   if (name.compare(0, 3, "py:") == 0) {
-    // explicitly requested Python module
-    std::string package = "psana_python";
+    language = "python";
+    module = name.substr(3);
+  } else if (name.compare(0, 4, "php:") == 0) {
+    language = "php"; // not really implemnented; just an example
+    module = name.substr(4);
+  }
+  if (language != "") {
+    // explicitly requested non-C++ module
+    std::string package = "psana_" + language;
     void* ldh = loadPackageLib(package);
-    printf("loadPackageLib(\"psana_python\") -> %p\n", ldh);
-
-#if 1
     std::string symname = "moduleFactory";
-    printf("~~~ dlsym(%s) from %s\n", symname.c_str(), package.c_str());
     void* sym = dlsym(ldh, symname.c_str());
     if ( not sym ) {
       throw ExceptionDlerror(ERR_LOC, "failed to locate symbol " + symname);
     }
     ::mod_factory factory = (::mod_factory) sym;
-    return boost::shared_ptr<Module>(factory(name.substr(3)));
-#else
-    std::string symname = "wrapperFactory";
-    printf("~~~ dlsym(%s) from %s\n", symname.c_str(), package.c_str());
-    void* sym = dlsym(ldh, symname.c_str());
-    if ( not sym ) {
-      throw ExceptionDlerror(ERR_LOC, "failed to locate symbol " + symname);
-    }
-    ::wrapper_factory factory = (::wrapper_factory) sym;
-    GenericWrapper* wrapper = factory(name.substr(3));
-    return boost::make_shared<GenericWrapperModule>(wrapper);
-#endif
+    return boost::shared_ptr<Module>(factory(module));
   }
 
   // make class name, use psana for package name if not given
