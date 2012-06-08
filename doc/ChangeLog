@@ -11,6 +11,16 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-06-00
+2012-06-08 Andy Salnikov
+- refactoring and event loop inversion
+- split PSAnaApp into a bunch of classes (PSAna, EventLoop, DataSource, 
+  EventIter)
+- inverted event loop, clients can use event iterator to step through
+  events and get access to event data from "outside" framework modules
+- only event iteration implemented for now, will add run/scan 
+  iterators as well
+
 Tag: V00-05-03
 2012-05-02 Andy Salnikov
 - modify PrintEventId to print ID in all methods, not only event()

@@ -97,25 +97,6 @@ protected :
 
 private:
 
-  typedef void (Module::*ModuleMethod)(Event& evt, Env& env);
-
-  /**
-   *  Calls a method on all modules and returns summary  status.
-   *
-   *  @param[in] modules  List of modules
-   *  @param[in] method   Pointer to the member function
-   *  @param[in] evt      Event object
-   *  @param[in] env      Environment object
-   *  @param[in] ignoreSkip Should be set to false for event() method, true for all others
-   */
-  Module::Status callModuleMethod(ModuleMethod method, Event& evt, Env& env, bool ignoreSkip);
-
-  enum State {None, Configured, Running, Scanning, NumStates};
-
-  Module::Status newState(State state, Event& evt, Env& env);
-  Module::Status closeState(Event& evt, Env& env);
-  Module::Status unwind(State newState, Event& evt, Env& env, bool ignoreStatus = false);
-
   // more command line options and arguments
   AppUtils::AppCmdOpt<std::string> m_calibDirOpt ;
   AppUtils::AppCmdOpt<std::string> m_configOpt ;
@@ -125,10 +106,6 @@ private:
   AppUtils::AppCmdOpt<unsigned> m_maxEventsOpt ;
   AppUtils::AppCmdOpt<unsigned> m_skipEventsOpt ;
   AppUtils::AppCmdArgList<std::string>  m_files;
-  std::vector<boost::shared_ptr<Module> > m_modules;
-  std::stack<State> m_state;
-  ModuleMethod m_newStateMethods[NumStates];
-  ModuleMethod m_closeStateMethods[NumStates];
 };
 
 } // namespace psana

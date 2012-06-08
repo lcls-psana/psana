@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 // File and Version Information:
-// 	$Id: Exceptions.cpp 3215 2012-04-18 17:09:00Z salnikov@SLAC.STANFORD.EDU $
+// 	$Id$
 //
 // Description:
 //	Class Exceptions...
@@ -62,6 +62,11 @@ ExceptionPyLoadError::ExceptionPyLoadError(const ErrSvc::Context& ctx, const std
 }
 
 ExceptionGenericPyError::ExceptionGenericPyError(const ErrSvc::Context& ctx, const std::string& what)
+  : Exception(ctx, what)
+{
+}
+
+ExceptionAbort::ExceptionAbort(const ErrSvc::Context& ctx, const std::string& what)
   : Exception(ctx, what)
 {
 }

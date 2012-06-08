@@ -1,0 +1,108 @@
+#ifndef PSANA_DATASOURCE_H
+#define PSANA_DATASOURCE_H
+
+//--------------------------------------------------------------------------
+// File and Version Information:
+// 	$Id$
+//
+// Description:
+//	Class DataSource.
+//
+//------------------------------------------------------------------------
+
+//-----------------
+// C/C++ Headers --
+//-----------------
+#include <vector>
+#include <boost/shared_ptr.hpp>
+
+//----------------------
+// Base Class Headers --
+//----------------------
+
+//-------------------------------
+// Collaborating Class Headers --
+//-------------------------------
+#include "psana/EventIter.h"
+#include "PSEnv/Env.h"
+
+//------------------------------------
+// Collaborating Class Declarations --
+//------------------------------------
+namespace psana {
+class EventLoop;
+class InputModule;
+class Module;
+}
+
+
+//		---------------------
+// 		-- Class Interface --
+//		---------------------
+
+namespace psana {
+
+/// @addtogroup psana
+
+/**
+ *  @ingroup psana
+ *
+ *  @brief Class representing a data source for psana framework.
+ *
+ *  Class encapsulates input data in the form of input module and
+ *  provides different ways to iterator over those data.
+ *
+ *  This software was developed for the LCLS project.  If you use all or 
+ *  part of it, please give an appropriate acknowledgment.
+ *
+ *  @version $Id$
+ *
+ *  @author Andy Salnikov
+ */
+
+class DataSource {
+public:
+
+  /**
+   *  @brief Default constructor makes "null" data source
+   */
+  DataSource();
+
+  // Destructor
+  ~DataSource();
+
+  /**
+   *  Returns true if data source has no data ("null" source)
+   */
+  bool empty() const { return not m_evtLoop; }
+
+  /// Get environment object, cannot be called for "null" source
+  PSEnv::Env& env() const;
+
+  /// Returns iterator for events
+  EventIter events();
+
+protected:
+
+  // this class can only be instantiated by framework
+  friend class PSAna;
+
+  /**
+   *  @brief Make an instance of data source.
+   *
+   *  Constructor takes instance of input module, and a list of
+   *  user modules.
+   */
+  DataSource(const boost::shared_ptr<InputModule>& inputModule,
+             const std::vector<boost::shared_ptr<Module> >& modules,
+             const boost::shared_ptr<PSEnv::Env>& env);
+
+private:
+
+  // Data members
+  boost::shared_ptr<EventLoop> m_evtLoop;
+};
+
+} // namespace psana
+
+#endif // PSANA_DATASOURCE_H

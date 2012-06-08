@@ -1,34 +1,36 @@
-#ifndef PSANA_EXPNAMEFROMXTC_H
-#define PSANA_EXPNAMEFROMXTC_H
+#ifndef PSANA_EVENTITER_H
+#define PSANA_EVENTITER_H
 
 //--------------------------------------------------------------------------
 // File and Version Information:
 // 	$Id$
 //
 // Description:
-//	Class ExpNameFromXtc.
+//	Class EventIter.
 //
 //------------------------------------------------------------------------
 
 //-----------------
 // C/C++ Headers --
 //-----------------
-#include <string>
-#include <list>
-#include <vector>
+#include <boost/shared_ptr.hpp>
 
 //----------------------
 // Base Class Headers --
 //----------------------
-#include "PSEnv/IExpNameProvider.h"
 
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
+#include "psana/EventLoop.h"
+#include "PSEvt/Event.h"
 
 //------------------------------------
 // Collaborating Class Declarations --
 //------------------------------------
+namespace psana {
+class EventLoop;
+}
 
 //		---------------------
 // 		-- Class Interface --
@@ -36,11 +38,12 @@
 
 namespace psana {
 
+/// @addtogroup psana
+
 /**
  *  @ingroup psana
  *
- *  @brief Experiment name provider which extracts experiment name from XTC
- *  file names.
+ *  @brief Class representing iterator over events.
  *
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.
@@ -50,34 +53,36 @@ namespace psana {
  *  @author Andy Salnikov
  */
 
-class ExpNameFromXtc : public PSEnv::IExpNameProvider {
+class EventIter  {
 public:
 
-  /// Constructor takes the list of input file names
-  ExpNameFromXtc(const std::vector<std::string>& files);
+  /// Default constructor make invalid iterator
+  EventIter () ;
+
+  /**
+   *  @brief Constructor takes event loop instance and "stop event type".
+   *
+   *  Do not use EventLoop::Event for stop type, first it does not make
+   *  sense, second this iterator uses it for special purpose.
+   */
+  EventIter (const boost::shared_ptr<EventLoop>& evtLoop, EventLoop::EventType stopType);
 
   // Destructor
-  virtual ~ExpNameFromXtc();
+  ~EventIter();
 
-  /// Returns instrument name
-  virtual const std::string& instrument() const { return m_instr; }
-
-  /// Returns experiment name
-  virtual const std::string& experiment() const { return m_exp; }
-
-  /// Returns experiment number or 0
-  virtual unsigned expNum() const { return m_expNum; }
+  /// get next event, returns zero pointer when done
+  boost::shared_ptr<PSEvt::Event> next();
 
 protected:
 
 private:
-  
-  std::string m_instr;
-  std::string m_exp;
-  unsigned m_expNum;
+
+  // Data members
+  boost::shared_ptr<EventLoop> m_evtLoop;
+  EventLoop::EventType m_stopType;
 
 };
 
 } // namespace psana
 
-#endif // PSANA_EXPNAMEFROMXTC_H
+#endif // PSANA_EVENTITER_H

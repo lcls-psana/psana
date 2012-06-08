@@ -76,14 +76,14 @@ namespace psana {
 //----------------
 // Constructors --
 //----------------
-ExpNameFromXtc::ExpNameFromXtc (const std::list<std::string>& files)
+ExpNameFromXtc::ExpNameFromXtc (const std::vector<std::string>& files)
   : IExpNameProvider()
   , m_instr()
   , m_exp()
   , m_expNum(0)
 {
   // extract exp number for every file name, they all must be the same
-  for (list<string>::const_iterator it = files.begin(); it != files.end(); ++ it) {
+  for (vector<string>::const_iterator it = files.begin(); it != files.end(); ++ it) {
     int exp = ::expNumber(*it);
     if (exp < 0) {
       MsgLog(logger, warning, "ExpNameFromXtc: file name " << *it << " has no valid experiment number");
@@ -94,7 +94,7 @@ ExpNameFromXtc::ExpNameFromXtc (const std::list<std::string>& files)
     } else if (unsigned(exp) != m_expNum) {
       WithMsgLog(logger, warning, out ) {
         out << "ExpNameFromXtc: XTC files belong to different experiments:";
-        for (list<string>::const_iterator it = files.begin(); it != files.end(); ++ it) {
+        for (vector<string>::const_iterator it = files.begin(); it != files.end(); ++ it) {
           out << "\n    " << *it;
         }
       }

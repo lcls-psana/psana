@@ -3,7 +3,7 @@
 
 //--------------------------------------------------------------------------
 // File and Version Information:
-// 	$Id: Exceptions.h 3215 2012-04-18 17:09:00Z salnikov@SLAC.STANFORD.EDU $
+// 	$Id$
 //
 // Description:
 //	Class Exceptions.
@@ -39,7 +39,7 @@ namespace psana {
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.
  *
- *  @version \$Id: Exceptions.h 3215 2012-04-18 17:09:00Z salnikov@SLAC.STANFORD.EDU $
+ *  @version \$Id$
  *
  *  @author Andrei Salnikov
  */
@@ -94,6 +94,15 @@ public:
 
   /// Constructor takes the reason for an exception
   ExceptionGenericPyError(const ErrSvc::Context& ctx, const std::string& what);
+
+};
+
+/// Exception thrown when modules request abort.
+class ExceptionAbort : public Exception {
+public:
+
+  /// Constructor takes the reason for an exception
+  ExceptionAbort(const ErrSvc::Context& ctx, const std::string& what);
 
 };
 
