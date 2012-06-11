@@ -1,12 +1,12 @@
-#ifndef PSANA_EVENTITER_H
-#define PSANA_EVENTITER_H
+#ifndef PSANA_SCANITER_H
+#define PSANA_SCANITER_H
 
 //--------------------------------------------------------------------------
 // File and Version Information:
 // 	$Id$
 //
 // Description:
-//	Class EventIter.
+//	Class ScanIter.
 //
 //------------------------------------------------------------------------
 
@@ -22,12 +22,14 @@
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
-#include "psana/EventLoop.h"
-#include "PSEvt/Event.h"
+#include "psana/Scan.h"
 
 //------------------------------------
 // Collaborating Class Declarations --
 //------------------------------------
+namespace psana {
+class EventLoop;
+}
 
 //		---------------------
 // 		-- Class Interface --
@@ -40,15 +42,8 @@ namespace psana {
 /**
  *  @ingroup psana
  *
- *  @brief Class representing iterator over events.
+ *  @brief Class representing iterator over scans (calib cycles)
  *
- *  This class uses EventLoop class as a source of raw events, it then
- *  selects events of "Event" type and returns them one by one when
- *  next() method is called. Iteration stops when there are no more
- *  events left in the input source or when specified "stop" event
- *  type is reached. To iterate over all events from begin to end use
- *  None event type, to stop at the end of the run use EndRun type,
- *  to stop at the end of the scan use EndCalibSycle event type.
  *
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.
@@ -58,11 +53,13 @@ namespace psana {
  *  @author Andy Salnikov
  */
 
-class EventIter {
+class ScanIter  {
 public:
 
+  typedef Scan value_type;
+    
   /// Default constructor makes invalid iterator
-  EventIter () ;
+  ScanIter () ;
 
   /**
    *  @brief Constructor takes event loop instance and "stop event type".
@@ -70,13 +67,13 @@ public:
    *  Do not use EventLoop::Event for stop type, first it does not make
    *  sense, second this iterator uses it for special purpose.
    */
-  EventIter (const boost::shared_ptr<EventLoop>& evtLoop, EventLoop::EventType stopType);
+  ScanIter (const boost::shared_ptr<EventLoop>& evtLoop, EventLoop::EventType stopType);
 
   // Destructor
-  ~EventIter();
+  ~ScanIter () ;
 
-  /// get next event, returns zero pointer when done
-  boost::shared_ptr<PSEvt::Event> next();
+  /// get next scan, when done returns object which is convertible to "false"
+  value_type next();
 
 protected:
 
@@ -90,4 +87,4 @@ private:
 
 } // namespace psana
 
-#endif // PSANA_EVENTITER_H
+#endif // PSANA_SCANITER_H

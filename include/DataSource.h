@@ -24,13 +24,15 @@
 // Collaborating Class Headers --
 //-------------------------------
 #include "psana/EventIter.h"
+#include "psana/EventLoop.h"
+#include "psana/RunIter.h"
+#include "psana/ScanIter.h"
 #include "PSEnv/Env.h"
 
 //------------------------------------
 // Collaborating Class Declarations --
 //------------------------------------
 namespace psana {
-class EventLoop;
 class InputModule;
 class Module;
 }
@@ -68,6 +70,16 @@ public:
    */
   DataSource();
 
+  /**
+   *  @brief Make an instance of data source.
+   *
+   *  Constructor takes instance of input module, and a list of
+   *  user modules.
+   */
+  DataSource(const boost::shared_ptr<InputModule>& inputModule,
+             const std::vector<boost::shared_ptr<Module> >& modules,
+             const boost::shared_ptr<PSEnv::Env>& env);
+
   // Destructor
   ~DataSource();
 
@@ -80,22 +92,15 @@ public:
   PSEnv::Env& env() const;
 
   /// Returns iterator for events
-  EventIter events();
+  EventIter events() { return EventIter(m_evtLoop, EventLoop::None); }
+
+  /// Returns iterator for scans
+  ScanIter scans() { return ScanIter(m_evtLoop, EventLoop::None); }
+
+  /// Returns iterator for runs
+  RunIter runs() { return RunIter(m_evtLoop); }
 
 protected:
-
-  // this class can only be instantiated by framework
-  friend class PSAna;
-
-  /**
-   *  @brief Make an instance of data source.
-   *
-   *  Constructor takes instance of input module, and a list of
-   *  user modules.
-   */
-  DataSource(const boost::shared_ptr<InputModule>& inputModule,
-             const std::vector<boost::shared_ptr<Module> >& modules,
-             const boost::shared_ptr<PSEnv::Env>& env);
 
 private:
 

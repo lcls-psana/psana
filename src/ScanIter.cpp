@@ -3,7 +3,7 @@
 // 	$Id$
 //
 // Description:
-//	Class EventIter...
+//	Class ScanIter...
 //
 // Author List:
 //      Andy Salnikov
@@ -13,7 +13,7 @@
 //-----------------------
 // This Class's Header --
 //-----------------------
-#include "psana/EventIter.h"
+#include "psana/ScanIter.h"
 
 //-----------------
 // C/C++ Headers --
@@ -36,13 +36,13 @@ namespace psana {
 //----------------
 // Constructors --
 //----------------
-EventIter::EventIter ()
+ScanIter::ScanIter ()
   : m_evtLoop()
-  , m_stopType(EventLoop::None)
 {
 }
 
-EventIter::EventIter (const boost::shared_ptr<EventLoop>& evtLoop, EventLoop::EventType stopType)
+/// Constructor takes event loop instance.
+ScanIter::ScanIter (const boost::shared_ptr<EventLoop>& evtLoop, EventLoop::EventType stopType)
   : m_evtLoop(evtLoop)
   , m_stopType(stopType)
 {
@@ -51,15 +51,15 @@ EventIter::EventIter (const boost::shared_ptr<EventLoop>& evtLoop, EventLoop::Ev
 //--------------
 // Destructor --
 //--------------
-EventIter::~EventIter ()
+ScanIter::~ScanIter ()
 {
 }
 
-/// get next event, returns zero pointer when done
-boost::shared_ptr<PSEvt::Event>
-EventIter::next()
+/// get next scan, when done returns object which is convertible to "false"
+ScanIter::value_type 
+ScanIter::next()
 {
-  boost::shared_ptr<PSEvt::Event> result;
+  ScanIter::value_type result;
   if (m_stopType == EventLoop::Event) {
     // means iteration already finished
     return result;
@@ -77,9 +77,9 @@ EventIter::next()
       m_evtLoop->putback(nxt);
       m_stopType = EventLoop::Event;
       break;
-    } else if (nxt.first == EventLoop::Event) {
-      // found event
-      result = nxt.second;
+    } else if (nxt.first == EventLoop::BeginCalibCycle) {
+      // found it
+      result = ScanIter::value_type(m_evtLoop);
       break;
     }
   }

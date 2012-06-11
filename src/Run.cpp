@@ -3,7 +3,7 @@
 // 	$Id$
 //
 // Description:
-//	Class DataSource...
+//	Class Run...
 //
 // Author List:
 //      Andy Salnikov
@@ -13,12 +13,11 @@
 //-----------------------
 // This Class's Header --
 //-----------------------
-#include "psana/DataSource.h"
+#include "psana/Run.h"
 
 //-----------------
 // C/C++ Headers --
 //-----------------
-#include <boost/make_shared.hpp>
 
 //-------------------------------
 // Collaborating Class Headers --
@@ -29,37 +28,36 @@
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
 //-----------------------------------------------------------------------
 
-//      ----------------------------------------
-//      -- Public Function Member Definitions --
-//      ----------------------------------------
+//		----------------------------------------
+// 		-- Public Function Member Definitions --
+//		----------------------------------------
 
 namespace psana {
 
 //----------------
 // Constructors --
 //----------------
-DataSource::DataSource()
+Run::Run ()
   : m_evtLoop()
 {
 }
 
-DataSource::DataSource (const boost::shared_ptr<InputModule>& inputModule,
-    const std::vector<boost::shared_ptr<Module> >& modules,
-    const boost::shared_ptr<PSEnv::Env>& env)
-  : m_evtLoop(boost::make_shared<EventLoop>(inputModule, modules, env))
+// Constructor takes event loop object
+Run::Run(const boost::shared_ptr<EventLoop>& evtLoop)
+  : m_evtLoop(evtLoop)
 {
 }
 
 //--------------
 // Destructor --
 //--------------
-DataSource::~DataSource ()
+Run::~Run ()
 {
 }
 
 /// Get environment object, cannot be called for "null" source
 PSEnv::Env&
-DataSource::env() const
+Run::env() const
 {
   return m_evtLoop->env();
 }

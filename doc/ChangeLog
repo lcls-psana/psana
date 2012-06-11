@@ -11,6 +11,13 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-06-01
+2012-06-10 Andy Salnikov
+- further refactoring of the event loop, split event loop into input
+  iterator and user module caller
+- added iterators for iterating over runs and scans
+- added test cases for all new stuff
+
 Tag: V00-06-00
 2012-06-08 Andy Salnikov
 - refactoring and event loop inversion

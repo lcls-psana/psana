@@ -1,12 +1,12 @@
-#ifndef PSANA_EVENTLOOP_H
-#define PSANA_EVENTLOOP_H
+#ifndef PSANA_INPUTITER_H
+#define PSANA_INPUTITER_H
 
 //--------------------------------------------------------------------------
 // File and Version Information:
 // 	$Id$
 //
 // Description:
-//	Class EventLoop.
+//	Class InputIter.
 //
 //------------------------------------------------------------------------
 
@@ -16,8 +16,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 #include <deque>
-#include <vector>
 #include <utility>
+#include <iosfwd>
 
 //----------------------
 // Base Class Headers --
@@ -26,7 +26,6 @@
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
-#include "psana/Module.h"
 #include "PSEnv/Env.h"
 #include "PSEvt/Event.h"
 
@@ -34,7 +33,6 @@
 // Collaborating Class Declarations --
 //------------------------------------
 namespace psana {
-class InputIter;
 class InputModule;
 }
 
@@ -49,7 +47,7 @@ namespace psana {
 /**
  *  @ingroup psana
  *
- *  @brief Implementation of the event loop for psana.
+ *  @brief Implementation of the iterator for input events.
  *
  *  The purpose of this class is to provide iteration over "events"
  *  in psana framework with well-defined properties. Event in this
@@ -59,9 +57,7 @@ namespace psana {
  *  event type and event contents (PSEvt::Event object). It guarantees
  *  correct nesting of transitions and events, so that regular events
  *  happen only inside BeginCalibCycle/EndCalibCycle, which in turn
- *  happen only inside BeginRun/EndRun. On every iteration this instance
- *  calls corresponding method of the user modules before returning
- *  event to caller so that user modules can add more data to event.
+ *  happen only inside BeginRun/EndRun.
  *
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.
@@ -71,8 +67,11 @@ namespace psana {
  *  @author Andy Salnikov
  */
 
-class EventLoop : boost::noncopyable {
+class InputIter : boost::noncopyable {
 public:
+
+  /// State order must not change, state machine depends on ordering
+  enum State {StateNone=0, StateConfigured=1, StateRunning=2, StateScanning=3, NumStates=4};
 
   /// Enumeration for the event types returned by iterator
   enum EventType {
@@ -84,24 +83,23 @@ public:
     EndRun,           ///< Returned at the end of run
     EndJob,           ///< Returned at the end of job
     None,             ///< Returned if there are no more events
+    NumEventTypes,    ///< Total number off event types
   };
 
   typedef boost::shared_ptr<PSEvt::Event> EventPtr;
   typedef std::pair<EventType, EventPtr> value_type;
 
   /**
-   *  @brief Constructor takes instance of input module, and a list of
-   *  user modules.
+   *  @brief Constructor takes instance of input module and environment object.
    */
-  EventLoop(const boost::shared_ptr<InputModule>& inputModule,
-            const std::vector<boost::shared_ptr<Module> >& modules,
+  InputIter(const boost::shared_ptr<InputModule>& inputModule,
             const boost::shared_ptr<PSEnv::Env>& env);
 
-  // Destructor
-  ~EventLoop();
-
+  // DEstructor
+  ~InputIter();
+  
   /// Get environment object
-  PSEnv::Env& env() const;
+  PSEnv::Env& env() const { return *m_env; }
 
   /**
    *  Method that runs one iteration and returns event type,
@@ -109,40 +107,31 @@ public:
    */
   value_type next();
 
-  /**
-   *  @brief "Return" an event back to the input stream. 
-   *  
-   *  If you want to look ahead for the next event, to check its type, 
-   *  for example, then you can call  next() followed by putback(). 
-   */
-  void putback(const value_type& value) { m_values.push_front(value); }
-
 protected:
 
 private:
 
-  enum {NumEventTypes = None+1};
-  
-  typedef void (Module::*ModuleMethod)(PSEvt::Event& evt, PSEnv::Env& env);
+  void newState(State state, const EventPtr& evt);
+  void closeState(const EventPtr& evt);
+  void unwind(State newState, const EventPtr& evt);
 
-  /**
-   *  Calls a method on all modules and returns summary  status.
-   *
-   *  @param[in] modules  List of modules
-   *  @param[in] method   Pointer to the member function
-   *  @param[in] evt      Event object
-   *  @param[in] env      Environment object
-   *  @param[in] ignoreSkip Should be set to false for event() method, true for all others
-   */
-  Module::Status callModuleMethod(ModuleMethod method, PSEvt::Event& evt, PSEnv::Env& env, bool ignoreSkip);
-
-
-  boost::shared_ptr<InputIter> m_inputIter;
-  std::vector<boost::shared_ptr<Module> > m_modules;
-  ModuleMethod m_eventMethods[NumEventTypes];
+  boost::shared_ptr<InputModule> m_inputModule;
+  boost::shared_ptr<PSEnv::Env> m_env;
+  bool m_finished;
+  State m_state;
+  EventType m_newStateEventType[NumStates];
+  EventType m_closeStateEventType[NumStates];
   std::deque<value_type> m_values;
 };
 
+/// formatting for InputIter::EventType enum
+std::ostream&
+operator<<(std::ostream& out, InputIter::EventType type);
+
+/// formatting for InputIter::State enum
+std::ostream&
+operator<<(std::ostream& out, InputIter::State state);
+
 } // namespace psana
 
-#endif // PSANA_EVENTLOOP_H
+#endif // PSANA_INPUTITER_H

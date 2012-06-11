@@ -3,7 +3,7 @@
 // 	$Id$
 //
 // Description:
-//	Class DataSource...
+//	Class RunIter...
 //
 // Author List:
 //      Andy Salnikov
@@ -13,55 +13,67 @@
 //-----------------------
 // This Class's Header --
 //-----------------------
-#include "psana/DataSource.h"
+#include "psana/RunIter.h"
 
 //-----------------
 // C/C++ Headers --
 //-----------------
-#include <boost/make_shared.hpp>
 
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
-#include "psana/EventLoop.h"
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
 //-----------------------------------------------------------------------
 
-//      ----------------------------------------
-//      -- Public Function Member Definitions --
-//      ----------------------------------------
+//		----------------------------------------
+// 		-- Public Function Member Definitions --
+//		----------------------------------------
 
 namespace psana {
 
 //----------------
 // Constructors --
 //----------------
-DataSource::DataSource()
+RunIter::RunIter ()
   : m_evtLoop()
 {
 }
 
-DataSource::DataSource (const boost::shared_ptr<InputModule>& inputModule,
-    const std::vector<boost::shared_ptr<Module> >& modules,
-    const boost::shared_ptr<PSEnv::Env>& env)
-  : m_evtLoop(boost::make_shared<EventLoop>(inputModule, modules, env))
+/// Constructor takes event loop instance.
+RunIter::RunIter (const boost::shared_ptr<EventLoop>& evtLoop)
+  : m_evtLoop(evtLoop)
 {
 }
 
 //--------------
 // Destructor --
 //--------------
-DataSource::~DataSource ()
+RunIter::~RunIter ()
 {
 }
 
-/// Get environment object, cannot be called for "null" source
-PSEnv::Env&
-DataSource::env() const
+/// get next scan, when done returns object which is convertible to "false"
+RunIter::value_type 
+RunIter::next()
 {
-  return m_evtLoop->env();
+  RunIter::value_type result;
+
+  // Go to a BeginRun transition
+  while (true) {
+    EventLoop::value_type nxt = m_evtLoop->next();
+    if (nxt.first == EventLoop::None) {
+      // nothing left there
+      break;
+    } else if (nxt.first == EventLoop::BeginRun) {
+      // found it
+      result = RunIter::value_type(m_evtLoop);
+      break;
+    }
+  }
+
+  return result;
 }
 
 } // namespace psana
