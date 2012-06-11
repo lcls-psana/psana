@@ -130,6 +130,18 @@ PSAna::~PSAna ()
 {
 }
 
+/**
+ *  @brief Get the list of modules.
+ */
+std::vector<std::string>
+PSAna::modules()
+{
+  ConfigSvc::ConfigSvc cfgsvc;
+  std::vector<std::string> moduleNames = cfgsvc.getList("psana", "modules", std::vector<std::string>());
+  return moduleNames;
+}
+
+
 // Create data source instance for the set of input files/datasets.
 DataSource
 PSAna::dataSource(const std::vector<std::string>& input)

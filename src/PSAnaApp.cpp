@@ -56,6 +56,7 @@ PSAnaApp::PSAnaApp ( const std::string& appName )
   , m_modulesOpt( 'm', "module", "name", "module name, more than one possible" )
   , m_maxEventsOpt( 'n', "num-events", "number", "maximum number of events to process, def: all", 0U )
   , m_skipEventsOpt( 's', "skip-events", "number", "number of events to skip, def: 0", 0U )
+  , m_optionsOpt( 'o', "option", "string", "configuration options, format: section.option[=value]" )
   , m_files( "data-file",   "file name(s) with input data", std::list<std::string>() )
 {
   addOption( m_calibDirOpt ) ;
@@ -65,6 +66,7 @@ PSAnaApp::PSAnaApp ( const std::string& appName )
   addOption( m_modulesOpt ) ;
   addOption( m_maxEventsOpt ) ;
   addOption( m_skipEventsOpt ) ;
+  addOption( m_optionsOpt ) ;
   addArgument( m_files ) ;
 }
 
@@ -140,10 +142,12 @@ PSAnaApp::preRunApp ()
 int
 PSAnaApp::runApp ()
 {
-  // if neither -m nor -c specified then try to read psana.cfg
+  // if -c is not specified the try to read psana.cfg (only if present)
   std::string cfgFile = m_configOpt.value();
-  if (cfgFile.empty() and m_modulesOpt.value().empty()) {
-    cfgFile = "psana.cfg";
+  if (not m_configOpt.valueChanged()) {
+    if (access("psana.cfg", R_OK) == 0) {
+      cfgFile = "psana.cfg";
+    }
   }
 
   std::map<std::string, std::string> options;
@@ -190,11 +194,30 @@ PSAnaApp::runApp ()
     options["psana.calib-dir"] = m_calibDirOpt.value();
   }
 
+  // now copy all -o options, they may override existing options
+  typedef AppUtils::AppCmdOptList<std::string>::const_iterator OptIter;
+  for (OptIter it = m_optionsOpt.begin(); it != m_optionsOpt.end(); ++ it) {
+    std::string optname = *it;
+    std::string optval;
+    std::string::size_type p = optname.find('=');
+    if (p != std::string::npos) {
+      optval = std::string(optname, p+1);
+      optname.erase(p);
+    }
+    options[optname] = optval;
+  }
+
   // list of inputs
   std::vector<std::string> input(m_files.begin(), m_files.end());
 
   // Instantiate framework
   PSAna fwk(cfgFile, options);
+
+  // check that we have at least one module
+  if (fwk.modules().empty()) {
+    MsgLogRoot(error, "no analysis modules specified");
+    return 2;
+  }
 
   // get data source
   DataSource dataSource = fwk.dataSource(input);

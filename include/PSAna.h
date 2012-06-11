@@ -80,6 +80,11 @@ public:
   ~PSAna () ;
 
   /**
+   *  @brief Get the list of modules.
+   */
+  std::vector<std::string> modules();
+
+  /**
    *  @brief Create data source instance for the set of input files/datasets.
    *
    *  This method can be called multiple times with different (or same) set of

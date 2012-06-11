@@ -11,6 +11,16 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-06-04
+2012-06-11 Andy Salnikov
+- add -o option to psana to specify options on command line instead of
+  configuration file
+- PSAna class has new method modules() which returns the list module names
+- PSAnaApp: check that list of modules is non-empty
+- in PSAnaApp - use psana.cfg when -c option is not specified and file
+  is in the current dir (before it always used psana.cfg if -m option 
+  is not given)
+
 Tag: V00-06-03
 2012-06-11 Andy Salnikov
 - add src/__init__.py - high-level psana module
