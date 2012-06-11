@@ -74,7 +74,7 @@ public:
    *  @param[in]  options   Other configuration options
    *
    */
-  PSAna(const std::string& config, std::map<std::string, std::string>& options);
+  PSAna(const std::string& config, const std::map<std::string, std::string>& options);
 
   // Destructor
   ~PSAna () ;

@@ -82,7 +82,7 @@ namespace psana {
 //----------------
 // Constructors --
 //----------------
-PSAna::PSAna(const std::string& config, std::map<std::string, std::string>& options)
+PSAna::PSAna(const std::string& config, const std::map<std::string, std::string>& options)
   : m_modules()
 {
 
@@ -111,11 +111,11 @@ PSAna::PSAna(const std::string& config, std::map<std::string, std::string>& opti
   }
 
   // get list of modules to load
-  std::list<std::string> moduleNames = cfgsvc.getList("psana", "modules");
+  std::vector<std::string> moduleNames = cfgsvc.getList("psana", "modules", std::vector<std::string>());
 
   // instantiate all user modules
   DynLoader loader;
-  for ( std::list<std::string>::const_iterator it = moduleNames.begin(); it != moduleNames.end() ; ++ it ) {
+  for ( std::vector<std::string>::const_iterator it = moduleNames.begin(); it != moduleNames.end() ; ++ it ) {
     m_modules.push_back(loader.loadModule(*it));
     MsgLog(logger, trace, "Loaded module " << m_modules.back()->name());
   }

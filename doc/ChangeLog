@@ -11,6 +11,13 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-06-02
+2012-06-11 Andy Salnikov
+- first version of the python wrapper module for psana
+- evnet iterator implementation is not complete, need to return 
+  python event object from iterator
+- same goes for env object returned from run/scan/source objects
+
 Tag: V00-06-01
 2012-06-10 Andy Salnikov
 - further refactoring of the event loop, split event loop into input
