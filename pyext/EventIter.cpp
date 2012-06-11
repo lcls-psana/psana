@@ -33,7 +33,10 @@ namespace {
   PyObject* EventIter_iter(PyObject* self);
   PyObject* EventIter_iternext(PyObject* self);
 
-  char typedoc[] = "";
+  char typedoc[] = "Class which supports iteration over events contained in a "
+      "particular :py:class:`DataSource`, :py:class:`Run`, or :py:class:`Scan` "
+      "instance. Iterator returns event objects which contain all experimental "
+      "data for particular event.";
 
 }
 

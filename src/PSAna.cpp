@@ -100,7 +100,7 @@ PSAna::PSAna(const std::string& config, const std::map<std::string, std::string>
   for (std::map<std::string, std::string>::const_iterator it = options.begin(); it != options.end(); ++ it) {
     std::string section;
     std::string option = it->first;
-    std::string::size_type p = option.find('.');
+    std::string::size_type p = option.rfind('.');
     if (p == std::string::npos) {
       section = "psana";
     } else {

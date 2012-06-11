@@ -37,12 +37,22 @@ namespace {
   PyMethodDef methods[] = {
     { "dataSource",  PSAna_dataSource,  METH_VARARGS, 
         "self.dataSource(input, ...) -> DataSource\n\n"
-        "Returns data source object, accepts a list of strings or any number of string arguments. "
-        "Strings can be either names of files or datasets." },
+        "Returns data source object (:py:class:`DataSource`), accepts a list of strings or "
+        "any number of string arguments. Strings can be either names of files or datasets." },
     {0, 0, 0, 0}
    };
 
-  char typedoc[] = "";
+  char typedoc[] = "PSAna(configFile: str[, options: dict]) -> instance\n\n"
+      "Python wrapper for psana framework class (PSAna). Constructor takes the name "
+      "of the configuration file (typically \"psana.cfg\") and optional dictionary "
+      "of configuration options. Keys in the options dictionary are option names, "
+      "name has format \"section.option\" where \"section\" is the name of the section "
+      "in configuration file (such as \"psana\" or \"psana_examples.DumpPrinceton\"). "
+      "Value can be any string, possibly empty, non-string values will be converted "
+      "to strings using str() call. Options from a dictionary override corresponding "
+      "options in configuration file.\n\n"
+      "Only one instance of the framework can be created. User code will typically "
+      "use high-level wrappers for the framework (see :py:mod:`psana`).";
 
 }
 

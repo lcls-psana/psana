@@ -34,7 +34,9 @@ namespace {
   PyObject* ScanIter_iter(PyObject* self);
   PyObject* ScanIter_iternext(PyObject* self);
 
-  char typedoc[] = "";
+  char typedoc[] = "Class which supports iteration over scans (calib cycles) contained in a "
+      "particular :py:class:`DataSource` or :py:class:`Run` instance. Iterator returns instances "
+      "of :py:class:`Scan` class.";
 
 }
 

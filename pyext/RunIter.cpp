@@ -34,7 +34,9 @@ namespace {
   PyObject* RunIter_iter(PyObject* self);
   PyObject* RunIter_iternext(PyObject* self);
 
-  char typedoc[] = "";
+  char typedoc[] = "Class which supports iteration over runs contained in a "
+      "particular :py:class:`DataSource` instance. Iterator returns instances "
+      "of :py:class:`Run` class.";
 
 }
 
