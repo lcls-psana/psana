@@ -46,6 +46,51 @@ namespace psana {
 
 /**
  *  Load one user module. The name of the module has a format 
+ *  [Language$][Package.]Class[:name]
+ */
+boost::shared_ptr<Module>
+DynLoader::loadModule(const std::string& name, const std::string& language) const
+{
+  if (language == "c++") {
+    // make class name, use psana for package name if not given
+    std::string fullName = name;
+    std::string className = name;
+    std::string::size_type p1 = className.find(':');
+    if (p1 != std::string::npos) {
+      className.erase(p1);
+    }
+    if (className.find('.') == std::string::npos) {
+      className = "psana." + className;
+      fullName = "psana." + fullName;
+    }
+    // Load function
+    void* sym = loadFactoryFunction(className, "_psana_module_");
+    ::mod_factory factory = (::mod_factory)sym;
+    // call factory function
+    return boost::shared_ptr<Module>(factory(fullName));
+  } else {
+    // explicitly requested non-C++ module
+    std::string package = "psana_" + language;
+    void* ldh;
+    try {
+      ldh = loadPackageLib(package);
+    } catch (...) {
+      fprintf(stderr, "No loader found for the %s language\n", language.c_str());
+      throw;
+    }
+    std::string symname = "moduleFactory";
+    void* sym = dlsym(ldh, symname.c_str());
+    if (not sym) {
+      fprintf(stderr, "Loader for the %s language is missing symbol '%s'\n", language.c_str(), symname.c_str());
+      throw ExceptionDlerror(ERR_LOC, "failed to locate symbol " + symname);
+    }
+    ::mod_factory factory = (::mod_factory) sym;
+    return boost::shared_ptr<Module>(factory(name));
+  }
+}
+
+/**
+ *  Load one user module. The name of the module has a format 
  *  [py:][Package.]Class[:name]
  */
 boost::shared_ptr<Module>
@@ -53,44 +98,33 @@ DynLoader::loadModule(const std::string& name) const
 {
   std::string language = "";
   std::string module = "";
-  if (name.compare(0, 3, "py:") == 0) {
-    language = "python";
-    module = name.substr(3);
-  } else if (name.compare(0, 4, "php:") == 0) {
-    language = "php"; // not really implemented; just an example
-    module = name.substr(4);
+  size_t n = name.find("$");
+  if (n != string::npos) {
+    language = name.substr(0, n);
+    boost::algorithm::to_lower(language);
+    module = name.substr(n + 1);
+  } else {
+    module = name;
   }
   if (language != "") {
-    // explicitly requested non-C++ module
-    std::string package = "psana_" + language;
-    void* ldh = loadPackageLib(package);
-    std::string symname = "moduleFactory";
-    void* sym = dlsym(ldh, symname.c_str());
-    if ( not sym ) {
-      throw ExceptionDlerror(ERR_LOC, "failed to locate symbol " + symname);
+    try {
+      return loadModule(module, language);
+    } catch (...) {
+      fprintf(stderr, "Failed to load %s module '%s'\n", language.c_str(), module.c_str());
+      throw;
     }
-    ::mod_factory factory = (::mod_factory) sym;
-    return boost::shared_ptr<Module>(factory(module));
+  } else {
+    try {
+      return loadModule(module, "c++");
+    } catch (psana::Exception e) {
+      try {
+        return loadModule(module, "python");
+      } catch (...) {
+        fprintf(stderr, "Failed to load module '%s'\n", name.c_str());
+        throw e; // rethrow the C++ loader error
+      }
+    }
   }
-
-  // make class name, use psana for package name if not given
-  std::string fullName = name;
-  std::string className = name;
-  std::string::size_type p1 = className.find(':');
-  if (p1 != std::string::npos) {
-    className.erase(p1);
-  }
-  if (className.find('.') == std::string::npos) {
-    className = "psana." + className;
-    fullName = "psana." + fullName;
-  }
-
-  // Load function
-  void* sym = loadFactoryFunction(className, "_psana_module_");
-  ::mod_factory factory = (::mod_factory)sym;
-
-  // call factory function
-  return boost::shared_ptr<Module>(factory(fullName));
 }
 
 /**

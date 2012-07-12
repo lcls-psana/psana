@@ -54,7 +54,7 @@ public:
 
   /**
    *  @brief Load one user module. The name of the module has a format 
-   *  [py:][Package.]Class[:name]
+   *  [Language$][Package.]Class[:name]
    */
   boost::shared_ptr<Module> loadModule(const std::string& name) const;
   
@@ -87,6 +87,12 @@ protected:
   void* loadFactoryFunction(const std::string& className, const std::string& factory) const;
   
 private:
+
+  /**
+   *  @brief Load one user module for the given language. The name of the module has a format 
+   *  [Package.]Class[:name]
+   */
+  boost::shared_ptr<Module> loadModule(const std::string& name, const std::string& language) const;
 
 };
 
