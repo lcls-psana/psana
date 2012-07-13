@@ -18,7 +18,7 @@
 //-----------------
 // C/C++ Headers --
 //-----------------
-#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
 //-------------------------------
@@ -56,7 +56,7 @@ namespace {
       FileType ftype = Unknown;
       if (ext == ".h5") {
         ftype = HDF5;
-      } else if (ext == ".xtc") {
+      } else if (boost::starts_with(ext, ".xtc")) {
         ftype = XTC;
       }
 
@@ -172,7 +172,7 @@ PSAna::dataSource(const std::vector<std::string>& input)
   }
 
   // pass file names to the configuration so that input module can find them
-  std::string flist = boost::algorithm::join(inputList, " ");
+  std::string flist = boost::join(inputList, " ");
   cfgsvc.put(iname, "files", flist);
 
   // Load input module

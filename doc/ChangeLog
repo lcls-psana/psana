@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-06-05
+2012-07-12 Andy Salnikov
+- guessType(): accept .xtc* extensions as XTC files
+
 Tag: V00-06-04
 2012-06-11 Andy Salnikov
 - add -o option to psana to specify options on command line instead of
