@@ -214,8 +214,7 @@ PyDataType<ConcreteType, CppType>::initType(const char* name, PyObject* module)
   if ( PyType_Ready( type ) < 0 ) return;
 
   // register it in a module
-  Py_INCREF(type);
-  PyModule_AddObject(module, (char*)name, (PyObject*)type);
+  PyDict_SetItemString( PyModule_GetDict(module), (char*)name, (PyObject*) type );
 }
 
 } // namespace pyext

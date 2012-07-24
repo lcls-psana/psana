@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-06-08
+2012-07-24 Andy Salnikov
+- fix compilation warnings about aliasing rules
+
 Tag: V00-06-07
 2012-07-24 Andy Salnikov
 - make it compile with Python 2.7 (and 2.4)
