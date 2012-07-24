@@ -30,6 +30,12 @@
 
 namespace {
 
+#if PY_VERSION_HEX >= 0x02050000
+  typedef Py_ssize_t PyDictPosType;
+#else
+  typedef int PyDictPosType;
+#endif
+
   // type-specific methods
   PyObject* PSAna_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds);
   PyObject* PSAna_dataSource(PyObject* self, PyObject* args);
@@ -95,7 +101,7 @@ PSAna_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
   // copy dict to map
   std::map<std::string, std::string> optMap;
   PyObject *key, *value;
-  int pos = 0;
+  PyDictPosType pos = 0;
   while (options and PyDict_Next(options, &pos, &key, &value)) {
     if (not PyString_Check(key)) {
       PyErr_SetString(PyExc_TypeError, "Error: PSAna options keys must be strings");

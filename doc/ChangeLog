@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-06-07
+2012-07-24 Andy Salnikov
+- make it compile with Python 2.7 (and 2.4)
+
 Tag: V00-06-06
 2012-07-17 Andy Salnikov
 - renamed doc/mainpage.dox doc/mainpage.dox-main to avoid pulling it
