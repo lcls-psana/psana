@@ -192,6 +192,18 @@ InputIter::next()
   return result;
 }
 
+
+void
+InputIter::finish()
+{
+  // means we reached the end, time to call endJob
+  EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>());
+  m_inputModule->endJob(*evt, *m_env);
+  unwind(StateNone, evt);
+  m_finished = true;
+}
+
+
 void
 InputIter::newState(State state, const EventPtr& evt)
 {

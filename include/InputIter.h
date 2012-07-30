@@ -107,6 +107,13 @@ public:
    */
   value_type next();
 
+  /**
+   *  Prepare to stop iteration, instructs iterator to stop reading
+   *  data from input module and produce standard EndCalibCycle/EndRun/EndJob
+   *  sequence on the following calls to next().
+   */
+  void finish();
+
 protected:
 
 private:

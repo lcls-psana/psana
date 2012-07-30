@@ -103,21 +103,31 @@ EventLoop::next()
     return result;
   }
   
-  // Get next event from input iterator
-  InputIter::value_type evt = m_inputIter->next();
-  EventType evtType = ::eventType(evt.first);
-  if (evtType != None) {
+  while (true) {
+
+    // Get next event from input iterator
+    InputIter::value_type evt = m_inputIter->next();
+    EventType evtType = ::eventType(evt.first);
+    if (evtType == None) break;
 
     // call corresponding method for all modules
     Module::Status stat = callModuleMethod(m_eventMethods[evtType], *evt.second, m_inputIter->env(), evtType != Event);
-    if (stat == Module::Abort) throw ExceptionAbort(ERR_LOC, "User module requested abort");
-    if (stat != Module::Stop) {
+    if (stat == Module::Abort) {
+      // stop right here
+      throw ExceptionAbort(ERR_LOC, "User module requested abort");
+    } else if (stat == Module::Stop) {
+      // user module requested stop, signal iterator it's time to finish and continue
+      m_inputIter->finish();
+    } else {
+      // good result, return
       result = value_type(evtType, evt.second);
+      break;
     }
 
   }
-  
+
   return result;
+  
 }
 
 //
