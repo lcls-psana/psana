@@ -26,4 +26,4 @@ Import('*')
 # PYEXTMOD - name of the Python extension module, package name used by default
 #
 #
-standardSConscript(LIBS="dl", PYEXTMOD="_psana")
+standardSConscript(LIBS="dl")

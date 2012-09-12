@@ -52,6 +52,7 @@ boost::shared_ptr<Module>
 DynLoader::loadModule(const std::string& name, const std::string& language) const
 {
   if (language == "c++") {
+
     // make class name, use psana for package name if not given
     std::string fullName = name;
     std::string className = name;
@@ -63,29 +64,23 @@ DynLoader::loadModule(const std::string& name, const std::string& language) cons
       className = "psana." + className;
       fullName = "psana." + fullName;
     }
+
     // Load function
     void* sym = loadFactoryFunction(className, "_psana_module_");
     ::mod_factory factory = (::mod_factory)sym;
     // call factory function
     return boost::shared_ptr<Module>(factory(fullName));
+
   } else {
-    // explicitly requested non-C++ module
-    std::string package = "psana_" + language;
-    void* ldh;
-    try {
-      ldh = loadPackageLib(package);
-    } catch (...) {
-      fprintf(stderr, "No loader found for the %s language\n", language.c_str());
-      throw;
-    }
-    std::string symname = "moduleFactory";
-    void* sym = dlsym(ldh, symname.c_str());
-    if (not sym) {
-      fprintf(stderr, "Loader for the %s language is missing symbol '%s'\n", language.c_str(), symname.c_str());
-      throw ExceptionDlerror(ERR_LOC, "failed to locate symbol " + symname);
-    }
+
+    // explicitly requested non-C++ module, load libpsana_lanaguage.so
+    // library, find "moduleFactory()" function in it and call it
+    // giving full name of the module.
+
+    void* sym = loadFactoryFunction("psana_" + language + ".moduleFactory", "");
     ::mod_factory factory = (::mod_factory) sym;
     return boost::shared_ptr<Module>(factory(name));
+
   }
 }
 
@@ -96,31 +91,37 @@ DynLoader::loadModule(const std::string& name, const std::string& language) cons
 boost::shared_ptr<Module>
 DynLoader::loadModule(const std::string& name) const
 {
-  std::string language = "";
-  std::string module = "";
-  size_t n = name.find("$");
+  // parse given name, determine language name
+  // from it and a module name
+  std::string language;
+  std::string module = name;
+  size_t n = name.find(":");
   if (n != string::npos) {
     language = name.substr(0, n);
     boost::algorithm::to_lower(language);
-    module = name.substr(n + 1);
-  } else {
-    module = name;
-  }
-  if (language != "") {
-    try {
-      return loadModule(module, language);
-    } catch (...) {
-      fprintf(stderr, "Failed to load %s module '%s'\n", language.c_str(), module.c_str());
-      throw;
+    if (language == "c++") {
+      module = name.substr(n + 1);
+    } else if (language == "python") {
+      module = name.substr(n + 1);
+    } else if (language == "py") {
+      language = "python";
+      module = name.substr(n + 1);
+    } else {
+      language.clear();
     }
+  }
+
+  if (not language.empty()) {
+    // if language is specified then use it
+    return loadModule(module, language);
   } else {
+    // if not specified then try to load C++ module and then python
     try {
       return loadModule(module, "c++");
     } catch (psana::Exception e) {
       try {
         return loadModule(module, "python");
       } catch (...) {
-        fprintf(stderr, "Failed to load module '%s'\n", name.c_str());
         throw e; // rethrow the C++ loader error
       }
     }

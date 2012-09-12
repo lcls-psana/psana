@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-07-00
+2012-09-11 Andy Salnikov
+- psext/ stuff moved to psana_python package
+- DynLoader class redefines language prefixes in module names
+
 Tag: V00-06-09
 2012-07-30 Andy Salnikov
 - bug fix in EventLoop, endJob() and other end*() methods were not called
