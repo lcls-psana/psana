@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-07-01
+2012-10-03 Andy Salnikov
+- moved python unit test to psana_python package
+
 Tag: V00-07-00
 2012-09-11 Andy Salnikov
 - psext/ stuff moved to psana_python package
