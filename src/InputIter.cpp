@@ -256,7 +256,7 @@ InputIter::unwind(State newState, const EventPtr& evt)
   }
 }
 
-/// formatting for InputIter::EventType enum
+// formatting for InputIter::EventType enum
 std::ostream&
 operator<<(std::ostream& out, InputIter::EventType type)
 {
@@ -292,7 +292,7 @@ operator<<(std::ostream& out, InputIter::EventType type)
   return out << str;  
 }
 
-/// formatting for InputIter::State enum
+// formatting for InputIter::State enum
 std::ostream&
 operator<<(std::ostream& out, InputIter::State state)
 {

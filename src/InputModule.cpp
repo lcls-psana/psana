@@ -48,13 +48,13 @@ InputModule::~InputModule ()
 {
 }
 
-/// Method which is called once at the beginning of the job
+// Method which is called once at the beginning of the job
 void 
 InputModule::beginJob(Event& evt, Env& env)
 {
 }
 
-/// Method which is called once at the end of the job
+// Method which is called once at the end of the job
 void 
 InputModule::endJob(Event& evt, Env& env)
 {

@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-07-02
+2012-11-28 Andy Salnikov
+- small fixes to dixygen comments
+
 Tag: V00-07-01
 2012-10-03 Andy Salnikov
 - moved python unit test to psana_python package
