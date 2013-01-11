@@ -35,7 +35,7 @@ import sys
 import os
 import logging
 
-if sys.platform == 'linux2':
+if sys.platform.startswith('linux'):
     # on Linux with g++ one needs RTLD_GLOBAL for dlopen
     # which Python does not set by default
     import DLFCN
@@ -46,7 +46,7 @@ if sys.platform == 'linux2':
     del flags
     del DLFCN
 else:
-    from _ConfigSvc import *
+    import _psana
 del sys
 
 #----------------------------------

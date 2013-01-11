@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-07-03
+2013-01-10 Andy Salnikov
+- in __init__.py fix test for linux platform
+
 Tag: V00-07-02
 2012-11-28 Andy Salnikov
 - small fixes to dixygen comments
