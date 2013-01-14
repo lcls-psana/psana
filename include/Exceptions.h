@@ -79,24 +79,6 @@ public:
 
 };
 
-/// Exception thrown for Python import errors.
-class ExceptionPyLoadError : public Exception {
-public:
-
-  /// Constructor takes the reason for an exception
-  ExceptionPyLoadError(const ErrSvc::Context& ctx, const std::string& what);
-
-};
-
-/// Exception thrown for Python import errors.
-class ExceptionGenericPyError : public Exception {
-public:
-
-  /// Constructor takes the reason for an exception
-  ExceptionGenericPyError(const ErrSvc::Context& ctx, const std::string& what);
-
-};
-
 /// Exception thrown when modules request abort.
 class ExceptionAbort : public Exception {
 public:

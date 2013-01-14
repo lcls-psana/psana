@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-07-04
+2013-01-14 Andy Salnikov
+- couple of exception classes moved to pyana_python
+
 Tag: V00-07-03
 2013-01-10 Andy Salnikov
 - in __init__.py fix test for linux platform
