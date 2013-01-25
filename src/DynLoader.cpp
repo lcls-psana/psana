@@ -96,7 +96,7 @@ DynLoader::loadModule(const std::string& name) const
   std::string language;
   std::string module = name;
   size_t n = name.find(":");
-  if (n != string::npos) {
+  if (n != std::string::npos) {
     language = name.substr(0, n);
     boost::algorithm::to_lower(language);
     if (language == "c++") {
