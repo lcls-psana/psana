@@ -127,3 +127,14 @@ def DataSource(*args):
         _fwk = _psana.PSAna(cfgFile, _options)
     
     return _fwk.dataSource(*args)
+
+#
+# "import" few other things from _psana
+#
+EventId = _psana.EventId
+EventKey = _psana.EventKey
+Source = _psana.Source
+BldInfo = _psana.BldInfo
+DetInfo = _psana.DetInfo
+ProcInfo = _psana.ProcInfo
+Src = _psana.Src
