@@ -118,14 +118,7 @@ public:
    */
   PSEvt::Source configSrc(const std::string& param) const
   {
-    ConfigSvc::ConfigSvc cfg;
-    std::string srcStr;
-    try {
-      srcStr = cfg.getStr(name(), param);
-    } catch (const ConfigSvc::ExceptionMissing& ex) {
-      srcStr = cfg.getStr(className(), param);
-    }
-    return PSEvt::Source(srcStr);
+    return PSEvt::Source(configStr(param));
   }
 
   /**
@@ -178,14 +171,7 @@ public:
    */
   PSEvt::Source configSrc(const std::string& param, const std::string& def) const
   {
-    ConfigSvc::ConfigSvc cfg;
-    std::string srcStr;
-    try {
-      srcStr = cfg.getStr(name(), param);
-    } catch (const ConfigSvc::ExceptionMissing& ex) {
-      srcStr = cfg.getStr(className(), param, def);
-    }
-    return PSEvt::Source(srcStr);
+    return PSEvt::Source(configStr(param, def));
   }
 
   /**
