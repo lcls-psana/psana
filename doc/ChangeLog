@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-07-07
+2013-01-28 Andy Salnikov
+- Configurable has new method configSrc() which returns Source object
+
 Tag: V00-07-06
 2013-01-25 Andy Salnikov
 - add few members to psana module (from _psana)

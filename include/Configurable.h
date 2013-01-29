@@ -23,6 +23,7 @@
 // Collaborating Class Headers --
 //-------------------------------
 #include "ConfigSvc/ConfigSvc.h"
+#include "PSEvt/Source.h"
 
 //------------------------------------
 // Collaborating Class Declarations --
@@ -108,6 +109,26 @@ public:
   }
 
   /**
+   *  @brief Get the value of a single parameter as a Source object.
+   *
+   *  @param[in] param  Name of the parameter
+   *  @return Parameter value
+   *
+   *  @throw ConfigSvc::ExceptionMissing thrown if parameter or section is not found
+   */
+  PSEvt::Source configSrc(const std::string& param) const
+  {
+    ConfigSvc::ConfigSvc cfg;
+    std::string srcStr;
+    try {
+      srcStr = cfg.getStr(name(), param);
+    } catch (const ConfigSvc::ExceptionMissing& ex) {
+      srcStr = cfg.getStr(className(), param);
+    }
+    return PSEvt::Source(srcStr);
+  }
+
+  /**
    *  @brief Get the value of a single parameter, this method can be used for numeric types only.
    *  
    *  Returns default value if parameter is not found. 
@@ -144,6 +165,27 @@ public:
     } catch (const ConfigSvc::ExceptionMissing& ex) {
       return cfg.getStr(className(), param, def);
     }    
+  }
+
+  /**
+   *  @brief Get the value of a single parameter as a Source object.
+   *
+   *  Returns default value if parameter is not found.
+   *
+   *  @param[in] param  Name of the parameter
+   *  @param[in] def    Default value to return if parameter is not there
+   *  @return Parameter value or default value
+   */
+  PSEvt::Source configSrc(const std::string& param, const std::string& def) const
+  {
+    ConfigSvc::ConfigSvc cfg;
+    std::string srcStr;
+    try {
+      srcStr = cfg.getStr(name(), param);
+    } catch (const ConfigSvc::ExceptionMissing& ex) {
+      srcStr = cfg.getStr(className(), param, def);
+    }
+    return PSEvt::Source(srcStr);
   }
 
   /**
