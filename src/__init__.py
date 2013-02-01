@@ -49,6 +49,11 @@ else:
     import _psana
 del sys
 
+#
+# import everything from _psana
+#
+from _psana import *
+
 #----------------------------------
 # Local non-exported definitions --
 #----------------------------------
@@ -128,7 +133,3 @@ def DataSource(*args):
     
     return _fwk.dataSource(*args)
 
-#
-# import few other things from _psana
-#
-from _psana import *
