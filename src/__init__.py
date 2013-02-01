@@ -129,12 +129,6 @@ def DataSource(*args):
     return _fwk.dataSource(*args)
 
 #
-# "import" few other things from _psana
+# import few other things from _psana
 #
-EventId = _psana.EventId
-EventKey = _psana.EventKey
-Source = _psana.Source
-BldInfo = _psana.BldInfo
-DetInfo = _psana.DetInfo
-ProcInfo = _psana.ProcInfo
-Src = _psana.Src
+from _psana import *
