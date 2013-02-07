@@ -22,6 +22,7 @@
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
+#include "PSEvt/EventId.h"
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
@@ -67,8 +68,10 @@ RunIter::next()
       // nothing left there
       break;
     } else if (nxt.first == EventLoop::BeginRun) {
-      // found it
-      result = RunIter::value_type(m_evtLoop);
+      // found it, try to get run number from current event
+      boost::shared_ptr<PSEvt::EventId> eid = nxt.second->get();
+      int run = eid ? eid->run() : -1 ;
+      result = RunIter::value_type(m_evtLoop, run);
       break;
     }
   }

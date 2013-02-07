@@ -65,7 +65,7 @@ public:
   Run();
 
   // Constructor takes event loop object
-  Run(const boost::shared_ptr<EventLoop>& evtLoop);
+  Run(const boost::shared_ptr<EventLoop>& evtLoop, int run);
   
   // Destructor
   ~Run () ;
@@ -77,6 +77,9 @@ public:
   /// Get environment object, cannot be called for "null" object
   PSEnv::Env& env() const;
 
+  /// Get run number, -1 returned for if unknown
+  int run() const { return m_run; }
+  
   /// Returns iterator for events in this run
   EventIter events() { return EventIter(m_evtLoop, EventLoop::EndRun); }
 
@@ -90,6 +93,7 @@ private:
 
   // Data members
   boost::shared_ptr<EventLoop> m_evtLoop;
+  int m_run;
 
 };
 

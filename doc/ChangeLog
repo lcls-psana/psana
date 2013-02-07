@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-07-11
+2013-02-06 Andy Salnikov
+- Run slacc has new method run() which returns run number
+
 Tag: V00-07-10
 2013-01-31 Andy Salnikov
 - move import _psana up to overwrite DataSource

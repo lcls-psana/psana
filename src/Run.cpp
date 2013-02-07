@@ -39,12 +39,14 @@ namespace psana {
 //----------------
 Run::Run ()
   : m_evtLoop()
+  , m_run(-1)
 {
 }
 
 // Constructor takes event loop object
-Run::Run(const boost::shared_ptr<EventLoop>& evtLoop)
+Run::Run(const boost::shared_ptr<EventLoop>& evtLoop, int run)
   : m_evtLoop(evtLoop)
+  , m_run(run)
 {
 }
 
