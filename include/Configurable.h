@@ -24,6 +24,7 @@
 //-------------------------------
 #include "ConfigSvc/ConfigSvc.h"
 #include "PSEvt/Source.h"
+#include "psana/Context.h"
 
 //------------------------------------
 // Collaborating Class Declarations --
@@ -72,6 +73,12 @@ public:
   // Destructor
   ~Configurable();
 
+  /// returns instance of configuration service
+  ConfigSvc::ConfigSvc configSvc() const
+  {
+    return ConfigSvc::ConfigSvc(m_context);
+  }
+
   /**
    *  @brief Get the value of a single parameter, this method can be used for numeric types only.
    *  
@@ -82,7 +89,7 @@ public:
    */
   ConfigSvc::ConfigSvc::Result config(const std::string& param) const
   {
-    ConfigSvc::ConfigSvc cfg;
+    ConfigSvc::ConfigSvc cfg(m_context);
     try {
       return cfg.get(name(), param);
     } catch (const ConfigSvc::ExceptionMissing& ex) {
@@ -100,7 +107,7 @@ public:
    */
   std::string configStr(const std::string& param) const
   {
-    ConfigSvc::ConfigSvc cfg;
+    ConfigSvc::ConfigSvc cfg(m_context);
     try {
       return cfg.getStr(name(), param);
     } catch (const ConfigSvc::ExceptionMissing& ex) {
@@ -133,7 +140,7 @@ public:
   template <typename T>
   T config(const std::string& param, const T& def) const
   {
-    ConfigSvc::ConfigSvc cfg;
+    ConfigSvc::ConfigSvc cfg(m_context);
     try {
       return cfg.get(name(), param);
     } catch (const ConfigSvc::ExceptionMissing& ex) {
@@ -152,7 +159,7 @@ public:
    */
   std::string configStr(const std::string& param, const std::string& def) const
   {
-    ConfigSvc::ConfigSvc cfg;
+    ConfigSvc::ConfigSvc cfg(m_context);
     try {
       return cfg.getStr(name(), param);
     } catch (const ConfigSvc::ExceptionMissing& ex) {
@@ -185,7 +192,7 @@ public:
    */
   ConfigSvc::ConfigSvc::ResultList configList(const std::string& param) const
   {
-    ConfigSvc::ConfigSvc cfg;
+    ConfigSvc::ConfigSvc cfg(m_context);
     try {
       return cfg.getList(name(), param);
     } catch (const ConfigSvc::ExceptionMissing& ex) {
@@ -206,7 +213,7 @@ public:
   template <typename T>
   std::list<T> configList(const std::string& param, const std::list<T>& def) const
   {
-    ConfigSvc::ConfigSvc cfg;
+    ConfigSvc::ConfigSvc cfg(m_context);
     try {
       return cfg.getList(name(), param);
     } catch (const ConfigSvc::ExceptionMissing& ex) {
@@ -227,6 +234,7 @@ private:
   // Data members
   std::string m_name;
   std::string m_className;
+  Context::context_t m_context;                       ///< context (id) of this framework instance
 
 };
 

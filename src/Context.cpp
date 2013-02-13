@@ -3,17 +3,17 @@
 // 	$Id$
 //
 // Description:
-//	Class Configurable...
+//	Class Context...
 //
 // Author List:
-//      Andrei Salnikov
+//      Andy Salnikov
 //
 //------------------------------------------------------------------------
 
 //-----------------------
 // This Class's Header --
 //-----------------------
-#include "psana/Configurable.h"
+#include "psana/Context.h"
 
 //-----------------
 // C/C++ Headers --
@@ -27,32 +27,34 @@
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
 //-----------------------------------------------------------------------
 
+namespace {
+
+  psana::Context::context_t g_next = 0;
+  psana::Context::context_t g_current = 0;
+
+}
+
 //		----------------------------------------
 // 		-- Public Function Member Definitions --
 //		----------------------------------------
 
-namespace psana {
-
-//----------------
-// Constructors --
-//----------------
-Configurable::Configurable (const std::string& name)
-  : m_name(name)
-  , m_className(name)
-  , m_context(Context::get())
+// generate new unique context value, never returns 0 value.
+psana::Context::context_t
+psana::Context::generate()
 {
-  // get class name from module name
-  std::string::size_type p = m_className.find(':');
-  if (p != std::string::npos) {
-    m_className.erase(p);
-  }
+  return ++::g_next;
 }
 
-//--------------
-// Destructor --
-//--------------
-Configurable::~Configurable ()
+// Set the context
+void
+psana::Context::set(psana::Context::context_t ctx)
 {
+  ::g_current = ctx;
 }
 
-} // namespace psana
+// Get current context, returns 0 if context was not set yet
+psana::Context::context_t
+psana::Context::get()
+{
+  return ::g_current;
+}

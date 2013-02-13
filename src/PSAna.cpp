@@ -20,16 +20,18 @@
 //-----------------
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/make_shared.hpp>
 
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
 #include "ConfigSvc/ConfigSvc.h"
 #include "ConfigSvc/ConfigSvcImplFile.h"
+#include "IData/Dataset.h"
 #include "MsgLogger/MsgLogger.h"
 #include "psana/DynLoader.h"
 #include "psana/ExpNameFromConfig.h"
-#include "psana/ExpNameFromXtc.h"
+#include "psana/ExpNameFromDs.h"
 #include "PSEnv/Env.h"
 
 //-----------------------------------------------------------------------
@@ -52,11 +54,12 @@ namespace {
 
     for ( ; begin != end; ++ begin) {
 
-      std::string ext = fs::path(*begin).extension().string();
+      IData::Dataset ds(*begin);
+
       FileType ftype = Unknown;
-      if (ext == ".h5") {
+      if (ds.exists("h5")) {
         ftype = HDF5;
-      } else if (boost::starts_with(ext, ".xtc")) {
+      } else if (ds.exists("xtc")) {
         ftype = XTC;
       }
 
@@ -83,18 +86,22 @@ namespace psana {
 // Constructors --
 //----------------
 PSAna::PSAna(const std::string& config, const std::map<std::string, std::string>& options)
-  : m_modules()
+  : m_context(Context::generate())
+  , m_modules()
 {
+  Context::set(m_context);
 
   // initialize configuration service, this can only be done once
-  std::auto_ptr<ConfigSvc::ConfigSvcImplI> cfgImpl;
-  if (config.empty()) {
-    cfgImpl.reset( new ConfigSvc::ConfigSvcImplFile() );
-  } else {
-    cfgImpl.reset( new ConfigSvc::ConfigSvcImplFile(config) );
+  boost::shared_ptr<ConfigSvc::ConfigSvcImplI> cfgImpl = boost::make_shared<ConfigSvc::ConfigSvcImplFile>(config);
+  ConfigSvc::ConfigSvc::init(cfgImpl, m_context);
+
+  // for backward compaibility also initialize config service in global context
+  if (not ConfigSvc::ConfigSvc::initialized()) {
+    ConfigSvc::ConfigSvc::init(boost::make_shared<ConfigSvc::ConfigSvcImplFile>());
   }
-  ConfigSvc::ConfigSvc::init(cfgImpl);
-  ConfigSvc::ConfigSvc cfgsvc;
+
+  ConfigSvc::ConfigSvc cfgsvc(m_context);
+  ConfigSvc::ConfigSvc glbcfgsvc;
 
   // copy all options
   for (std::map<std::string, std::string>::const_iterator it = options.begin(); it != options.end(); ++ it) {
@@ -108,6 +115,8 @@ PSAna::PSAna(const std::string& config, const std::map<std::string, std::string>
       option.erase(0, p+1);
     }
     cfgsvc.put(section, option, it->second);
+    // and update global config as well
+    glbcfgsvc.put(section, option, it->second);
   }
 
   // get list of modules to load
@@ -136,7 +145,7 @@ PSAna::~PSAna ()
 std::vector<std::string>
 PSAna::modules()
 {
-  ConfigSvc::ConfigSvc cfgsvc;
+  ConfigSvc::ConfigSvc cfgsvc(m_context);
   std::vector<std::string> moduleNames = cfgsvc.getList("psana", "modules", std::vector<std::string>());
   return moduleNames;
 }
@@ -146,7 +155,9 @@ PSAna::modules()
 DataSource
 PSAna::dataSource(const std::vector<std::string>& input)
 {
-  ConfigSvc::ConfigSvc cfgsvc;
+  Context::set(m_context);
+
+  ConfigSvc::ConfigSvc cfgsvc(m_context);
 
   DataSource dataSrc;
 
@@ -197,10 +208,8 @@ PSAna::dataSource(const std::vector<std::string>& input)
     const std::string& instr = cfgsvc.getStr("psana", "instrument", "");
     const std::string& exp = cfgsvc.getStr("psana", "experiment", "");
     expNameProvider = boost::make_shared<ExpNameFromConfig>(instr, exp);
-  } else if (ftype == XTC) {
-    expNameProvider = boost::make_shared<ExpNameFromXtc>(inputList);
   } else {
-    expNameProvider = boost::make_shared<ExpNameFromConfig>("", "");
+    expNameProvider = boost::make_shared<ExpNameFromDs>(inputList);
   }
 
   // Setup environment

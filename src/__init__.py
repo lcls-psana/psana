@@ -60,7 +60,6 @@ from _psana import *
 
 _cfgFile = None
 _options = {}
-_fwk = None
 
 
 def setConfigFile(name):
@@ -72,9 +71,6 @@ def setConfigFile(name):
     Configuration file name can only be changed before first call to DataSource().
     """
     
-    if _fwk is not None:
-        logging.warning("psana.setConfigFile() called after DataSource(), has no effect")
-        
     _cfgFile = name
 
 def setOption(name, value):
@@ -88,9 +84,6 @@ def setOption(name, value):
     Configuration options can only be changed before first call to DataSource().
     """
     
-    if _fwk is not None:
-        logging.warning("psana.setOption() called after DataSource(), has no effect")
-        
     _options[name] = str(value)
 
 def setOptions(mapping):
@@ -105,9 +98,6 @@ def setOptions(mapping):
     Configuration options can only be changed before first call to DataSource().
     """
 
-    if _fwk is not None:
-        logging.warning("psana.setOptions() called after DataSource(), has no effect")
-        
     _options[name] = str(value)
     for key, val in mapping.items():
         _options[key] = str(val)
@@ -120,16 +110,14 @@ def DataSource(*args):
     each string represents either an input file name or event collection.
     """
     
-    global _fwk
-    if _fwk is None:
-        # make one single instance of the framework
-        cfgFile = _cfgFile
-        if cfgFile is None:
-            if os.path.exists("psana.cfg"): 
-                cfgFile = "psana.cfg"
-            else:
-                cfgFile = ""
-        _fwk = _psana.PSAna(cfgFile, _options)
+    # make instance of the framework
+    cfgFile = _cfgFile
+    if cfgFile is None:
+        if os.path.exists("psana.cfg"): 
+            cfgFile = "psana.cfg"
+        else:
+            cfgFile = ""
+    fwk = _psana.PSAna(cfgFile, _options)
     
-    return _fwk.dataSource(*args)
+    return fwk.dataSource(*args)
 

@@ -1,12 +1,12 @@
-#ifndef PSANA_EXPNAMEFROMXTC_H
-#define PSANA_EXPNAMEFROMXTC_H
+#ifndef PSANA_EXPNAMEFROMDS_H
+#define PSANA_EXPNAMEFROMDS_H
 
 //--------------------------------------------------------------------------
 // File and Version Information:
 // 	$Id$
 //
 // Description:
-//	Class ExpNameFromXtc.
+//	Class ExpNameFromDs.
 //
 //------------------------------------------------------------------------
 
@@ -50,14 +50,14 @@ namespace psana {
  *  @author Andy Salnikov
  */
 
-class ExpNameFromXtc : public PSEnv::IExpNameProvider {
+class ExpNameFromDs : public PSEnv::IExpNameProvider {
 public:
 
   /// Constructor takes the list of input file names
-  ExpNameFromXtc(const std::vector<std::string>& files);
+  ExpNameFromDs(const std::vector<std::string>& files);
 
   // Destructor
-  virtual ~ExpNameFromXtc();
+  virtual ~ExpNameFromDs();
 
   /// Returns instrument name
   virtual const std::string& instrument() const { return m_instr; }
@@ -80,4 +80,4 @@ private:
 
 } // namespace psana
 
-#endif // PSANA_EXPNAMEFROMXTC_H
+#endif // PSANA_EXPNAMEFROMDS_H

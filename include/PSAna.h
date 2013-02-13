@@ -26,6 +26,7 @@
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
+#include "psana/Context.h"
 #include "psana/DataSource.h"
 
 //------------------------------------
@@ -100,6 +101,7 @@ protected:
 
 private:
 
+  Context::context_t m_context;                       ///< context (id) of this framework instance
   std::vector<boost::shared_ptr<Module> > m_modules;  ///< list of user modules
 
 };
