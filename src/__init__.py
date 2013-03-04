@@ -68,7 +68,7 @@ def setConfigFile(name):
     file name is psana.cfg. If you want to avoid reading any configuration
     file then set it to empty string. 
     
-    Configuration file name can only be changed before first call to DataSource().
+    Configuration file name set with setConfigFile() is used in a next call to DataSource().
     """
     
     _cfgFile = name
@@ -81,7 +81,7 @@ def setOption(name, value):
     "psana_examples.DumpPrinceton"). Value can be any string, possibly empty,
     non-string values will be converted to strings using str() call.
 
-    Configuration options can only be changed before first call to DataSource().
+    Configuration options set with setOption() are used in a next call to DataSource().
     """
     
     _options[name] = str(value)
@@ -95,7 +95,7 @@ def setOptions(mapping):
     "psana_examples.DumpPrinceton"). Value can be any string, possibly empty,
     non-string values will be converted to strings using str() call.
 
-    Configuration options can only be changed before first call to DataSource().
+    Configuration options set with setOptions() are used in a next call to DataSource().
     """
 
     _options[name] = str(value)
