@@ -11,17 +11,21 @@
 
 Typical usage::
 
-    import psana
-    from psddl_python import CsPad
+    from psana import *
     
-    psana.setConfigFile('config-file.cfg')   # optional, default is to use psana.cfg if present
-    psana.setOption("psana.modules", "EventKeys")   # can set/change options from script
-    
-    datasrc = psana.DataSource("exp=cxi63112/run=111")
-    
-    for evt in datasrc.events():
-        cspad = evt.get(CsPad.CspadElement_V2, "CxiDs1.0:Cspad.0")
+    setConfigFile('config-file.cfg')   # optional, default is to use psana.cfg if present
+    setOption("psana.modules", "EventKeys")   # can set/change options from script
 
+    # define "data source" specifying experiment and run number
+    datasrc = DataSource("exp=cxi63112:run=111")
+
+    # specify source device for data   
+    cam_src = Source("CxiDg4.0:Tm6740.0")
+
+    # loop over all events in a data source
+    for evt in datasrc.events():
+        frame = evt.get(Camera.FrameV1, cam_src)
+        image = frame.data16()
 
 This software was developed for the SIT project.  If you use all or 
 part of it, please give an appropriate acknowledgment.
@@ -53,6 +57,9 @@ del sys
 # import everything from _psana
 #
 from _psana import *
+
+# this is not used here directly but still imported for documentation
+from _psana import _DataSource
 
 #----------------------------------
 # Local non-exported definitions --
@@ -105,7 +112,7 @@ def setOptions(mapping):
 
 def DataSource(*args):
     """
-    Makes an instance of the data source object (:py:class:`_psana.DataSource`).
+    Makes an instance of the data source object (:py:class:`psana._DataSource`).
     Arguments can be either a single list of strings or any number of strings,
     each string represents either an input file name or event collection.
     """
