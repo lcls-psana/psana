@@ -138,14 +138,12 @@ public:
    *  @return Parameter value or default value
    */
   template <typename T>
-  T config(const std::string& param, const T& def) const
+  ConfigSvc::ConfigSvc::ResultDef<T> config(const std::string& param, const T& def) const
   {
     ConfigSvc::ConfigSvc cfg(m_context);
-    try {
-      return cfg.get(name(), param);
-    } catch (const ConfigSvc::ExceptionMissing& ex) {
-      return cfg.get<T>(className(), param, def);
-    }    
+    ConfigSvc::ConfigSvc::ResultDef<T> res(cfg.get(name(), param, def));
+    if (not res.isDefault()) return res;
+    return cfg.get<T>(className(), param, def);
   }
 
   /**

@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-08-03
+2013-03-08 Andy Salnikov
+- Configurable::config() fix for the case when default value type is 
+  different from result type
+
 Tag: V00-08-02
 2013-03-04 Andy Salnikov
 - more updates for docstrings in python module
