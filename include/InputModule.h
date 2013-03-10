@@ -115,7 +115,7 @@ public:
    *  @param[out] evt    Event object
    *  @param[out] env    Environment object
    */ 
-  virtual void beginJob(Event& evt, Env& env);
+  virtual void beginJob(Event& evt, Env& env) = 0;
   
   /**
    *  @brief Method which is called for the next event in the event loop.
@@ -139,7 +139,7 @@ public:
    *  @param[out] evt    Event object
    *  @param[out] env    Environment object
    */
-  virtual void endJob(Event& evt, Env& env);
+  virtual void endJob(Event& evt, Env& env) = 0;
   
 protected:
 
