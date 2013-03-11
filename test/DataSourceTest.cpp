@@ -43,6 +43,8 @@ public:
     std::copy(states, states+nstates, std::back_inserter(m_states));
   }
   
+  virtual void beginJob(Event& evt, Env& env) {}
+
   virtual Status event(Event& evt, Env& env) {
     InputModule::Status state = InputModule::Stop;
     if (not m_states.empty()) {
@@ -52,6 +54,8 @@ public:
     return state;
   }
   
+  virtual void endJob(Event& evt, Env& env) {}
+
 private:
   
   std::deque<psana::InputModule::Status> m_states;  

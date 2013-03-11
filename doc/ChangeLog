@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-08-05
+2013-03-11 Andy Salnikov
+- fixing tests after latest change to InputModule interface
+
 Tag: V00-08-04
 2013-03-10 Andy Salnikov
 - removed implementation of beginJob(), endJob() methods in InputModule
