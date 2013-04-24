@@ -44,7 +44,7 @@ namespace {
 
   const char* logger = "PSAna";
 
-  enum FileType { Unknown=-1, Mixed=0, XTC, HDF5 };
+  enum FileType { Unknown=-1, Mixed=0, XTC, HDF5, SHMEM };
 
   // Function which tries to guess input data type from file name extensions
   template <typename Iter>
@@ -59,6 +59,8 @@ namespace {
       FileType ftype = Unknown;
       if (ds.exists("h5")) {
         ftype = HDF5;
+      } else if (ds.exists("shmem")) {
+        ftype = SHMEM;
       } else if (ds.exists("xtc")) {
         ftype = XTC;
       }
@@ -178,12 +180,15 @@ PSAna::dataSource(const std::vector<std::string>& input)
   if (ftype == Mixed) {
     MsgLog(logger, error, "Mixed input file types");
     return dataSrc;
+  } else if (ftype == SHMEM) {
+    iname = "PSShmemInput.ShmemInputModule";
   } else if (ftype == HDF5) {
     iname = "PSHdf5Input.Hdf5InputModule";
   }
 
-  // pass file names to the configuration so that input module can find them
+  // pass datasets/file names to the configuration so that input module can find them
   std::string flist = boost::join(inputList, " ");
+  cfgsvc.put(iname, "input", flist);
   cfgsvc.put(iname, "files", flist);
 
   // Load input module
