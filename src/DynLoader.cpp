@@ -46,7 +46,7 @@ namespace psana {
 
 /**
  *  Load one user module. The name of the module has a format 
- *  [Language$][Package.]Class[:name]
+ *  [Package.]Class[:name]
  */
 boost::shared_ptr<Module>
 DynLoader::loadModule(const std::string& name, const std::string& language) const
@@ -118,11 +118,15 @@ DynLoader::loadModule(const std::string& name) const
     // if not specified then try to load C++ module and then python
     try {
       return loadModule(module, "c++");
-    } catch (psana::Exception e) {
+    } catch (psana::Exception ex) {
+      std::string cpperr = ex.what();
       try {
         return loadModule(module, "python");
-      } catch (...) {
-        throw e; // rethrow the C++ loader error
+      } catch (const std::exception& pex) {
+        std::string pyerr = pex.what();
+        throw Exception(ERR_LOC, "Failed to load C++ or Python module with name " + module +
+            "\n    C++ error: " + cpperr +
+            "\n    Python error: " + pyerr);
       }
     }
   }

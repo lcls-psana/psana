@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-08-07
+2013-05-01 Andy Salnikov
+- improve error messge printed when module loading fails
+
 Tag: V00-08-06
 2013-04-23 Andy Salnikov
 - add support for ShmemInputModule
