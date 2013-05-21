@@ -166,6 +166,9 @@ PSAna::dataSource(const std::vector<std::string>& input)
   // if input is empty try to use input from config file
   std::vector<std::string> inputList(input);
   if (inputList.empty()) {
+    inputList = cfgsvc.getList("psana", "input", std::vector<std::string>());
+  }
+  if (inputList.empty()) {
     inputList = cfgsvc.getList("psana", "files", std::vector<std::string>());
   }
   if (inputList.empty()) {

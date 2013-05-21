@@ -57,7 +57,7 @@ PSAnaApp::PSAnaApp ( const std::string& appName )
   , m_maxEventsOpt( 'n', "num-events", "number", "maximum number of events to process, def: all", 0U )
   , m_skipEventsOpt( 's', "skip-events", "number", "number of events to skip, def: 0", 0U )
   , m_optionsOpt( 'o', "option", "string", "configuration options, format: section.option[=value]" )
-  , m_files( "data-file",   "file name(s) with input data", std::list<std::string>() )
+  , m_datasets( "dataset", "input dataset specification (list of file names or exp=cxi12345:run=123:...)", std::list<std::string>() )
 {
   addOption( m_calibDirOpt ) ;
   addOption( m_configOpt ) ;
@@ -67,7 +67,7 @@ PSAnaApp::PSAnaApp ( const std::string& appName )
   addOption( m_maxEventsOpt ) ;
   addOption( m_skipEventsOpt ) ;
   addOption( m_optionsOpt ) ;
-  addArgument( m_files ) ;
+  addArgument( m_datasets ) ;
 }
 
 //--------------
@@ -208,7 +208,7 @@ PSAnaApp::runApp ()
   }
 
   // list of inputs
-  std::vector<std::string> input(m_files.begin(), m_files.end());
+  std::vector<std::string> input(m_datasets.begin(), m_datasets.end());
 
   // Instantiate framework
   PSAna fwk(cfgFile, options);

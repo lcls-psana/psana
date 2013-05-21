@@ -106,7 +106,7 @@ private:
   AppUtils::AppCmdOpt<unsigned> m_maxEventsOpt ;
   AppUtils::AppCmdOpt<unsigned> m_skipEventsOpt ;
   AppUtils::AppCmdOptList<std::string> m_optionsOpt;
-  AppUtils::AppCmdArgList<std::string>  m_files;
+  AppUtils::AppCmdArgList<std::string>  m_datasets;
 };
 
 } // namespace psana

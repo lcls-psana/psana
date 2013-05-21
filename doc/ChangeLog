@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-08-08
+2013-05-21 Andy Salnikov
+- updated help for input dataset spec
+- psana.input option can be used instead of psana.files in config file
+
 Tag: V00-08-07
 2013-05-01 Andy Salnikov
 - improve error messge printed when module loading fails
