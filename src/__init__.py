@@ -77,7 +77,7 @@ def setConfigFile(name):
     
     Configuration file name set with setConfigFile() is used in a next call to DataSource().
     """
-    
+    global _cfgFile
     _cfgFile = name
 
 def setOption(name, value):
@@ -90,7 +90,7 @@ def setOption(name, value):
 
     Configuration options set with setOption() are used in a next call to DataSource().
     """
-    
+    global _options
     _options[name] = str(value)
 
 def setOptions(mapping):
@@ -104,7 +104,7 @@ def setOptions(mapping):
 
     Configuration options set with setOptions() are used in a next call to DataSource().
     """
-
+    global _options
     _options[name] = str(value)
     for key, val in mapping.items():
         _options[key] = str(val)
@@ -116,7 +116,7 @@ def DataSource(*args):
     Arguments can be either a single list of strings or any number of strings,
     each string represents either an input file name or event collection.
     """
-    
+    global _options, _cfgFile
     # make instance of the framework
     cfgFile = _cfgFile
     if cfgFile is None:
