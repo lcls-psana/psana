@@ -3,7 +3,7 @@
 // 	$Id$
 //
 // Description:
-//	Class Scan...
+//	Class Step...
 //
 // Author List:
 //      Andy Salnikov
@@ -13,7 +13,7 @@
 //-----------------------
 // This Class's Header --
 //-----------------------
-#include "psana/Scan.h"
+#include "psana/Step.h"
 
 //-----------------
 // C/C++ Headers --
@@ -37,13 +37,13 @@ namespace psana {
 //----------------
 // Constructors --
 //----------------
-Scan::Scan ()
+Step::Step ()
   : m_evtLoop()
 {
 }
 
 // Constructor takes event loop object
-Scan::Scan(const boost::shared_ptr<EventLoop>& evtLoop)
+Step::Step(const boost::shared_ptr<EventLoop>& evtLoop)
   : m_evtLoop(evtLoop)
 {
 }
@@ -51,13 +51,13 @@ Scan::Scan(const boost::shared_ptr<EventLoop>& evtLoop)
 //--------------
 // Destructor --
 //--------------
-Scan::~Scan ()
+Step::~Step ()
 {
 }
 
 /// Get environment object, cannot be called for "null" source
 PSEnv::Env&
-Scan::env() const
+Step::env() const
 {
   return m_evtLoop->env();
 }

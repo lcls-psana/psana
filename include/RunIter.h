@@ -66,7 +66,7 @@ public:
   // Destructor
   ~RunIter () ;
 
-  /// get next scan, when done returns object which is convertible to "false"
+  /// get next run, when done returns object which is convertible to "false"
   value_type next();
 
 protected:

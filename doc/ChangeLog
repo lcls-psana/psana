@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-09-00
+2013-06-24 Andy Salnikov
+- rename Scan and ScanIter classes to Step and StepIter
+- method scans() also renamed intp steps()
+
 Tag: V00-08-09
 2013-05-31 Andy Salnikov
 - fixing bug in psana.setConfigFile() Python method

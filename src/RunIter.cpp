@@ -55,7 +55,7 @@ RunIter::~RunIter ()
 {
 }
 
-/// get next scan, when done returns object which is convertible to "false"
+/// get next run, when done returns object which is convertible to "false"
 RunIter::value_type 
 RunIter::next()
 {

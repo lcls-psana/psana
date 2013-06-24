@@ -130,7 +130,7 @@ public:
   virtual void beginRun(Event& evt, Env& env);
   
   /**
-   *  @brief Method which is called at the beginning of new calibration cycle (scan)
+   *  @brief Method which is called at the beginning of new calibration cycle (step)
    *  
    *  @param[in,out] evt  Event object. In this call it does not have any event 
    *                      data but can be used to pass information between modules.
@@ -147,7 +147,7 @@ public:
   virtual void event(Event& evt, Env& env) = 0;
   
   /**
-   *  @brief Method which is called at the end of the calibration cycle (scan)
+   *  @brief Method which is called at the end of the calibration cycle (step)
    *  
    *  @param[in,out] evt  Event object. In this call it does not have any event 
    *                      data but can be used to pass information between modules.

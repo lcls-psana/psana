@@ -27,7 +27,7 @@ Typical usage::
         frame = evt.get(Camera.FrameV1, cam_src)
         image = frame.data16()
 
-This software was developed for the SIT project.  If you use all or 
+This software was developed for the LCLS project.  If you use all or 
 part of it, please give an appropriate acknowledgment.
 
 @version $Id$

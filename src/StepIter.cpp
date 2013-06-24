@@ -3,7 +3,7 @@
 // 	$Id$
 //
 // Description:
-//	Class ScanIter...
+//	Class StepIter...
 //
 // Author List:
 //      Andy Salnikov
@@ -13,7 +13,7 @@
 //-----------------------
 // This Class's Header --
 //-----------------------
-#include "psana/ScanIter.h"
+#include "psana/StepIter.h"
 
 //-----------------
 // C/C++ Headers --
@@ -36,13 +36,13 @@ namespace psana {
 //----------------
 // Constructors --
 //----------------
-ScanIter::ScanIter ()
+StepIter::StepIter ()
   : m_evtLoop()
 {
 }
 
 /// Constructor takes event loop instance.
-ScanIter::ScanIter (const boost::shared_ptr<EventLoop>& evtLoop, EventLoop::EventType stopType)
+StepIter::StepIter (const boost::shared_ptr<EventLoop>& evtLoop, EventLoop::EventType stopType)
   : m_evtLoop(evtLoop)
   , m_stopType(stopType)
 {
@@ -51,15 +51,15 @@ ScanIter::ScanIter (const boost::shared_ptr<EventLoop>& evtLoop, EventLoop::Even
 //--------------
 // Destructor --
 //--------------
-ScanIter::~ScanIter ()
+StepIter::~StepIter ()
 {
 }
 
-/// get next scan, when done returns object which is convertible to "false"
-ScanIter::value_type 
-ScanIter::next()
+/// get next Step, when done returns object which is convertible to "false"
+StepIter::value_type
+StepIter::next()
 {
-  ScanIter::value_type result;
+  StepIter::value_type result;
   if (m_stopType == EventLoop::Event) {
     // means iteration already finished
     return result;
@@ -79,7 +79,7 @@ ScanIter::next()
       break;
     } else if (nxt.first == EventLoop::BeginCalibCycle) {
       // found it
-      result = ScanIter::value_type(m_evtLoop);
+      result = StepIter::value_type(m_evtLoop);
       break;
     }
   }

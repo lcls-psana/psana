@@ -1,12 +1,12 @@
-#ifndef PSANA_SCAN_H
-#define PSANA_SCAN_H
+#ifndef PSANA_STEP_H
+#define PSANA_STEP_H
 
 //--------------------------------------------------------------------------
 // File and Version Information:
 // 	$Id$
 //
 // Description:
-//	Class Scan.
+//	Class Step.
 //
 //------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@
 // Collaborating Class Declarations --
 //------------------------------------
 namespace psana {
-class ScanIter;
+class StepIter;
 }
 
 //		---------------------
@@ -44,7 +44,7 @@ namespace psana {
 /**
  *  @ingroup psana
  *
- *  @brief Class representing a scan (calib cycle).
+ *  @brief Class representing a step (calib cycle).
  *  
  *  Main purpose of this class is to provide iteration over contained 
  *  events.
@@ -57,17 +57,17 @@ namespace psana {
  *  @author Andy Salnikov
  */
 
-class Scan  {
+class Step  {
 public:
 
-  /// Default constructor makes "null" scan object
-  Scan();
+  /// Default constructor makes "null" Step object
+  Step();
 
   // Constructor takes event loop object
-  Scan(const boost::shared_ptr<EventLoop>& evtLoop);
+  Step(const boost::shared_ptr<EventLoop>& evtLoop);
   
   // Destructor
-  ~Scan () ;
+  ~Step () ;
   
   /// This object is converted to true for non-null instance
   operator bool() const { return bool(m_evtLoop); }
@@ -76,7 +76,7 @@ public:
   /// Get environment object, cannot be called for "null" object
   PSEnv::Env& env() const;
 
-  /// Returns iterator for events in this scan
+  /// Returns iterator for events in this step
   EventIter events() { return EventIter(m_evtLoop, EventLoop::EndCalibCycle); }
 
 protected:
@@ -90,4 +90,4 @@ private:
 
 } // namespace psana
 
-#endif // PSANA_SCAN_H
+#endif // PSANA_STEP_H

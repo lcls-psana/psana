@@ -26,7 +26,7 @@
 #include "psana/EventIter.h"
 #include "psana/EventLoop.h"
 #include "psana/RunIter.h"
-#include "psana/ScanIter.h"
+#include "psana/StepIter.h"
 #include "PSEnv/Env.h"
 
 //------------------------------------
@@ -94,8 +94,8 @@ public:
   /// Returns iterator for events
   EventIter events() { return EventIter(m_evtLoop, EventLoop::None); }
 
-  /// Returns iterator for scans
-  ScanIter scans() { return ScanIter(m_evtLoop, EventLoop::None); }
+  /// Returns iterator for steps
+  StepIter steps() { return StepIter(m_evtLoop, EventLoop::None); }
 
   /// Returns iterator for runs
   RunIter runs() { return RunIter(m_evtLoop); }

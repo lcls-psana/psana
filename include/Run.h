@@ -24,7 +24,7 @@
 //-------------------------------
 #include "psana/EventIter.h"
 #include "psana/EventLoop.h"
-#include "psana/ScanIter.h"
+#include "psana/StepIter.h"
 #include "PSEnv/Env.h"
 
 //------------------------------------
@@ -48,7 +48,7 @@ namespace psana {
  *  @brief Class representing a run.
  *  
  *  Main purpose of this class is to provide iteration over contained 
- *  events or scans.
+ *  events or steps.
  *
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.
@@ -83,8 +83,8 @@ public:
   /// Returns iterator for events in this run
   EventIter events() { return EventIter(m_evtLoop, EventLoop::EndRun); }
 
-  /// Returns iterator for scans in this run
-  ScanIter scans() { return ScanIter(m_evtLoop, EventLoop::EndRun); }
+  /// Returns iterator for steps in this run
+  StepIter steps() { return StepIter(m_evtLoop, EventLoop::EndRun); }
 
 
 protected:

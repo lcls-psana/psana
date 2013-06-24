@@ -1,12 +1,12 @@
-#ifndef PSANA_SCANITER_H
-#define PSANA_SCANITER_H
+#ifndef PSANA_STEPITER_H
+#define PSANA_STEPITER_H
 
 //--------------------------------------------------------------------------
 // File and Version Information:
 // 	$Id$
 //
 // Description:
-//	Class ScanIter.
+//	Class StepIter.
 //
 //------------------------------------------------------------------------
 
@@ -22,7 +22,7 @@
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
-#include "psana/Scan.h"
+#include "psana/Step.h"
 
 //------------------------------------
 // Collaborating Class Declarations --
@@ -42,7 +42,7 @@ namespace psana {
 /**
  *  @ingroup psana
  *
- *  @brief Class representing iterator over scans (calib cycles)
+ *  @brief Class representing iterator over steps (calib cycles)
  *
  *
  *  This software was developed for the LCLS project.  If you use all or 
@@ -53,13 +53,13 @@ namespace psana {
  *  @author Andy Salnikov
  */
 
-class ScanIter  {
+class StepIter  {
 public:
 
-  typedef Scan value_type;
+  typedef Step value_type;
     
   /// Default constructor makes invalid iterator
-  ScanIter () ;
+  StepIter () ;
 
   /**
    *  @brief Constructor takes event loop instance and "stop event type".
@@ -67,12 +67,12 @@ public:
    *  Do not use EventLoop::Event for stop type, first it does not make
    *  sense, second this iterator uses it for special purpose.
    */
-  ScanIter (const boost::shared_ptr<EventLoop>& evtLoop, EventLoop::EventType stopType);
+  StepIter (const boost::shared_ptr<EventLoop>& evtLoop, EventLoop::EventType stopType);
 
   // Destructor
-  ~ScanIter () ;
+  ~StepIter () ;
 
-  /// get next scan, when done returns object which is convertible to "false"
+  /// get next step, when done returns object which is convertible to "false"
   value_type next();
 
 protected:
@@ -87,4 +87,4 @@ private:
 
 } // namespace psana
 
-#endif // PSANA_SCANITER_H
+#endif // PSANA_STEPITER_H

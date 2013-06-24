@@ -48,7 +48,7 @@ namespace psana {
  *  events left in the input source or when specified "stop" event
  *  type is reached. To iterate over all events from begin to end use
  *  None event type, to stop at the end of the run use EndRun type,
- *  to stop at the end of the scan use EndCalibSycle event type.
+ *  to stop at the end of the step use EndCalibCycle event type.
  *
  *  This software was developed for the LCLS project.  If you use all or 
  *  part of it, please give an appropriate acknowledgment.

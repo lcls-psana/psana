@@ -116,7 +116,7 @@ EventKeys::event(Event& evt, Env& env)
   ::printKeys(std::cout, evt.keys());
 }
 
-/// Method which is called at the end of the calibration cycle (scan)
+/// Method which is called at the end of the calibration cycle
 void
 EventKeys::endCalibCycle(Event& evt, Env& env)
 {
