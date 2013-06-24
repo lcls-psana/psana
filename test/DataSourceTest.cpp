@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE( test_events_3 )
 
 // ==============================================================
 
-BOOST_AUTO_TEST_CASE( test_scans_1 )
+BOOST_AUTO_TEST_CASE( test_steps_1 )
 {
   InputModule::Status states[] = {
       InputModule::BeginRun,
@@ -203,19 +203,19 @@ BOOST_AUTO_TEST_CASE( test_scans_1 )
 
   Fixture f(states, sizeof states/sizeof states[0]);
 
-  ScanIter iter = f.dataSrc->scans();
-  Scan scan;
-  BOOST_CHECK(not scan);
+  StepIter iter = f.dataSrc->steps();
+  Step step;
+  BOOST_CHECK(not step);
   
-  scan = iter.next();
-  BOOST_CHECK(scan);
-  scan = iter.next();
-  BOOST_CHECK(not scan);
+  step = iter.next();
+  BOOST_CHECK(step);
+  step = iter.next();
+  BOOST_CHECK(not step);
 }
 
 // ==============================================================
 
-BOOST_AUTO_TEST_CASE( test_scans_2 )
+BOOST_AUTO_TEST_CASE( test_steps_2 )
 {
   InputModule::Status states[] = {
       InputModule::BeginRun,
@@ -232,20 +232,20 @@ BOOST_AUTO_TEST_CASE( test_scans_2 )
 
   Fixture f(states, sizeof states/sizeof states[0]);
 
-  ScanIter iter = f.dataSrc->scans();
-  Scan scan;
-  BOOST_CHECK(not scan);
+  StepIter iter = f.dataSrc->steps();
+  Step step;
+  BOOST_CHECK(not step);
   
-  scan = iter.next();
-  BOOST_CHECK(scan);
-  scan = iter.next();
-  BOOST_CHECK(scan);
-  scan = iter.next();
-  BOOST_CHECK(not scan);
+  step = iter.next();
+  BOOST_CHECK(step);
+  step = iter.next();
+  BOOST_CHECK(step);
+  step = iter.next();
+  BOOST_CHECK(not step);
 }
 // ==============================================================
 
-BOOST_AUTO_TEST_CASE( test_scans_3 )
+BOOST_AUTO_TEST_CASE( test_steps_3 )
 {
   InputModule::Status states[] = {
       InputModule::BeginRun,
@@ -264,16 +264,16 @@ BOOST_AUTO_TEST_CASE( test_scans_3 )
 
   Fixture f(states, sizeof states/sizeof states[0]);
 
-  ScanIter iter = f.dataSrc->scans();
-  Scan scan;
-  BOOST_CHECK(not scan);
+  StepIter iter = f.dataSrc->steps();
+  Step step;
+  BOOST_CHECK(not step);
   
-  scan = iter.next();
-  BOOST_CHECK(scan);
-  scan = iter.next();
-  BOOST_CHECK(scan);
-  scan = iter.next();
-  BOOST_CHECK(not scan);
+  step = iter.next();
+  BOOST_CHECK(step);
+  step = iter.next();
+  BOOST_CHECK(step);
+  step = iter.next();
+  BOOST_CHECK(not step);
 }
 
 // ==============================================================
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE( test_runs_2 )
 
 // ==============================================================
 
-BOOST_AUTO_TEST_CASE( test_scans_nest_1 )
+BOOST_AUTO_TEST_CASE( test_steps_nest_1 )
 {
   InputModule::Status states[] = {
       InputModule::BeginRun,
@@ -349,15 +349,15 @@ BOOST_AUTO_TEST_CASE( test_scans_nest_1 )
 
   Fixture f(states, sizeof states/sizeof states[0]);
 
-  ScanIter sit = f.dataSrc->scans();
-  Scan scan;
+  StepIter sit = f.dataSrc->steps();
+  Step step;
   boost::shared_ptr<PSEvt::Event> evt;  
-  BOOST_CHECK(not scan);
+  BOOST_CHECK(not step);
   
-  scan = sit.next();
-  BOOST_CHECK(scan);
+  step = sit.next();
+  BOOST_CHECK(step);
 
-  EventIter eit = scan.events();
+  EventIter eit = step.events();
   evt = eit.next();
   BOOST_CHECK(evt);
   evt = eit.next();
@@ -365,13 +365,13 @@ BOOST_AUTO_TEST_CASE( test_scans_nest_1 )
   evt = eit.next();
   BOOST_CHECK(not evt);
     
-  scan = sit.next();
-  BOOST_CHECK(not scan);
+  step = sit.next();
+  BOOST_CHECK(not step);
 }
 
 // ==============================================================
 
-BOOST_AUTO_TEST_CASE( test_scans_nest_2 )
+BOOST_AUTO_TEST_CASE( test_steps_nest_2 )
 {
   InputModule::Status states[] = {
       InputModule::BeginRun,
@@ -388,14 +388,14 @@ BOOST_AUTO_TEST_CASE( test_scans_nest_2 )
 
   Fixture f(states, sizeof states/sizeof states[0]);
 
-  ScanIter sit = f.dataSrc->scans();
-  Scan scan;
+  StepIter sit = f.dataSrc->steps();
+  Step step;
   boost::shared_ptr<PSEvt::Event> evt;  
   
-  scan = sit.next();
-  BOOST_CHECK(scan);
+  step = sit.next();
+  BOOST_CHECK(step);
 
-  EventIter eit = scan.events();
+  EventIter eit = step.events();
   evt = eit.next();
   BOOST_CHECK(evt);
   evt = eit.next();
@@ -403,10 +403,10 @@ BOOST_AUTO_TEST_CASE( test_scans_nest_2 )
   evt = eit.next();
   BOOST_CHECK(not evt);
     
-  scan = sit.next();
-  BOOST_CHECK(scan);
+  step = sit.next();
+  BOOST_CHECK(step);
 
-  eit = scan.events();
+  eit = step.events();
   evt = eit.next();
   BOOST_CHECK(evt);
   evt = eit.next();
@@ -414,8 +414,8 @@ BOOST_AUTO_TEST_CASE( test_scans_nest_2 )
   evt = eit.next();
   BOOST_CHECK(not evt);
     
-  scan = sit.next();
-  BOOST_CHECK(not scan);
+  step = sit.next();
+  BOOST_CHECK(not step);
 }
 
 // ==============================================================
@@ -520,18 +520,18 @@ BOOST_AUTO_TEST_CASE( test_runs_nest_3 )
 
   RunIter rit = f.dataSrc->runs();
   Run run;
-  Scan scan;
+  Step step;
   boost::shared_ptr<PSEvt::Event> evt;  
   
   run = rit.next();
   BOOST_CHECK(run);
 
-  ScanIter sit = run.scans();
+  StepIter sit = run.steps();
 
-  scan = sit.next();
-  BOOST_CHECK(scan);
+  step = sit.next();
+  BOOST_CHECK(step);
 
-  EventIter eit = scan.events();
+  EventIter eit = step.events();
   evt = eit.next();
   BOOST_CHECK(evt);
   evt = eit.next();
@@ -539,8 +539,8 @@ BOOST_AUTO_TEST_CASE( test_runs_nest_3 )
   evt = eit.next();
   BOOST_CHECK(not evt);
   
-  scan = sit.next();
-  BOOST_CHECK(not scan);
+  step = sit.next();
+  BOOST_CHECK(not step);
 
   run = rit.next();
   BOOST_CHECK(not run);
@@ -567,17 +567,17 @@ BOOST_AUTO_TEST_CASE( test_runs_nest_4 )
 
   RunIter rit = f.dataSrc->runs();
   Run run;
-  Scan scan;
+  Step step;
   boost::shared_ptr<PSEvt::Event> evt;  
   
   run = rit.next();
   BOOST_CHECK(run);
 
-  ScanIter sit = run.scans();
-  scan = sit.next();
-  BOOST_CHECK(scan);
+  StepIter sit = run.steps();
+  step = sit.next();
+  BOOST_CHECK(step);
 
-  EventIter eit = scan.events();
+  EventIter eit = step.events();
   evt = eit.next();
   BOOST_CHECK(evt);
   evt = eit.next();
@@ -585,10 +585,10 @@ BOOST_AUTO_TEST_CASE( test_runs_nest_4 )
   evt = eit.next();
   BOOST_CHECK(not evt);
   
-  scan = sit.next();
-  BOOST_CHECK(scan);
+  step = sit.next();
+  BOOST_CHECK(step);
 
-  eit = scan.events();
+  eit = step.events();
   evt = eit.next();
   BOOST_CHECK(evt);
   evt = eit.next();
@@ -596,8 +596,8 @@ BOOST_AUTO_TEST_CASE( test_runs_nest_4 )
   evt = eit.next();
   BOOST_CHECK(not evt);
   
-  scan = sit.next();
-  BOOST_CHECK(not scan);
+  step = sit.next();
+  BOOST_CHECK(not step);
 
   run = rit.next();
   BOOST_CHECK(not run);
@@ -634,17 +634,17 @@ BOOST_AUTO_TEST_CASE( test_runs_nest_5 )
 
   RunIter rit = f.dataSrc->runs();
   Run run;
-  Scan scan;
+  Step step;
   boost::shared_ptr<PSEvt::Event> evt;  
   
   run = rit.next();
   BOOST_CHECK(run);
 
-  ScanIter sit = run.scans();
-  scan = sit.next();
-  BOOST_CHECK(scan);
+  StepIter sit = run.steps();
+  step = sit.next();
+  BOOST_CHECK(step);
 
-  EventIter eit = scan.events();
+  EventIter eit = step.events();
   evt = eit.next();
   BOOST_CHECK(evt);
   evt = eit.next();
@@ -652,10 +652,10 @@ BOOST_AUTO_TEST_CASE( test_runs_nest_5 )
   evt = eit.next();
   BOOST_CHECK(not evt);
   
-  scan = sit.next();
-  BOOST_CHECK(scan);
+  step = sit.next();
+  BOOST_CHECK(step);
 
-  eit = scan.events();
+  eit = step.events();
   evt = eit.next();
   BOOST_CHECK(evt);
   evt = eit.next();
@@ -663,17 +663,17 @@ BOOST_AUTO_TEST_CASE( test_runs_nest_5 )
   evt = eit.next();
   BOOST_CHECK(not evt);
   
-  scan = sit.next();
-  BOOST_CHECK(not scan);
+  step = sit.next();
+  BOOST_CHECK(not step);
 
   run = rit.next();
   BOOST_CHECK(run);
 
-  sit = run.scans();
-  scan = sit.next();
-  BOOST_CHECK(scan);
+  sit = run.steps();
+  step = sit.next();
+  BOOST_CHECK(step);
 
-  eit = scan.events();
+  eit = step.events();
   evt = eit.next();
   BOOST_CHECK(evt);
   evt = eit.next();
@@ -681,10 +681,10 @@ BOOST_AUTO_TEST_CASE( test_runs_nest_5 )
   evt = eit.next();
   BOOST_CHECK(not evt);
   
-  scan = sit.next();
-  BOOST_CHECK(scan);
+  step = sit.next();
+  BOOST_CHECK(step);
 
-  eit = scan.events();
+  eit = step.events();
   evt = eit.next();
   BOOST_CHECK(evt);
   evt = eit.next();
@@ -692,8 +692,8 @@ BOOST_AUTO_TEST_CASE( test_runs_nest_5 )
   evt = eit.next();
   BOOST_CHECK(not evt);
   
-  scan = sit.next();
-  BOOST_CHECK(not scan);
+  step = sit.next();
+  BOOST_CHECK(not step);
 
   run = rit.next();
   BOOST_CHECK(not run);

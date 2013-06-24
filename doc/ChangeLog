@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-09-01
+2013-06-24 Andy Salnikov
+- update tests for my last changes
+
 Tag: V00-09-00
 2013-06-24 Andy Salnikov
 - rename Scan and ScanIter classes to Step and StepIter
