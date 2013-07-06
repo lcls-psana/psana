@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-09-02
+2013-07-05 Andy Salnikov
+- in InputIter: call input module's beginJob() earlier so that DataSource
+  constructor can fail sooner
+
 Tag: V00-09-01
 2013-06-24 Andy Salnikov
 - update tests for my last changes

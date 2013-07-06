@@ -66,6 +66,11 @@ InputIter::InputIter (const boost::shared_ptr<InputModule>& inputModule,
   m_closeStateEventType[StateConfigured] = EndJob;
   m_closeStateEventType[StateRunning] = EndRun;
   m_closeStateEventType[StateScanning] = EndCalibCycle;
+
+  // run beginJob for input module
+  EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>());
+  m_inputModule->beginJob(*evt, *m_env);
+  newState(StateConfigured, evt);
 }
 
 //--------------
@@ -106,13 +111,6 @@ InputIter::next()
         out <<  " " << it->first;
       }
     }
-  }
-
-  if (m_state == StateNone) {
-    // run beginJob for input module
-    EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>());
-    m_inputModule->beginJob(*evt, *m_env);
-    newState(StateConfigured, evt);
   }
 
   // if we don't have any saved transitions on stack then get next
