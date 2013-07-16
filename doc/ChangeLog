@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-09-03
+2013-07-16 Andy Salnikov
+- bug fix in __init__.py, pylint found undefined variables
+
 Tag: V00-09-02
 2013-07-05 Andy Salnikov
 - in InputIter: call input module's beginJob() earlier so that DataSource

@@ -105,7 +105,6 @@ def setOptions(mapping):
     Configuration options set with setOptions() are used in a next call to DataSource().
     """
     global _options
-    _options[name] = str(value)
     for key, val in mapping.items():
         _options[key] = str(val)
 
