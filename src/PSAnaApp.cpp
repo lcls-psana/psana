@@ -49,25 +49,16 @@ namespace psana {
 //----------------
 PSAnaApp::PSAnaApp ( const std::string& appName )
   : AppUtils::AppBase( appName )
-  , m_calibDirOpt( 'b', "calib-dir", "path", "calibration directory name, may include {exp} and {instr}", "" )
-  , m_configOpt( 'c', "config", "path", "configuration file, def: psana.cfg", "" )
-  , m_expNameOpt( 'e', "experiment", "string", "experiment name, format: XPP:xpp12311 or xpp12311", "" )
-  , m_jobNameOpt( 'j', "job-name", "string", "job name, def: from input files", "" )
-  , m_modulesOpt( 'm', "module", "name", "module name, more than one possible" )
-  , m_maxEventsOpt( 'n', "num-events", "number", "maximum number of events to process, def: all", 0U )
-  , m_skipEventsOpt( 's', "skip-events", "number", "number of events to skip, def: 0", 0U )
-  , m_optionsOpt( 'o', "option", "string", "configuration options, format: section.option[=value]" )
-  , m_datasets( "dataset", "input dataset specification (list of file names or exp=cxi12345:run=123:...)", std::list<std::string>() )
+  , m_calibDirOpt( parser(), "b,calib-dir", "path", "calibration directory name, may include {exp} and {instr}", "" )
+  , m_configOpt( parser(), "c,config", "path", "configuration file, def: psana.cfg", "" )
+  , m_expNameOpt( parser(), "e,experiment", "string", "experiment name, format: XPP:xpp12311 or xpp12311", "" )
+  , m_jobNameOpt( parser(), "j,job-name", "string", "job name, def: from input files", "" )
+  , m_modulesOpt( parser(), "m,module", "name", "module name, more than one possible" )
+  , m_maxEventsOpt( parser(), "n,num-events", "number", "maximum number of events to process, def: all", 0U )
+  , m_skipEventsOpt( parser(), "s,skip-events", "number", "number of events to skip, def: 0", 0U )
+  , m_optionsOpt( parser(), "o,option", "string", "configuration options, format: section.option[=value]" )
+  , m_datasets( parser(), "dataset", "input dataset specification (list of file names or exp=cxi12345:run=123:...)", std::list<std::string>() )
 {
-  addOption( m_calibDirOpt ) ;
-  addOption( m_configOpt ) ;
-  addOption( m_expNameOpt ) ;
-  addOption( m_jobNameOpt ) ;
-  addOption( m_modulesOpt ) ;
-  addOption( m_maxEventsOpt ) ;
-  addOption( m_skipEventsOpt ) ;
-  addOption( m_optionsOpt ) ;
-  addArgument( m_datasets ) ;
 }
 
 //--------------
