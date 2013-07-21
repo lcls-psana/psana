@@ -57,7 +57,7 @@ PSAnaApp::PSAnaApp ( const std::string& appName )
   , m_maxEventsOpt( parser(), "n,num-events", "number", "maximum number of events to process, def: all", 0U )
   , m_skipEventsOpt( parser(), "s,skip-events", "number", "number of events to skip, def: 0", 0U )
   , m_optionsOpt( parser(), "o,option", "string", "configuration options, format: section.option[=value]" )
-  , m_datasets( parser(), "dataset", "input dataset specification (list of file names or exp=cxi12345:run=123:...)", std::list<std::string>() )
+  , m_datasets( parser(), "dataset", "input dataset specification (list of file names or exp=cxi12345:run=123:...)", std::vector<std::string>() )
 {
 }
 
@@ -146,8 +146,8 @@ PSAnaApp::runApp ()
   // command-line -m options override config file values
   if (not m_modulesOpt.value().empty()) {
     std::string modlist;
-    const std::list<std::string>& modules = m_modulesOpt.value();
-    for(std::list<std::string>::const_iterator it = modules.begin(); it != modules.end(); ++ it) {
+    const std::vector<std::string>& modules = m_modulesOpt.value();
+    for(std::vector<std::string>::const_iterator it = modules.begin(); it != modules.end(); ++ it) {
       if (not modlist.empty()) modlist += ' ';
       modlist += *it;
     }
