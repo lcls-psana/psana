@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-09-06
+2013-07-23 Andy Salnikov
+- improve descriotion of command line options
+
 Tag: V00-09-05
 2013-07-21 Andy Salnikov
 - another update for changes in cmdline interface
