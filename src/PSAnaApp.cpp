@@ -49,14 +49,14 @@ namespace psana {
 //----------------
 PSAnaApp::PSAnaApp ( const std::string& appName )
   : AppUtils::AppBase( appName )
-  , m_calibDirOpt( parser(), "b,calib-dir", "path", "calibration directory name, may include {exp} and {instr}", "" )
-  , m_configOpt( parser(), "c,config", "path", "configuration file, def: psana.cfg", "" )
-  , m_expNameOpt( parser(), "e,experiment", "string", "experiment name, format: XPP:xpp12311 or xpp12311", "" )
-  , m_jobNameOpt( parser(), "j,job-name", "string", "job name, def: from input files", "" )
+  , m_calibDirOpt( parser(), "b,calib-dir", "path", "calibration directory name, may include {exp} and {instr}, if left empty then do not do calibrations", "" )
+  , m_configOpt( parser(), "c,config", "path", "configuration file, by default use psana.cfg if it exists", "" )
+  , m_expNameOpt( parser(), "e,experiment", "string", "experiment name, format: XPP:xpp12311 or xpp12311, by default guess it from data", "" )
+  , m_jobNameOpt( parser(), "j,job-name", "string", "job name, default is to generate from input file names", "" )
   , m_modulesOpt( parser(), "m,module", "name", "module name, more than one possible" )
-  , m_maxEventsOpt( parser(), "n,num-events", "number", "maximum number of events to process, def: all", 0U )
-  , m_skipEventsOpt( parser(), "s,skip-events", "number", "number of events to skip, def: 0", 0U )
-  , m_optionsOpt( parser(), "o,option", "string", "configuration options, format: section.option[=value]" )
+  , m_maxEventsOpt( parser(), "n,num-events", "number", "maximum number of events to process, 0 means all", 0U )
+  , m_skipEventsOpt( parser(), "s,skip-events", "number", "number of events to skip", 0U )
+  , m_optionsOpt( parser(), "o,option", "string", "configuration options, format: module.option[=value]" )
   , m_datasets( parser(), "dataset", "input dataset specification (list of file names or exp=cxi12345:run=123:...)", std::vector<std::string>() )
 {
 }
