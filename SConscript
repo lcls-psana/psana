@@ -26,4 +26,7 @@ Import('*')
 # PYEXTMOD - name of the Python extension module, package name used by default
 #
 #
-standardSConscript(LIBS="dl")
+LIBS="dl"
+DOCGEN = {'psana-doxy': 'psana psana/doc/mainpage.dox-main',
+          'doxy-all': 'psana'}
+standardSConscript(**locals())
