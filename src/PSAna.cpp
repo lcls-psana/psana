@@ -220,8 +220,11 @@ PSAna::dataSource(const std::vector<std::string>& input)
     expNameProvider = boost::make_shared<ExpNameFromDs>(inputList);
   }
 
+  // make AliasMap instance
+  boost::shared_ptr<PSEvt::AliasMap> amap = boost::make_shared<AliasMap>();
+
   // Setup environment
-  boost::shared_ptr<PSEnv::Env> env = boost::make_shared<PSEnv::Env>(jobName, expNameProvider, calibDir);
+  boost::shared_ptr<PSEnv::Env> env = boost::make_shared<PSEnv::Env>(jobName, expNameProvider, calibDir, amap);
   MsgLogRoot(debug, "instrument = " << env->instrument() << " experiment = " << env->experiment());
   MsgLogRoot(debug, "calibDir = " << env->calibDir());
 

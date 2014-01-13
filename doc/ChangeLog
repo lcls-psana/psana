@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-10-00
+2014-01-13 Andy Salnikov
+- add support for aliases
+
 Tag: V00-09-07
 2013-09-17 Andy Salnikov
 - documentation generation changed in SConsTools, updating SConscript

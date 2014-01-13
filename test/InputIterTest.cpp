@@ -65,8 +65,9 @@ struct Fixture {
   
   Fixture(const InputModule::Status states[], int nstates, InputIter::EventType expected[], unsigned nexpected) 
   {
+    boost::shared_ptr<AliasMap> amap = boost::make_shared<AliasMap>();
     boost::shared_ptr<PSEnv::IExpNameProvider> expNameProvider;
-    boost::shared_ptr<PSEnv::Env> env = boost::make_shared<PSEnv::Env>("", expNameProvider, "");
+    boost::shared_ptr<PSEnv::Env> env = boost::make_shared<PSEnv::Env>("", expNameProvider, "", amap);
     boost::shared_ptr<InputModule> input = boost::make_shared<TestInputModule>(states, nstates);
     iter = boost::make_shared<InputIter>(input, env);
     std::copy(expected, expected+nexpected, std::back_inserter(exp));

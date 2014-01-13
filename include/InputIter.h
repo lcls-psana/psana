@@ -26,6 +26,7 @@
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
+#include "PSEvt/AliasMap.h"
 #include "PSEnv/Env.h"
 #include "PSEvt/Event.h"
 
@@ -129,6 +130,7 @@ private:
   EventType m_newStateEventType[NumStates];
   EventType m_closeStateEventType[NumStates];
   std::deque<value_type> m_values;
+  boost::shared_ptr<PSEvt::AliasMap> m_aliasMap;
 };
 
 /// formatting for InputIter::EventType enum

@@ -56,6 +56,7 @@ InputIter::InputIter (const boost::shared_ptr<InputModule>& inputModule,
   , m_finished(false)
   , m_state(StateNone)
   , m_values()
+  , m_aliasMap(env->aliasMap())
 {
   m_newStateEventType[StateNone] = None;
   m_newStateEventType[StateConfigured] = BeginJob;
@@ -68,7 +69,7 @@ InputIter::InputIter (const boost::shared_ptr<InputModule>& inputModule,
   m_closeStateEventType[StateScanning] = EndCalibCycle;
 
   // run beginJob for input module
-  EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>());
+  EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>(m_aliasMap));
   m_inputModule->beginJob(*evt, *m_env);
   newState(StateConfigured, evt);
 }
@@ -80,7 +81,7 @@ InputIter::~InputIter ()
 {
   // call endJob if has not been called yet
   if (m_state != StateNone) {
-    EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>());
+    EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>(m_aliasMap));
     m_inputModule->endJob(*evt, *m_env);
   }
 }
@@ -118,7 +119,7 @@ InputIter::next()
   while (m_values.empty()) {
 
     // Create event object
-    EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>());
+    EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>(m_aliasMap));
 
     // run input module to populate event
     InputModule::Status istat = m_inputModule->event(*evt, *m_env);
@@ -165,7 +166,7 @@ InputIter::next()
 
   if (m_values.empty()) {
     // means we reached the end, time to call endJob
-    EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>());
+    EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>(m_aliasMap));
     m_inputModule->endJob(*evt, *m_env);
     unwind(StateNone, evt);
     m_finished = true;
@@ -195,7 +196,7 @@ void
 InputIter::finish()
 {
   // means we reached the end, time to call endJob
-  EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>());
+  EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>(m_aliasMap));
   m_inputModule->endJob(*evt, *m_env);
   unwind(StateNone, evt);
   m_finished = true;
@@ -210,7 +211,7 @@ InputIter::newState(State state, const EventPtr& evt)
   // make sure that previous state is also in the stack
   if (int(m_state) < int(state-1)) {
     // use different event instance for it
-    EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>());
+    EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>(m_aliasMap));
     newState(State(state-1), evt);
   }
 
@@ -246,7 +247,7 @@ InputIter::unwind(State newState, const EventPtr& evt)
 {
   while (m_state > newState+1) {
     // use different event instance for it
-    EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>());
+    EventPtr evt = boost::make_shared<PSEvt::Event>(boost::make_shared<PSEvt::ProxyDict>(m_aliasMap));
     closeState(evt);
   }
   if (m_state > newState) {
