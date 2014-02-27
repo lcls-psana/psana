@@ -11,6 +11,19 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-11-00
+2014-02-26 Andy Salnikov
+- first implementation of multi-processing support
+- pyana-style multiprocessing with a master process reading the 
+  data and sending it do one of several worker processes
+- works with XTC data only, relies on special input modules from
+  PSXtcMPInput package
+- should be possible to extend to HDF5 with some effort
+- forking and job configuration is done by PSAna::dataSource()
+  method
+- in the future we should find more generic mechanism for spawning
+  and controlling workers, e.g. based on MPI
+
 Tag: V00-10-00
 2014-01-13 Andy Salnikov
 - add support for aliases

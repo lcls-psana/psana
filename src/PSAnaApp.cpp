@@ -56,6 +56,7 @@ PSAnaApp::PSAnaApp ( const std::string& appName )
   , m_modulesOpt( parser(), "m,module", "name", "module name, more than one possible" )
   , m_maxEventsOpt( parser(), "n,num-events", "number", "maximum number of events to process, 0 means all", 0U )
   , m_skipEventsOpt( parser(), "s,skip-events", "number", "number of events to skip", 0U )
+  , m_parallelOpt( parser(), "p,num-cpu", "number", "number greater than 0 enables multi-processing", 0U )
   , m_optionsOpt( parser(), "o,option", "string", "configuration options, format: module.option[=value]" )
   , m_datasets( parser(), "dataset", "input dataset specification (list of file names or exp=cxi12345:run=123:...)", std::vector<std::string>() )
 {
@@ -178,6 +179,11 @@ PSAnaApp::runApp ()
   }
   if (m_skipEventsOpt.value()) {
       options["psana.skip-events"] = boost::lexical_cast<std::string>(m_skipEventsOpt.value());
+  }
+
+  // multi-processing
+  if (m_parallelOpt.value()) {
+      options["psana.parallel"] = boost::lexical_cast<std::string>(m_parallelOpt.value());
   }
 
   // set calib dir name if specified

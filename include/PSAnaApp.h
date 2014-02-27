@@ -105,6 +105,7 @@ private:
   AppUtils::AppCmdOptList<std::string> m_modulesOpt;
   AppUtils::AppCmdOpt<unsigned> m_maxEventsOpt ;
   AppUtils::AppCmdOpt<unsigned> m_skipEventsOpt ;
+  AppUtils::AppCmdOpt<unsigned> m_parallelOpt;
   AppUtils::AppCmdOptList<std::string> m_optionsOpt;
   AppUtils::AppCmdArgList<std::string>  m_datasets;
 };

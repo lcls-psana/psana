@@ -18,6 +18,7 @@
 //-----------------
 // C/C++ Headers --
 //-----------------
+#include <signal.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
@@ -30,8 +31,10 @@
 #include "IData/Dataset.h"
 #include "MsgLogger/MsgLogger.h"
 #include "psana/DynLoader.h"
+#include "psana/Exceptions.h"
 #include "psana/ExpNameFromConfig.h"
 #include "psana/ExpNameFromDs.h"
+#include "psana/MPWorkerId.h"
 #include "PSEnv/Env.h"
 
 //-----------------------------------------------------------------------
@@ -75,6 +78,7 @@ namespace {
 
     return type;
   }
+
 }
 
 
@@ -120,18 +124,6 @@ PSAna::PSAna(const std::string& config, const std::map<std::string, std::string>
     // and update global config as well
     glbcfgsvc.put(section, option, it->second);
   }
-
-  // get list of modules to load
-  std::vector<std::string> moduleNames = cfgsvc.getList("psana", "modules", std::vector<std::string>());
-
-  // instantiate all user modules
-  DynLoader loader;
-  for ( std::vector<std::string>::const_iterator it = moduleNames.begin(); it != moduleNames.end() ; ++ it ) {
-    m_modules.push_back(loader.loadModule(*it));
-    MsgLog(logger, trace, "Loaded module " << m_modules.back()->name());
-  }
-
-
 }
 
 //--------------
@@ -176,29 +168,6 @@ PSAna::dataSource(const std::vector<std::string>& input)
     return dataSrc;
   }
 
-  // Guess input data type, by default use XTC input even if cannot correctly
-  // guess types of the input files
-  std::string iname = "PSXtcInput.XtcInputModule";
-  ::FileType ftype = ::guessType(inputList.begin(), inputList.end());
-  if (ftype == Mixed) {
-    MsgLog(logger, error, "Mixed input file types");
-    return dataSrc;
-  } else if (ftype == SHMEM) {
-    iname = "PSShmemInput.ShmemInputModule";
-  } else if (ftype == HDF5) {
-    iname = "PSHdf5Input.Hdf5InputModule";
-  }
-
-  // pass datasets/file names to the configuration so that input module can find them
-  std::string flist = boost::join(inputList, " ");
-  cfgsvc.put(iname, "input", flist);
-  cfgsvc.put(iname, "files", flist);
-
-  // Load input module
-  DynLoader loader;
-  boost::shared_ptr<psana::InputModule> inputModule(loader.loadInputModule(iname));
-  MsgLog(logger, trace, "Loaded input module " << iname);
-
   // get calib directory name
   std::string calibDir = cfgsvc.getStr("psana", "calib-dir", "/reg/d/psdm/{instr}/{exp}/calib");
 
@@ -223,10 +192,194 @@ PSAna::dataSource(const std::vector<std::string>& input)
   // make AliasMap instance
   boost::shared_ptr<PSEvt::AliasMap> amap = boost::make_shared<AliasMap>();
 
+  // Guess input data type
+  ::FileType ftype = ::guessType(inputList.begin(), inputList.end());
+  if (ftype == Mixed) {
+    MsgLog(logger, error, "Mixed input file types");
+    return dataSrc;
+  }
+
+  // check if requested multi-process mode and it's compatible with input data
+  int nworkers = cfgsvc.get("psana", "parallel", 0);
+  switch (ftype) {
+  case HDF5:
+    MsgLog(logger, warning, "Multi-process mode is not available for HDF5 data, switching to single-process");
+    nworkers = 0;
+    break;
+  case XTC:
+  case SHMEM:
+    // OK
+    break;
+  case Unknown:
+  case Mixed:
+    // should not happen
+    break;
+  }
+  if (nworkers > 255) {
+    MsgLog(logger, warning, "Number of workers exceeds limit, reduced to 255");
+    nworkers = 255;
+  }
+
+  // in parallel mode start spawning workers, workerId will be -1 in master
+  // and non-negative number in workers
+  int workerId = -1;
+  int readyPipe = -1;   // fd for ready pipe
+  int dPipe = -1;   // fd for data pipe
+  boost::shared_ptr<std::vector<MPWorkerId> > workers;
+  if (nworkers > 0) {
+
+    workers = boost::make_shared<std::vector<MPWorkerId> >();
+
+    // make a pipe for ready queue
+    int rPipe[2];
+    pipe(rPipe);
+    readyPipe = rPipe[0]; // to be used by master
+
+    for (int iworker = 0; iworker < nworkers; ++ iworker) {
+
+      // make a pipe for communication with worker
+      int dataPipe[2];
+      pipe(dataPipe);
+
+      pid_t pid = fork();
+      if (pid == -1) {
+
+        // error happened, this is fatal
+        throw ExceptionErrno(ERR_LOC, "fork failed");
+
+      } else if (pid == 0) {
+
+        // we are in the child (worker) process
+
+        // close pipe ends that we don't use
+        close(dataPipe[1]);
+        close(rPipe[0]);
+
+        workerId = iworker;
+        readyPipe = rPipe[1];
+        dPipe = dataPipe[0];
+
+        // can cleanup some space
+        workers.reset();
+
+        MsgLog(logger, trace, "Forked worker #" << iworker << " dataPipeFd: " << dataPipe[0] << " readyPipe: " << readyPipe);
+
+        break;
+
+      } else {
+
+        // we are still in parent process
+
+        // close pipe ends that we don't use
+        close(dataPipe[0]);
+
+        // save worker info
+        workers->push_back(MPWorkerId(iworker, pid, dataPipe[1]));
+        MsgLog(logger, trace, "Add worker #" << iworker << " pid " << pid << " dataPipeFd " << dataPipe[1]);
+
+      }
+
+    }
+
+    if (workerId < 0) {
+      // close unused end of ready pipe in master
+      ::close(rPipe[1]);
+    }
+  }
+
+
+  // Guess input module name
+  std::string iname;
+  switch (ftype) {
+  case XTC:
+    if (nworkers <= 0) {
+      // single-process input for XTC
+      iname = "PSXtcInput.XtcInputModule";
+    } else if (workerId < 0) {
+      // master process in multi-process mode
+      iname = "PSXtcMPInput.XtcMPMasterInput";
+    } else {
+      // worker process in multi-process mode
+      iname = "PSXtcMPInput.XtcMPWorkerInput";
+    }
+    break;
+  case SHMEM:
+    if (nworkers <= 0) {
+      // single-process input for shmem XTC
+      iname = "PSShmemInput.ShmemInputModule";
+    } else if (workerId < 0) {
+      // master process in multi-process mode
+      iname = "PSXtcMPInput.ShmemMPMasterInput";
+    } else {
+      // worker process in multi-process mode
+      iname = "PSXtcMPInput.XtcMPWorkerInput";
+    }
+    break;
+  case HDF5:
+    iname = "PSHdf5Input.Hdf5InputModule";
+    break;
+  case Unknown:
+  case Mixed:
+    // should not happen
+    break;
+  }
+
+  // pass datasets/file names to the configuration so that input module can find them
+  std::string flist = boost::join(inputList, " ");
+  cfgsvc.put(iname, "input", flist);
+  cfgsvc.put(iname, "files", flist);
+  if (readyPipe >= 0) {
+    cfgsvc.put(iname, "fdReadyPipe", boost::lexical_cast<std::string>(readyPipe));
+  }
+  if (workerId >= 0) {
+    cfgsvc.put(iname, "workerId", boost::lexical_cast<std::string>(workerId));
+  }
+  if (dPipe >= 0) {
+    cfgsvc.put(iname, "fdDataPipe", boost::lexical_cast<std::string>(dPipe));
+  }
+
+  // Load input module
+  DynLoader loader;
+  boost::shared_ptr<psana::InputModule> inputModule(loader.loadInputModule(iname));
+  MsgLog(logger, trace, "Loaded input module " << iname);
+
   // Setup environment
-  boost::shared_ptr<PSEnv::Env> env = boost::make_shared<PSEnv::Env>(jobName, expNameProvider, calibDir, amap);
+  boost::shared_ptr<PSEnv::Env> env = boost::make_shared<PSEnv::Env>(jobName, expNameProvider, calibDir, amap, workerId);
   MsgLogRoot(debug, "instrument = " << env->instrument() << " experiment = " << env->experiment());
   MsgLogRoot(debug, "calibDir = " << env->calibDir());
+
+  // instantiate all user modules
+  if (nworkers > 0 and workerId < 0) {
+
+    // master process in multi-process mode does not need any user modules
+
+    // put workers info into environment so that it can be seen by master module
+    env->configStore().put(workers, Pds::Src());
+
+    // install special signal handler so that dying children do not turn into zombies
+    // and writing to a pipe directed to dead worker does not cause crash
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = SIG_IGN;
+    sa.sa_flags = SA_NOCLDWAIT;
+    sigaction(SIGCHLD, &sa, NULL);
+    sa.sa_flags = 0;
+    sigaction(SIGPIPE, &sa, NULL);
+
+  } else {
+
+    // single process mode or worker process in multi-process mode
+
+    // get list of modules to load
+    std::vector<std::string> moduleNames = cfgsvc.getList("psana", "modules", std::vector<std::string>());
+
+    // instantiate all user modules
+    for ( std::vector<std::string>::const_iterator it = moduleNames.begin(); it != moduleNames.end() ; ++ it ) {
+      m_modules.push_back(loader.loadModule(*it));
+      MsgLog(logger, trace, "Loaded module " << m_modules.back()->name());
+    }
+
+  }
 
   // make new instance
   dataSrc = DataSource(inputModule, m_modules, env);
