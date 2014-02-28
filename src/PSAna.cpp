@@ -194,6 +194,7 @@ PSAna::dataSource(const std::vector<std::string>& input)
 
   // Guess input data type
   ::FileType ftype = ::guessType(inputList.begin(), inputList.end());
+  MsgLog(logger, debug, "input data type: " << int(ftype));
   if (ftype == Mixed) {
     MsgLog(logger, error, "Mixed input file types");
     return dataSrc;
@@ -211,6 +212,8 @@ PSAna::dataSource(const std::vector<std::string>& input)
     // OK
     break;
   case Unknown:
+    ftype = XTC;
+    break;
   case Mixed:
     // should not happen
     break;
