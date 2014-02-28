@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-11-01
+2014-02-27 Andy Salnikov
+- update unit tests for recent changes
+
 Tag: V00-11-00
 2014-02-26 Andy Salnikov
 - first implementation of multi-processing support

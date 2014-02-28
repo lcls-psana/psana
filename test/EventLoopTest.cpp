@@ -67,7 +67,7 @@ struct Fixture {
   {
     boost::shared_ptr<AliasMap> amap = boost::make_shared<AliasMap>();
     boost::shared_ptr<PSEnv::IExpNameProvider> expNameProvider;
-    boost::shared_ptr<PSEnv::Env> env = boost::make_shared<PSEnv::Env>("", expNameProvider, "", amap);
+    boost::shared_ptr<PSEnv::Env> env = boost::make_shared<PSEnv::Env>("", expNameProvider, "", amap, 0);
     boost::shared_ptr<InputModule> input = boost::make_shared<TestInputModule>(states, nstates);
     const std::vector<boost::shared_ptr<Module> > modules;
     evtLoop = boost::make_shared<EventLoop>(input, modules, env);
