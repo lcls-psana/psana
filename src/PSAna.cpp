@@ -204,8 +204,10 @@ PSAna::dataSource(const std::vector<std::string>& input)
   int nworkers = cfgsvc.get("psana", "parallel", 0);
   switch (ftype) {
   case HDF5:
-    MsgLog(logger, warning, "Multi-process mode is not available for HDF5 data, switching to single-process");
-    nworkers = 0;
+    if (nworkers > 0) {
+      MsgLog(logger, warning, "Multi-process mode is not available for HDF5 data, switching to single-process");
+      nworkers = 0;
+    }
     break;
   case XTC:
   case SHMEM:

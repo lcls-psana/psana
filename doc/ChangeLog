@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-11-03
+2014-03-18 David Schneider
+- fixing warning message
+
 Tag: V00-11-02
 2014-02-28 Andy Salnikov
 - last big change introduces a bug where dataset is not recognized 
