@@ -22,6 +22,7 @@
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
+#include "psana/Exceptions.h"
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
@@ -46,6 +47,10 @@ InputModule::InputModule (const std::string& name)
 //--------------
 InputModule::~InputModule ()
 {
+}
+
+Index& InputModule::index() {
+  throw ExceptionAbort(ERR_LOC, "Index not supported by this input module");
 }
 
 // formatting for enum

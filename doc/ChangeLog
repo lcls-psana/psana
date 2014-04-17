@@ -11,6 +11,15 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-12-01
+2014-04-16 Christopher O'Grady
+- un-inline index() method in InputModule.h (move to .cpp) to avoid
+  what appears to be a RHEL5 compiler bug (works in RHEL6)
+
+Tag: V00-12-00
+2014-04-16 Christopher O'Grady
+- support for xtc-indexing
+
 Tag: V00-11-03
 2014-03-18 David Schneider
 - fixing warning message
