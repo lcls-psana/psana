@@ -86,6 +86,8 @@ public:
   /// Returns iterator for steps in this run
   StepIter steps() { return StepIter(m_evtLoop, EventLoop::EndRun); }
 
+  /// Returns run index for random access
+  Index& index() { return m_evtLoop->index(); }
 
 protected:
 

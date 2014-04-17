@@ -23,6 +23,7 @@
 // Collaborating Class Headers --
 //-------------------------------
 #include "PSEvt/EventId.h"
+#include "psana/Exceptions.h"
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
@@ -46,6 +47,11 @@ RunIter::RunIter ()
 RunIter::RunIter (const boost::shared_ptr<EventLoop>& evtLoop)
   : m_evtLoop(evtLoop)
 {
+  try {
+    _runIter = m_evtLoop->index().runs().begin();
+  }
+  catch (ExceptionAbort e) {
+  }
 }
 
 //--------------
@@ -60,6 +66,14 @@ RunIter::value_type
 RunIter::next()
 {
   RunIter::value_type result;
+
+  try {
+    if (_runIter == m_evtLoop->index().runs().end()) return result;
+    m_evtLoop->index().setrun(*_runIter);
+    _runIter++;
+  }
+  catch (ExceptionAbort e) {
+  }
 
   // Go to a BeginRun transition
   while (true) {

@@ -18,7 +18,6 @@
 //-----------------
 // C/C++ Headers --
 //-----------------
-#include <iostream>
 
 //-------------------------------
 // Collaborating Class Headers --
@@ -62,6 +61,7 @@ EventLoop::EventLoop (const boost::shared_ptr<InputModule>& inputModule,
   : m_inputIter(boost::make_shared<InputIter>(inputModule, env))
   , m_modules(modules)
   , m_values()
+  , m_inputModule(inputModule)
 {
   m_eventMethods[BeginJob] = &Module::beginJob;
   m_eventMethods[EndJob] = &Module::endJob;
@@ -211,6 +211,11 @@ EventLoop::callModuleMethod(ModuleMethod method, PSEvt::Event& evt, PSEnv::Env& 
   }
 
   return stat;
+}
+
+Index& EventLoop::index()
+{
+  return  m_inputModule->index();
 }
 
 } // namespace psana

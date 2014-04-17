@@ -76,6 +76,8 @@ private:
   // Data members
   boost::shared_ptr<EventLoop> m_evtLoop;
 
+  // for indexing
+  std::vector<unsigned>::const_iterator _runIter;
 };
 
 } // namespace psana

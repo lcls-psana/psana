@@ -47,7 +47,7 @@ namespace {
 
   const char* logger = "PSAna";
 
-  enum FileType { Unknown=-1, Mixed=0, XTC, HDF5, SHMEM };
+  enum FileType { Unknown=-1, Mixed=0, XTC, HDF5, SHMEM, IDX };
 
   // Function which tries to guess input data type from file name extensions
   template <typename Iter>
@@ -66,6 +66,8 @@ namespace {
         ftype = SHMEM;
       } else if (ds.exists("xtc")) {
         ftype = XTC;
+      } else if (ds.exists("idx")) {
+        ftype = IDX;
       }
 
       if (ftype == Unknown) return ftype;
@@ -203,6 +205,12 @@ PSAna::dataSource(const std::vector<std::string>& input)
   // check if requested multi-process mode and it's compatible with input data
   int nworkers = cfgsvc.get("psana", "parallel", 0);
   switch (ftype) {
+  case IDX:
+    if (nworkers > 0) {
+      MsgLog(logger, warning, "Multi-process mode is not available for IDX data, switching to single-process");
+      nworkers = 0;
+    }
+    break;
   case HDF5:
     if (nworkers > 0) {
       MsgLog(logger, warning, "Multi-process mode is not available for HDF5 data, switching to single-process");
@@ -322,6 +330,9 @@ PSAna::dataSource(const std::vector<std::string>& input)
     break;
   case HDF5:
     iname = "PSHdf5Input.Hdf5InputModule";
+    break;
+  case IDX:
+    iname = "PSXtcInput.XtcIndexInputModule";
     break;
   case Unknown:
   case Mixed:
