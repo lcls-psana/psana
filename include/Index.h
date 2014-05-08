@@ -18,14 +18,26 @@ namespace psana {
  *  @author Christopher O'Grady
  */
 
+class EventTime {
+public:
+  EventTime() {}
+  EventTime(uint64_t time, uint32_t fiducial) :
+    _time(time),_fiducial(fiducial) {}
+  uint64_t time()     const {return _time;}
+  uint64_t fiducial() const {return _fiducial;}
+private:
+  uint64_t _time;
+  uint64_t _fiducial;
+};
+
 class Index {
 public:
   Index() {}
   virtual ~Index() {}
-  virtual int   jump(uint64_t time)               = 0;
-  virtual void  setrun(int run)                   = 0;
-  virtual const std::vector<uint64_t>& runtimes() = 0;
-  virtual const std::vector<unsigned>& runs()     = 0;
+  virtual int   jump(EventTime t)                  = 0;
+  virtual void  setrun(int run)                    = 0;
+  virtual const std::vector<EventTime>& runtimes() = 0;
+  virtual const std::vector<unsigned>& runs()      = 0;
 };
 
 }
