@@ -4,6 +4,8 @@
 #include <boost/cstdint.hpp>
 #include <vector>
 
+#include "EventTime.h"
+
 namespace psana {
 
 /// @addtogroup psana
@@ -17,18 +19,6 @@ namespace psana {
  *
  *  @author Christopher O'Grady
  */
-
-class EventTime {
-public:
-  EventTime() {}
-  EventTime(uint64_t time, uint32_t fiducial) :
-    _time(time),_fiducial(fiducial) {}
-  uint64_t time()     const {return _time;}
-  uint64_t fiducial() const {return _fiducial;}
-private:
-  uint64_t _time;
-  uint64_t _fiducial;
-};
 
 class Index {
 public:
