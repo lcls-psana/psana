@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-12-02
+2014-05-13 Christopher O'Grady
+- Add new EventTime class for indexing.  Change interface in
+  Index.h accordingly.
+
 Tag: V00-12-01
 2014-04-16 Christopher O'Grady
 - un-inline index() method in InputModule.h (move to .cpp) to avoid
