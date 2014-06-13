@@ -19,6 +19,7 @@
 // C/C++ Headers --
 //-----------------
 #include <iostream>
+#include <fstream>
 #include <unistd.h>
 #include <boost/make_shared.hpp>
 
@@ -37,6 +38,45 @@
 //		----------------------------------------
 // 		-- Public Function Member Definitions --
 //		----------------------------------------
+
+namespace {
+
+  const std::string dumpConfigFileOption("psana.dump_config_file");
+
+  bool dumpConfigFileOptionSet(const std::map<std::string, std::string> &options) {
+    std::map<std::string, std::string>::const_iterator pos = options.find(dumpConfigFileOption);
+    if (pos == options.end()) {
+      return false;
+    }
+    return true;
+  }
+
+  void dumpConfigFile(const std::string &cfgFile) {
+    if (cfgFile.size()==0) return;
+    std::cout << "--------- psana config file: " << cfgFile << " ------------" << std::endl;
+    std::ifstream cfgFileStream;
+    cfgFileStream.open(cfgFile.c_str(), std::ifstream::in);
+    if ( (cfgFileStream.rdstate() & std::ifstream::failbit ) == 0 ) {
+      char c = cfgFileStream.get();
+      while (cfgFileStream.good()) {
+        std::cout << c;
+        c = cfgFileStream.get();
+      }
+      cfgFileStream.close();
+    } else {
+      std::cout << " ** unable to open file ** " << std::endl;
+    }
+    std::cout << "---------------------" << std::endl;
+  }
+
+  void removeDumpConfigFileOption(std::map<std::string, std::string> &options) {
+    std::map<std::string, std::string>::iterator pos = options.find(dumpConfigFileOption);
+    if (pos != options.end()) {
+      options.erase(pos);
+    }
+  }
+    
+} // local namespace
 
 namespace psana {
 
@@ -206,6 +246,12 @@ PSAnaApp::runApp ()
 
   // list of inputs
   std::vector<std::string> input(m_datasets.begin(), m_datasets.end());
+
+  // dump contents of config file if requested
+  if (dumpConfigFileOptionSet(options)) {
+    dumpConfigFile(cfgFile);
+    removeDumpConfigFileOption(options);
+  }
 
   // Instantiate framework
   PSAna fwk(cfgFile, options);

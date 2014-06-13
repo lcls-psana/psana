@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-12-03
+2014-06-13 David Schneider
+- Add cmd line option -o psana.dump_config_file for batch psana.
+  Will dump contents of config file that is used (for Translator jobs).
+
 Tag: V00-12-02
 2014-05-13 Christopher O'Grady
 - Add new EventTime class for indexing.  Change interface in
