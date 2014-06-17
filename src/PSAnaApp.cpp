@@ -66,7 +66,7 @@ namespace {
     } else {
       std::cout << " ** unable to open file ** " << std::endl;
     }
-    std::cout << "---------------------" << std::endl;
+    std::cout << std::endl << "------- end psana config file ---------" << std::endl;
   }
 
   void removeDumpConfigFileOption(std::map<std::string, std::string> &options) {

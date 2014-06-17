@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-12-04
+2014-06-16 David Schneider
+- fixup last tag, add newline after dumping contents of config file
+
 Tag: V00-12-03
 2014-06-13 David Schneider
 - Add cmd line option -o psana.dump_config_file for batch psana.
