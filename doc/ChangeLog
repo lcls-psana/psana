@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-12-05
+2014-07-18 Christopher O'Grady
+- Add Index::end method to allow user to indicate when they
+  are done with accessing a file randomly (sends an EndRun transition)
+
 Tag: V00-12-04
 2014-06-16 David Schneider
 - fixup last tag, add newline after dumping contents of config file

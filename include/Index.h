@@ -26,6 +26,7 @@ public:
   virtual ~Index() {}
   virtual int   jump(EventTime t)                  = 0;
   virtual void  setrun(int run)                    = 0;
+  virtual void  end()                              = 0;
   virtual const std::vector<EventTime>& runtimes() = 0;
   virtual const std::vector<unsigned>& runs()      = 0;
 };
