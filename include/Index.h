@@ -22,13 +22,16 @@ namespace psana {
 
 class Index {
 public:
+  typedef std::vector<EventTime>::const_iterator EventTimeIter;
   Index() {}
   virtual ~Index() {}
-  virtual int   jump(EventTime t)                  = 0;
-  virtual void  setrun(int run)                    = 0;
-  virtual void  end()                              = 0;
-  virtual const std::vector<EventTime>& runtimes() = 0;
-  virtual const std::vector<unsigned>& runs()      = 0;
+  virtual int      jump(EventTime t)                            = 0;
+  virtual void     setrun(int run)                              = 0;
+  virtual void     end()                                        = 0;
+  virtual unsigned nsteps()                                     = 0;
+  virtual void     times(EventTimeIter& begin, EventTimeIter& end) = 0;
+  virtual void     times(unsigned step, EventTimeIter& begin, EventTimeIter& end) = 0;
+  virtual const    std::vector<unsigned>& runs()                = 0;
 };
 
 }
