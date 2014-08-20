@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-12-06
+2014-08-20 Christopher O'Grady
+- Add ability to get EventTime's for a user-selectable calib cycle
+
 Tag: V00-12-05
 2014-07-18 Christopher O'Grady
 - Add Index::end method to allow user to indicate when they
