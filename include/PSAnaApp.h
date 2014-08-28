@@ -3,10 +3,10 @@
 
 //--------------------------------------------------------------------------
 // File and Version Information:
-// 	$Id$
+//     $Id$
 //
 // Description:
-//	Class PSAnaApp.
+//     Class PSAnaApp.
 //
 //------------------------------------------------------------------------
 
@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <map>
 #include <boost/shared_ptr.hpp>
 
 //----------------------
@@ -37,9 +38,9 @@
 // Collaborating Class Declarations --
 //------------------------------------
 
-//		---------------------
-// 		-- Class Interface --
-//		---------------------
+//             ---------------------
+//             -- Class Interface --
+//             ---------------------
 
 namespace psana {
 
@@ -95,6 +96,12 @@ protected :
    */
   virtual int runApp () ;
 
+  /**
+   * helper function for runApp which sets config file and options for framework
+   */
+  void setConfigFileAndOptions(std::string &cfgFile, std::map<std::string, std::string> &options);
+
+  std::vector<std::string> inputDataSets() const;
 private:
 
   // more command line options and arguments

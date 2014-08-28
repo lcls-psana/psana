@@ -11,6 +11,15 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-12-07
+2014-08-27 David Schneider
+- Changes to make it easier to write a C++ driver program - see comments  
+  in Jira PSAS-15 - specifically:
+- add method nextWithEvent to StepIter and RunIter that returns
+  same event that psana modules get in BeginCalibCycle and BeginRun
+- refactor PSAnaApp runApp. Add new methods setConfigFileAndOptions 
+  and inputDataSets for a C++ driver.
+
 Tag: V00-12-06
 2014-08-20 Christopher O'Grady
 - Add ability to get EventTime's for a user-selectable calib cycle

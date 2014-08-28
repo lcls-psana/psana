@@ -1,12 +1,12 @@
 //--------------------------------------------------------------------------
 // File and Version Information:
-// 	$Id$
+//     $Id$
 //
 // Description:
-//	Class StepIter...
+//     Class StepIter...
 //
 // Author List:
-//      Andy Salnikov
+//     Andy Salnikov
 //
 //------------------------------------------------------------------------
 
@@ -27,9 +27,9 @@
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
 //-----------------------------------------------------------------------
 
-//		----------------------------------------
-// 		-- Public Function Member Definitions --
-//		----------------------------------------
+//             ----------------------------------------
+//             -- Public Function Member Definitions --
+//             ----------------------------------------
 
 namespace psana {
 
@@ -55,16 +55,17 @@ StepIter::~StepIter ()
 {
 }
 
-/// get next Step, when done returns object which is convertible to "false"
-StepIter::value_type
-StepIter::next()
+/// get next Step and corresponding event.
+//  when done returns object which is convertible to "false"
+std::pair<StepIter::value_type, boost::shared_ptr<PSEvt::Event> >
+StepIter::nextWithEvent()
 {
-  StepIter::value_type result;
+  std::pair<StepIter::value_type, boost::shared_ptr<PSEvt::Event> > result;
   if (m_stopType == EventLoop::Event) {
     // means iteration already finished
     return result;
   }
-
+  
   while (true) {
     EventLoop::value_type nxt = m_evtLoop->next();
     if (nxt.first == EventLoop::None) {
@@ -79,11 +80,19 @@ StepIter::next()
       break;
     } else if (nxt.first == EventLoop::BeginCalibCycle) {
       // found it
-      result = StepIter::value_type(m_evtLoop);
+      result = std::pair<StepIter::value_type, 
+        boost::shared_ptr<PSEvt::Event> >(StepIter::value_type(m_evtLoop), nxt.second);
       break;
     }
   }
   return result;
+}
+
+/// get next Step, when done returns object which is convertible to "false"
+StepIter::value_type
+StepIter::next()
+{
+  return nextWithEvent().first;
 }
 
 } // namespace psana

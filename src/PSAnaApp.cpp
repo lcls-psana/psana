@@ -1,12 +1,12 @@
 //--------------------------------------------------------------------------
 // File and Version Information:
-// 	$Id$
+//     $Id$
 //
 // Description:
-//	Class PSAnaApp...
+//     Class PSAnaApp...
 //
 // Author List:
-//      Andy Salnikov
+//     Andy Salnikov
 //
 //------------------------------------------------------------------------
 
@@ -35,9 +35,9 @@
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
 //-----------------------------------------------------------------------
 
-//		----------------------------------------
-// 		-- Public Function Member Definitions --
-//		----------------------------------------
+//             ----------------------------------------
+//             -- Public Function Member Definitions --
+//             ----------------------------------------
 
 namespace {
 
@@ -174,15 +174,50 @@ PSAnaApp::preRunApp ()
 int
 PSAnaApp::runApp ()
 {
+  std::string cfgFile;
+  std::map<std::string, std::string> options;
+  setConfigFileAndOptions(cfgFile, options);
+  
+  // Instantiate framework
+  PSAna fwk(cfgFile, options);
+
+  // check that we have at least one module
+  if (fwk.modules().empty()) {
+    MsgLogRoot(error, "no analysis modules specified");
+    return 2;
+  }
+
+  // list of inputs
+  std::vector<std::string> input = inputDataSets();
+
+  // get data source
+  DataSource dataSource = fwk.dataSource(input);
+  if (dataSource.empty()) return 2;
+
+  // get event iterator
+  EventIter iter = dataSource.events();
+
+  // loop from begin to end
+  while (boost::shared_ptr<PSEvt::Event> evt = iter.next()) {
+    // nothing to do here
+  }
+
+  // return 0 on success, other values for error (like main())
+  return 0 ;
+}
+
+void
+PSAnaApp::setConfigFileAndOptions(std::string &cfgFile, std::map<std::string, std::string> &options)
+{
+  cfgFile.clear();
+  options.clear();
   // if -c is not specified the try to read psana.cfg (only if present)
-  std::string cfgFile = m_configOpt.value();
+  cfgFile = m_configOpt.value();
   if (not m_configOpt.valueChanged()) {
     if (access("psana.cfg", R_OK) == 0) {
       cfgFile = "psana.cfg";
     }
   }
-
-  std::map<std::string, std::string> options;
 
   // command-line -m options override config file values
   if (not m_modulesOpt.value().empty()) {
@@ -244,38 +279,18 @@ PSAnaApp::runApp ()
     options[optname] = optval;
   }
 
-  // list of inputs
-  std::vector<std::string> input(m_datasets.begin(), m_datasets.end());
-
   // dump contents of config file if requested
   if (dumpConfigFileOptionSet(options)) {
     dumpConfigFile(cfgFile);
     removeDumpConfigFileOption(options);
   }
+}
 
-  // Instantiate framework
-  PSAna fwk(cfgFile, options);
-
-  // check that we have at least one module
-  if (fwk.modules().empty()) {
-    MsgLogRoot(error, "no analysis modules specified");
-    return 2;
-  }
-
-  // get data source
-  DataSource dataSource = fwk.dataSource(input);
-  if (dataSource.empty()) return 2;
-
-  // get event iterator
-  EventIter iter = dataSource.events();
-
-  // loop from begin to end
-  while (boost::shared_ptr<PSEvt::Event> evt = iter.next()) {
-    // nothing to do here
-  }
-
-  // return 0 on success, other values for error (like main())
-  return 0 ;
+std::vector<std::string> 
+PSAnaApp::inputDataSets() const 
+{
+  std::vector<std::string> input(m_datasets.begin(), m_datasets.end());
+  return input;
 }
 
 } // namespace psana

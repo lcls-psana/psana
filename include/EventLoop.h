@@ -3,10 +3,10 @@
 
 //--------------------------------------------------------------------------
 // File and Version Information:
-// 	$Id$
+//     $Id$
 //
 // Description:
-//	Class EventLoop.
+//     Class EventLoop.
 //
 //------------------------------------------------------------------------
 
@@ -40,9 +40,9 @@ class InputIter;
 class InputModule;
 }
 
-//		---------------------
-// 		-- Class Interface --
-//		---------------------
+//             ---------------------
+//             -- Class Interface --
+//             ---------------------
 
 namespace psana {
 

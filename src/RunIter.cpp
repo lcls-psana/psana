@@ -1,12 +1,12 @@
 //--------------------------------------------------------------------------
 // File and Version Information:
-// 	$Id$
+//     $Id$
 //
 // Description:
-//	Class RunIter...
+//     Class RunIter...
 //
 // Author List:
-//      Andy Salnikov
+//     Andy Salnikov
 //
 //------------------------------------------------------------------------
 
@@ -29,9 +29,9 @@
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
 //-----------------------------------------------------------------------
 
-//		----------------------------------------
-// 		-- Public Function Member Definitions --
-//		----------------------------------------
+//             ----------------------------------------
+//             -- Public Function Member Definitions --
+//             ----------------------------------------
 
 namespace psana {
 
@@ -62,10 +62,10 @@ RunIter::~RunIter ()
 }
 
 /// get next run, when done returns object which is convertible to "false"
-RunIter::value_type 
-RunIter::next()
+std::pair<RunIter::value_type, boost::shared_ptr<PSEvt::Event> > 
+RunIter::nextWithEvent()
 {
-  RunIter::value_type result;
+  std::pair<RunIter::value_type, boost::shared_ptr<PSEvt::Event> > result;
 
   try {
     if (_runIter == m_evtLoop->index().runs().end()) return result;
@@ -85,12 +85,19 @@ RunIter::next()
       // found it, try to get run number from current event
       boost::shared_ptr<PSEvt::EventId> eid = nxt.second->get();
       int run = eid ? eid->run() : -1 ;
-      result = RunIter::value_type(m_evtLoop, run);
+      result = std::pair<RunIter::value_type, 
+        boost::shared_ptr<PSEvt::Event> >(RunIter::value_type(m_evtLoop, run), nxt.second);
       break;
     }
   }
 
   return result;
+}
+
+RunIter::value_type
+RunIter::next()
+{
+  return nextWithEvent().first;
 }
 
 } // namespace psana

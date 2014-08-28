@@ -3,10 +3,10 @@
 
 //--------------------------------------------------------------------------
 // File and Version Information:
-// 	$Id$
+//     $Id$
 //
 // Description:
-//	Class InputModule.
+//     Class InputModule.
 //
 //------------------------------------------------------------------------
 
@@ -53,9 +53,9 @@ using namespace PSEvt;
     return new UserModule(name);\
   }
 
-//		---------------------
-// 		-- Class Interface --
-//		---------------------
+//             ---------------------
+//             -- Class Interface --
+//             ---------------------
 
 namespace psana {
 
@@ -142,7 +142,7 @@ public:
    *  @param[out] env    Environment object
    */
   virtual void endJob(Event& evt, Env& env) = 0;
-  
+
 protected:
 
   /// Constructor may be called from subclass only.

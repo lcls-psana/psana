@@ -3,10 +3,10 @@
 
 //--------------------------------------------------------------------------
 // File and Version Information:
-// 	$Id$
+//     $Id$
 //
 // Description:
-//	Class RunIter.
+//     Class RunIter.
 //
 //------------------------------------------------------------------------
 
@@ -31,9 +31,9 @@ namespace psana {
 class EventLoop;
 }
 
-//		---------------------
-// 		-- Class Interface --
-//		---------------------
+//             ---------------------
+//             -- Class Interface --
+//             ---------------------
 
 namespace psana {
 
@@ -68,6 +68,9 @@ public:
 
   /// get next run, when done returns object which is convertible to "false"
   value_type next();
+
+  /// get next run and event. When done returns object which is convertible to "false"
+  std::pair<value_type, boost::shared_ptr<PSEvt::Event> >  nextWithEvent();
 
 protected:
 
