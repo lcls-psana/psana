@@ -55,7 +55,11 @@ namespace psana {
 //----------------
 EventKeys::EventKeys (const std::string& name)
   : Module(name)
+  , m_print_cfg_in_evt()
+  , m_print_clb_in_evt()
 {
+  m_print_cfg_in_evt = config("print_cfg_in_evt", false);
+  m_print_clb_in_evt = config("print_clb_in_evt", false);
 }
 
 //--------------
@@ -112,6 +116,18 @@ EventKeys::beginCalibCycle(Event& evt, Env& env)
 void 
 EventKeys::event(Event& evt, Env& env)
 {
+  MsgLog(logger, info, name() << ": in event()");
+  
+  if(m_print_cfg_in_evt) {
+    std::cout << "Config keys:\n";
+    ::printKeys(std::cout, env.configStore().keys());
+  }
+
+  if(m_print_clb_in_evt) {
+    std::cout << "Calib keys:\n";
+    ::printKeys(std::cout, env.calibStore().keys());
+  }
+
   std::cout << "Event keys:\n";
   ::printKeys(std::cout, evt.keys());
 }

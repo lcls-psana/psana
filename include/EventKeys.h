@@ -80,6 +80,11 @@ protected:
 
 private:
 
+  /// Flag: true - print in event() info about env.configStore().keys()
+  bool m_print_cfg_in_evt;
+
+  /// Flag: true - print in event() info about env.calibStore().keys()
+  bool m_print_clb_in_evt;
 };
 
 } // namespace psana
