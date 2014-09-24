@@ -62,7 +62,7 @@ ExpNameFromDs::ExpNameFromDs (const std::vector<std::string>& files)
     
     if (m_expNum == 0) {
       if (ds.expID() == 0) {
-        MsgLog(logger, warning, "ExpNameFromDs: dataset name " << *it << " has no valid experiment number");
+        // no warning msg, since shared memory has no valid exp. number (cpo)
         break;
       } else {
         m_expNum = ds.expID();

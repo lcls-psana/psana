@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-12-09
+2014-09-24 Christopher O'Grady
+- eliminate warning message about invalid experiment number, which
+  is not valid for shmem running.
+
 Tag: V00-12-08
 2014-09-11 Mikhail Dubrovin
 - in EventKeys add flag-pars to print in event() info about env.configStore().keys() and env.calibStore().keys()
