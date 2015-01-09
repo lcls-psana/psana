@@ -392,7 +392,10 @@ PSAna::dataSource(const std::vector<std::string>& input)
     // instantiate all user modules
     for ( std::vector<std::string>::const_iterator it = moduleNames.begin(); it != moduleNames.end() ; ++ it ) {
       m_modules.push_back(loader.loadModule(*it));
-      MsgLog(logger, trace, "Loaded module " << m_modules.back()->name());
+      MsgLog(logger, trace, "From psana modules, loaded module " << m_modules.back()->name());
+    }
+    if (moduleNames.size()==0) {
+      MsgLog(logger, trace, "psana modules parameter is empty.");
     }
 
   }

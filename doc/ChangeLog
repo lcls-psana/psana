@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-12-10
+2015-01-09 David Schneider
+- improve diagnostic about modules loaded.
+- related to Jira issue PSAS-86	
+	
 Tag: V00-12-09
 2014-09-24 Christopher O'Grady
 - eliminate warning message about invalid experiment number, which
