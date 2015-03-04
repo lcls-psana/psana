@@ -11,6 +11,14 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-12-11
+2015-3-3 David Schneider
+- small data JIRA issue PSAS-85
+- add smalldata type to PSAna file types. 
+- check for more than one input source in dataset
+- add smalldata file type to PSXtcInput.XtcInput modue
+- note - small data not supported for parallel mode
+
 Tag: V00-12-10
 2015-01-09 David Schneider
 - improve diagnostic about modules loaded.

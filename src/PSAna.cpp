@@ -19,6 +19,7 @@
 // C/C++ Headers --
 //-----------------
 #include <signal.h>
+#include <map>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
@@ -47,7 +48,17 @@ namespace {
 
   const char* logger = "PSAna";
 
-  enum FileType { Unknown=-1, Mixed=0, XTC, HDF5, SHMEM, IDX };
+  enum FileType { Unknown=-1, Mixed=0, XTC, HDF5, SHMEM, IDX, SMALLDATA };
+
+  std::map<std::string, FileType> getDsetInputKeys() {
+    std::map<std::string, FileType> dsetInputKeys;
+    dsetInputKeys["xtc"]=XTC;
+    dsetInputKeys["h5"]=HDF5;
+    dsetInputKeys["shmem"]=SHMEM;
+    dsetInputKeys["idx"]=IDX;
+    dsetInputKeys["smd"]=SMALLDATA;
+    return dsetInputKeys;
+  }
 
   // Function which tries to guess input data type from file name extensions
   template <typename Iter>
@@ -55,19 +66,27 @@ namespace {
 
     FileType type = Unknown;
 
+    std::map<std::string, FileType> dsetInputKeys = getDsetInputKeys();
+
     for ( ; begin != end; ++ begin) {
 
       IData::Dataset ds(*begin);
 
       FileType ftype = Unknown;
-      if (ds.exists("h5")) {
-        ftype = HDF5;
-      } else if (ds.exists("shmem")) {
-        ftype = SHMEM;
-      } else if (ds.exists("xtc")) {
-        ftype = XTC;
-      } else if (ds.exists("idx")) {
-        ftype = IDX;
+      int numSpecifiersInDataset = 0;
+      
+      for (std::map<std::string, FileType>::iterator dsKey = dsetInputKeys.begin();
+           dsKey != dsetInputKeys.end(); ++dsKey) {
+        const std::string inputKey = dsKey->first;
+        FileType dsFtype = dsKey->second;
+        if (ds.exists(inputKey)) {
+          ftype = dsFtype;
+          numSpecifiersInDataset += 1;
+        } 
+      }
+      
+      if (numSpecifiersInDataset > 1) {
+        MsgLog(logger, fatal, "More than one input source specified in dataset");
       }
 
       if (ftype == Unknown) return ftype;
@@ -219,6 +238,7 @@ PSAna::dataSource(const std::vector<std::string>& input)
     break;
   case XTC:
   case SHMEM:
+  case SMALLDATA:
     // OK
     break;
   case Unknown:
@@ -314,6 +334,18 @@ PSAna::dataSource(const std::vector<std::string>& input)
     } else {
       // worker process in multi-process mode
       iname = "PSXtcMPInput.XtcMPWorkerInput";
+    }
+    break;
+  case SMALLDATA:
+    if (nworkers <= 0) {
+      // single-process input for SMALLDATA
+      iname = "PSXtcInput.XtcInputModule"; 
+    } else if (workerId < 0) {
+      // master process in multi-process mode
+      MsgLog(logger, fatal, "smldata not supported with parallel");
+    } else {
+      // worker process in multi-process mode
+      MsgLog(logger, fatal, "smldata not supported with parallel");
     }
     break;
   case SHMEM:
