@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-00
+2015-4-7 David Schneider
+- remove strong dependency on root JIRA issue PSAS-131.
+- completely deprecate the roothistomanager, users must use the pshist manager
+	
 Tag: V00-12-11
 2015-3-3 David Schneider
 - small data JIRA issue PSAS-85
