@@ -23,6 +23,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/format.hpp>
 
 //-------------------------------
 // Collaborating Class Headers --
@@ -190,7 +191,17 @@ PSAna::dataSource(const std::vector<std::string>& input)
   }
 
   // get calib directory name
-  std::string calibDir = cfgsvc.getStr("psana", "calib-dir", "/reg/d/psdm/{instr}/{exp}/calib");
+  const char* datadir = getenv("SIT_PSDM_DATA");
+  std::string calibDirRoot;
+  if (datadir) {
+    calibDirRoot = datadir;
+  } else {
+    calibDirRoot = "/reg/d/psdm";
+  } 
+  boost::format fmt("%1%/%2%");
+  fmt % calibDirRoot % "{instr}/{exp}/calib";
+  std::string calibDirDefault = fmt.str();
+  std::string calibDir = cfgsvc.getStr("psana", "calib-dir", calibDirDefault);
 
   // get/build job name
   std::string jobName = cfgsvc.getStr("psana", "job-name", "");

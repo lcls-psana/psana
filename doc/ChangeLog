@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-01
+2015-4-9 Christopher O'Grady
+- use env variable SIT_PSDM_DATA to determine default calib-dir,
+  but default to /reg/d/psdm in env variable doesn't exist.
+	
 Tag:V00-13-00
 2015-4-7 David Schneider
 - remove strong dependency on root JIRA issue PSAS-131.
