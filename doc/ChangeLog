@@ -11,6 +11,13 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-02
+2015-5-12 David Schneider
+- overload configList that takes a default argument to take a vector.
+  before it only took a list, so although you could use configList to
+  return either a vector or list, when specifying a default argument for
+  configuration keys that were not there, you could only use a list.
+
 Tag:V00-13-01
 2015-4-9 Christopher O'Grady
 - use env variable SIT_PSDM_DATA to determine default calib-dir,

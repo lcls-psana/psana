@@ -14,6 +14,7 @@
 // C/C++ Headers --
 //-----------------
 #include <string>
+#include <vector>
 
 //----------------------
 // Base Class Headers --
@@ -199,17 +200,36 @@ public:
   }
   
   /**
-   *  @brief Get the value of a parameter as a sequence.
+   *  @brief Get the value of a parameter as a list.
    *  
-   *  Returns default value if parameter is not found. 
+   *  Returns default list if parameter is not found. 
    *  
    *  @param[in] param  Name of the parameter
    *  @param[in] def    Default value to return if parameter is not there
-   *  @return The object that is convertible to sequence type such as std::list<<std::string>
-   *          or std::vector<int>
+   *  @return The object that is convertible to a list sequence type such as std::list<<std::string>
    */
   template <typename T>
   std::list<T> configList(const std::string& param, const std::list<T>& def) const
+  {
+    ConfigSvc::ConfigSvc cfg(m_context);
+    try {
+      return cfg.getList(name(), param);
+    } catch (const ConfigSvc::ExceptionMissing& ex) {
+      return cfg.getList(className(), param, def);
+    }
+  }
+
+  /**
+   *  @brief Get the value of a parameter as a vector.
+   *  
+   *  Returns default vector if parameter is not found. 
+   *  
+   *  @param[in] param  Name of the parameter
+   *  @param[in] def    Default value to return if parameter is not there
+   *  @return The object that is convertible to a std::vector<T> for some type T
+   */
+  template <typename T>
+  std::vector<T> configList(const std::string& param, const std::vector<T>& def) const
   {
     ConfigSvc::ConfigSvc cfg(m_context);
     try {
