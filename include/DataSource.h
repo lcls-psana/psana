@@ -100,6 +100,9 @@ public:
   /// Returns iterator for runs
   RunIter runs() { return RunIter(m_evtLoop); }
 
+  // Add PSANA module to list of modules in eventloop
+  void addmodule(boost::shared_ptr<Module> module){ m_evtLoop->addmodule(module);}
+
 protected:
 
 private:

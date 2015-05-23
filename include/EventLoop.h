@@ -119,6 +119,14 @@ public:
    */
   void putback(const value_type& value) { m_values.push_front(value); }
 
+
+  /*
+   * @breif Add a PSANA module to list of modules
+   *
+   */
+  void addmodule(boost::shared_ptr<Module> module) { m_modules.push_back(module); }
+
+
   Index& index();
 
 protected:
