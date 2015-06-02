@@ -109,7 +109,7 @@ def setOptions(mapping):
         _options[key] = str(val)
 
 
-def DataSource(*args):
+def DataSource(*args,**kwargs):
     """
     Makes an instance of the data source object (:py:class:`psana._DataSource`).
     Arguments can be either a single list of strings or any number of strings,
@@ -124,6 +124,25 @@ def DataSource(*args):
         else:
             cfgFile = ""
     fwk = _psana.PSAna(cfgFile, _options)
+
+
+    # Create the PSANA datasource object
+    ds = fwk.dataSource(*args)
+
+
+    # Check if any keyword arguments given    
+    # module keyword -- add module or list of modules
+    if 'module' in kwargs:    
+        # Add modules
+        try :        
+            for module in kwargs['module'] :
+                ds.__add_module(module)
+        except TypeError:
+            # Incase a single module is added
+            ds.__add_module(kwargs['module'])
     
-    return fwk.dataSource(*args)
+        
+    # --> return the datasource object
+    return ds
+
 
