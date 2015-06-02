@@ -11,6 +11,13 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-03
+2015-6-2 Christopher O'Grady
+- Include changes from Ankush that allows people to register
+  python "modules" in the DataSource constructor.  Any methods of
+  those objects that have names like beginjob/beginrun etc. will be
+  called automatically by Andy's framework.
+
 Tag:V00-13-02
 2015-5-12 David Schneider
 - overload configList that takes a default argument to take a vector.
