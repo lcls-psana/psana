@@ -143,6 +143,10 @@ public:
    */
   virtual void endJob(Event& evt, Env& env) = 0;
 
+  virtual bool liveAvail(int numEvents) { 
+    return false; 
+  }
+
 protected:
 
   /// Constructor may be called from subclass only.

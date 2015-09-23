@@ -50,6 +50,10 @@ DataSource::DataSource (const boost::shared_ptr<InputModule>& inputModule,
 {
 }
 
+bool DataSource::liveAvail(int numEvents) {
+  return m_evtLoop->liveAvail(numEvents);
+}
+
 //--------------
 // Destructor --
 //--------------

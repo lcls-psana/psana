@@ -218,4 +218,8 @@ Index& EventLoop::index()
   return  m_inputModule->index();
 }
 
+bool EventLoop::liveAvail(int numEvents) {
+  return m_inputModule->liveAvail(numEvents);
+}
+
 } // namespace psana

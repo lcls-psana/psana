@@ -103,6 +103,11 @@ public:
   // Add PSANA module to list of modules in eventloop
   void addmodule(boost::shared_ptr<Module> module){ m_evtLoop->addmodule(module);}
 
+  // Returns True if live mode and the available events > numEvents arg
+  // Used to skip events and catch up with latest for live data.
+  // Calculation of available events is approximate
+  bool liveAvail(int numEvents);
+
 protected:
 
 private:

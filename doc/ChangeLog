@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-04
+2015-9-23 David Schneider
+- introduce liveAvail method to DataSource to keep up with latest event
+  during live data taking (JIRA PSAS-184)
+
 Tag:V00-13-03
 2015-6-2 Christopher O'Grady
 - Include changes from Ankush that allows people to register

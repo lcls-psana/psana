@@ -127,7 +127,13 @@ public:
   void addmodule(boost::shared_ptr<Module> module) { m_modules.push_back(module); }
 
 
+  // Returns True if live mode and the available events > numEvents arg
+  // Used to skip events and catch up with latest for live data.
+  // Calculation of available events is approximate
+  bool liveAvail(int numEvents);
+
   Index& index();
+
 
 protected:
 
