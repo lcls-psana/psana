@@ -61,6 +61,13 @@ from _psana import *
 # this is not used here directly but still imported for documentation
 from _psana import _DataSource
 
+
+#
+# Build the psana namespace from external packages
+#
+from Detector.PyDetector import PyDetector as Detector
+
+
 #----------------------------------
 # Local non-exported definitions --
 #----------------------------------
