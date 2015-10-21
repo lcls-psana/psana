@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-07
+2015-10-21 David Schneider
+- Add LiveAvail to psana namespace
+
 Tag:V00-13-05
 2015-9-25 TJ Lane
 - Add Detector to psana namespace

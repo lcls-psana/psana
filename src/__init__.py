@@ -67,6 +67,7 @@ from _psana import _DataSource
 #
 from Detector.PyDetector import PyDetector as Detector
 
+from XtcInput.PyLiveAvail import LiveAvail as LiveAvail
 
 #----------------------------------
 # Local non-exported definitions --
