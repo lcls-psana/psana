@@ -65,7 +65,7 @@ from _psana import _DataSource
 #
 # Build the psana namespace from external packages
 #
-from Detector.PyDetector import PyDetector as Detector
+from Detector.PyDetector import detector_factory as Detector
 
 from XtcInput.PyLiveAvail import LiveAvail as LiveAvail
 
