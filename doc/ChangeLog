@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-09
+2015-11-09 TJ Lane
+- Changed psana.Detector to point to new Detector.detector_factory
+
 Tag:V00-13-07
 2015-10-21 David Schneider
 - Add LiveAvail to psana namespace
