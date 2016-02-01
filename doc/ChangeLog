@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-10
+2016-02-01 TJ Lane
+- Make DataSource.env() globally available in psana namespace
+- Enabled default detection of env by psana.Detector
+
 Tag:V00-13-09
 2015-11-09 TJ Lane
 - Changed psana.Detector to point to new Detector.detector_factory

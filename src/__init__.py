@@ -65,7 +65,7 @@ from _psana import _DataSource
 #
 # Build the psana namespace from external packages
 #
-from Detector.PyDetector import detector_factory as Detector
+from Detector.PyDetector import detector_factory as _detector_factory
 
 from XtcInput.PyLiveAvail import LiveAvail as LiveAvail
 
@@ -75,6 +75,17 @@ from XtcInput.PyLiveAvail import LiveAvail as LiveAvail
 
 _cfgFile = None
 _options = {}
+_global_env = None
+
+
+def Detector(name, local_env=None):
+    if _global_env is None:
+        raise RuntimeError('Detector object cannot be created before an instance'
+                           ' of psana.DataSource exists')
+    if local_env is None:
+        return _detector_factory(name, _global_env)
+    else:
+        return _detector_factory(name, local_env)
 
 
 def setConfigFile(name):
@@ -117,13 +128,14 @@ def setOptions(mapping):
         _options[key] = str(val)
 
 
+
 def DataSource(*args,**kwargs):
     """
     Makes an instance of the data source object (:py:class:`psana._DataSource`).
     Arguments can be either a single list of strings or any number of strings,
     each string represents either an input file name or event collection.
     """
-    global _options, _cfgFile
+    global _options, _cfgFile, _global_env
     # make instance of the framework
     cfgFile = _cfgFile
     if cfgFile is None:
@@ -148,7 +160,9 @@ def DataSource(*args,**kwargs):
         except TypeError:
             # Incase a single module is added
             ds.__add_module(kwargs['module'])
-    
+
+    # inject the environment into the global namespace --TJL
+    _global_env = ds.env()    
         
     # --> return the datasource object
     return ds
