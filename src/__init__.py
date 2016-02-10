@@ -79,10 +79,10 @@ _global_env = None
 
 
 def Detector(name, local_env=None):
-    if _global_env is None:
-        raise RuntimeError('Detector object cannot be created before an instance'
-                           ' of psana.DataSource exists')
     if local_env is None:
+        if _global_env is None:
+            raise RuntimeError('Detector object cannot be created before an instance'
+                               ' of psana.DataSource exists')
         return _detector_factory(name, _global_env)
     else:
         return _detector_factory(name, local_env)

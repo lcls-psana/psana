@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-11
+2016-02-10 Christopher O'Grady
+- Only check for created DataSource if not passing in ds.env()
+  (when creating a detector)
+
 Tag:V00-13-10
 2016-02-01 TJ Lane
 - Make DataSource.env() globally available in psana namespace
