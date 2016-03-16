@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-12
+2016-03-15 Christopher O'Grady, TJ Lane
+- Add DetNames method and detnames script
+
 Tag:V00-13-11
 2016-02-10 Christopher O'Grady
 - Only check for created DataSource if not passing in ds.env()

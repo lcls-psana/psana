@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+import psana
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("exprun", help="psana experiment/run string (e.g. exp=xppd7114:run=43)")
+parser.add_argument('-e','--epics', dest='epics', action='store_true')
+parser.add_argument('-a','--all', dest='all', action='store_true')
+args = parser.parse_args()
+
+ds = psana.DataSource(args.exprun)
+
+if args.all:
+  names = psana.DetNames('all')
+elif args.epics:
+  names = psana.DetNames('epics')
+else:
+  names = psana.DetNames('detectors')
+
+headers = ['Full Name','DAQ Alias','User Alias']
+
+maxlen = [len(h) for h in headers]
+for ntuple in names:
+    lengths = [len(n) for n in ntuple]
+    maxlen = [max(oldmax,length) for oldmax,length in zip(maxlen,lengths)]
+
+# assumes that data rows are tuples
+template = "{0:%d} | {1:%d} | {2:%d}" % tuple(maxlen)
+header = template.format("Full Name", "DAQ Alias", "User Alias")
+print '-'*len(header)
+print header
+print '-'*len(header)
+for n in names: 
+  print template.format(*n)
+print '-'*len(header)
