@@ -142,6 +142,7 @@ def _detNames(local_env=None):
     namelist = []
     # leave a placeholder for "user alias" from the calibdir
     for s in amap.srcs():
+        if str(s).find('EpicsArch')!=-1: continue
         namelist.append((str(s).split('(')[-1].split(')')[0],amap.alias(s),''))
     cstore = env.configStore()
     for k in cstore.keys():
