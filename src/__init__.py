@@ -69,6 +69,8 @@ from Detector.PyDetector import detector_factory as _detector_factory
 
 from XtcInput.PyLiveAvail import LiveAvail as LiveAvail
 
+from psparallel.mpi_datasource import MPIDataSource
+
 #----------------------------------
 # Local non-exported definitions --
 #----------------------------------

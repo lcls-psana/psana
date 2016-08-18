@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-14
+2016-08-18 TJ Land and Christopher O'Grady
+- Import new MPIDataSource into psana namespace
+
 Tag:V00-13-13
 2016-03-28 Christopher O'Grady
 - Exclude EpicsArch from DetNames
