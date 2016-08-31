@@ -11,8 +11,13 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-15
+2016-08-30 Christopher O'Grady
+- Back out of V00-13-14 as a temporary workaround for cctbx crash due
+  to pytables import
+
 Tag:V00-13-14
-2016-08-18 TJ Land and Christopher O'Grady
+2016-08-18 TJ Lane and Christopher O'Grady
 - Import new MPIDataSource into psana namespace
 
 Tag:V00-13-13
