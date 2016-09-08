@@ -11,6 +11,13 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-16
+2016-09-07 TJ Lane and Christopher O'Grady
+- Bring files formerly in psparallel here in order
+  to avoid circular dependency.  Refactorize __init__.py into
+  more modular pieces.  Also defer loading of SmallData
+  so that pytables doesn't get loaded and create problems for cctbx.
+
 Tag:V00-13-15
 2016-08-30 Christopher O'Grady
 - Back out of V00-13-14 as a temporary workaround for cctbx crash due
