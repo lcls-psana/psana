@@ -45,9 +45,11 @@ part of it, please give an appropriate acknowledgment.
 # - TJ Lane and Christopher O'Grady
 
 import sys
-from datasource import DataSource, setOption, setOptions, setConfigFile
-from mpi_datasource import MPIDataSource
-from det_interface import Detector, DetNames
+
+# we believe this must be the FIRST import of _psana, so it's important
+# that other software that imports _psana (like DataSource) happen
+# after this.  one symptom we see if the order is wrong is that some
+# of the boost converters stop working, but only on RHEL5.
 
 if sys.platform.startswith('linux'):
     # on Linux with g++ one needs RTLD_GLOBAL for dlopen
@@ -62,6 +64,10 @@ if sys.platform.startswith('linux'):
 else:
     import _psana
 del sys
+
+from datasource import DataSource, setOption, setOptions, setConfigFile
+from mpi_datasource import MPIDataSource
+from det_interface import Detector, DetNames
 
 #
 # import everything from _psana
