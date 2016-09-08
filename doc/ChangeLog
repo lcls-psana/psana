@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Not yet Tagged:
+2016-09-08 David Schneider
+- move mpi4py import and initialization to be dynamic, on demand. This fixes a 
+  unit test failure - JIRA PSRT-145
+	
 Tag:V00-13-16
 2016-09-07 TJ Lane and Christopher O'Grady
 - Bring files formerly in psparallel here in order

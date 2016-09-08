@@ -8,12 +8,6 @@ maintains the same interface but enables under-the-hood MPI
 from datasource import DataSource
 from det_interface import DetNames
 
-from mpi4py import MPI
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
-
-
 class Step(object):
 
     def __init__(self, psana_step, ds_parent):
@@ -30,6 +24,11 @@ class Step(object):
 class MPIDataSource(object):
 
     def __init__(self, ds_string):
+
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        self.rank = comm.Get_rank()
+        self.size = comm.Get_size()
 
         self.ds_string = ds_string
         self.__cpp_ds = DataSource(ds_string)
@@ -87,7 +86,7 @@ class MPIDataSource(object):
                        (nevent % self.gather_interval==0):
                         self.sd._gather()
 
-                    if nevent % size == rank:
+                    if nevent % self.size == self.rank:
                         self._currevt = evt
                         yield evt
 
@@ -136,7 +135,7 @@ class MPIDataSource(object):
 
     @property
     def master(self):
-        return (rank == 0)
+        return (self.rank == 0)
 
 
 
