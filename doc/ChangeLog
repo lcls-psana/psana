@@ -11,7 +11,7 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
-Not yet Tagged:
+Tag:V00-13-17
 2016-09-08 Christopher O'Grady
 - import _psana first in __init__.py to fix boost-converter failure
 	
