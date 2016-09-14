@@ -362,7 +362,7 @@ class SmallData(object):
             v = np.array(v)
             a = tables.Atom.from_dtype(v.dtype)
             node = self.file_handle.create_carray(where='/', name=k,
-                                                  shape=v.shape, atom=a)
+                                                  shape=v.shape, atom=a, obj=v)
 
         return
 
