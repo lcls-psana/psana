@@ -1,27 +1,38 @@
 
-"""
-This code is a 'replacement' for psana.Datasource that
-maintains the same interface but enables under-the-hood MPI
-"""
-
-
 from datasource import DataSource
 from det_interface import DetNames
 
 class Step(object):
-
+    """
+    An object that represents a set of events within
+    a run taken under identical conditions (also known
+    as a `calib-cycle`.
+    """
     def __init__(self, psana_step, ds_parent):
         self._psana_step = psana_step
         self._ds_parent = ds_parent
         return
 
     def events(self):
+        """
+        Returns a python generator of events.
+
+        Parameters
+        ----------
+        None
+        """
         return self._ds_parent._event_gen(self._psana_step)
 
     # TODO ? add env method
 
 
 class MPIDataSource(object):
+
+    """
+    A wrapper for psana.Datasource that
+    maintains the same interface but hides distribution of
+    events to many MPI cores to simplify user analysis code.
+    """
 
     def __init__(self, ds_string):
 
@@ -50,6 +61,13 @@ class MPIDataSource(object):
 
 
     def events(self):
+        """
+        Returns a python generator of events.
+
+        Parameters
+        ----------
+        None
+        """
         return self._event_gen(self.__cpp_ds)
 
 
@@ -112,11 +130,27 @@ class MPIDataSource(object):
 
     def detnames(self, which='detectors'):
         # this could prob be better
-        DetNames(which, local_env=self.__cpp_ds.env())
+        return DetNames(which, local_env=self.__cpp_ds.env())
 
 
     def small_data(self, filename=None, 
                    save_on_gather=False, gather_interval=None):
+        """
+        Returns an object that manages small per-event data as
+        well as non-event data (e.g. a sum of an image over a run)
+
+        Parameters
+        ----------
+        filename : string, optional
+            A filename to use for saving the small data
+        save_on_gather: bool, optional (default False)
+            If true, save data to HDF5 file everytime
+            results are gathered from all MPI cores
+        gather_interval: unsigned int, optional (default None)
+            If set to unsigned integer "N", gather results
+            from all MPI cores every "N" events.  If not set,
+            only gather results from all cores at end-run.
+        """
 
         # defer the import because cctbx gets unhappy with
         # a floating-point-exception from the pytables import
