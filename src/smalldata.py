@@ -1,32 +1,63 @@
 
 """
+> anticipatable issues
+  -- gather_interval > n_cores 
+  -- no data
+  -- detector not present
+
+> nightly test
+
+> put datasets in user-definable groups
+
 > Idea of missing data
-  (skip this for alpha v)
--- NaN for missing ints?
+  -- changing/removing detectors: cause crash
+  -- NaN for missing ints?
+  -- Support users who save e.g. one dset at 60 Hz, one at 120 Hz (keep things aligned)
 
-> Support users who save e.g. one dset at 60 Hz, one at 120 Hz (keep things aligned)
-  (skip this for alpha v)
-
-Saving variable length event data:
-  (skip this for alpha v)
+> Saving variable length event data:
 -- Automatic detection of vlen at sh5.save()
 -- Explicit declare of vlen at sh5.flush()
 -- We will try out best to autodetect vlen, and raise if we
    get surprised
 
+> metadata
+-- xarray compatability?
+
+> always write certain detectors?
+
 > chunking for performance?
-   (skip this for alpha v)
 
+>>> from Silke
+- put datasets in user-definable groups [on the list]
+- storing extra "attributes" or datasets with stuff like ROI (like summary/config field)
+- think about cube problem
+- summary data (e.g. cube) and event data could be in different files.  maybe we provide the option
+  for multiple smallh5 files [done]
+- user-controlled mode for event distribution (e.g. based on delay-time)
+- detectors come and go from run to run and not crash
+- always write detectors like phasecav
+- put in Nan's for missing data (requires everything has to be a float)
 
->>> before alpha release <<<
-
-> clean up and merge w/DataSource ***
-> keep data on master after save()?
-
+>>> from Jason
+- coordinates/attributes for everything, using h5netcdf
+- for analyzing the small-data: xarray makes it easy to select/filter,
+  and will keep track of coordinates for you
+- can use pandas for plotting and packages like seaborn (stat plotting)
+  with these coordinate arrays
+- the xarray coordinates will provide the time sorting
+- wildcard to merge multiple files
+- didn't support variable length data? (maybe can do this)
+- treats NaNs correctly
+- merge fast and slow detectors (eventcode 40 and 42)
+- handles dropped data
+- not clear that we can write pieces while taking data?  look at it.
+- probably supports hierarchy of hdf5 groups in h5netcdf, but might
+  make it more difficult to cut/merge/sort in xarray
 """
 
 import numpy as np
 import tables
+import collections
 
 from _psana import EventId
 
@@ -34,6 +65,21 @@ from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
+
+
+def _flatten_dictionary(d, parent_key='', sep='/'):
+    """
+    http://stackoverflow.com/questions/6027558/flatten-nested-python-dictionaries-compressing-keys
+    """
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(_flatten_dictionary(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
 
 
 class SmallData(object):
@@ -228,12 +274,43 @@ class SmallData(object):
         return
 
 
-    def event(self, **kwargs):
+    def event(self, *args, **kwargs):
+        """
+        Save some data from this event for later use.
+
+        Parameters
+        ----------
+        *args : dictionaries
+            Save HDF5 group heirarchies using nested dictionaries. Each level
+            of the dictionary is a level in the HDF5 group heirarchy.
+
+        **kwargs : datasetname, dataset
+            Save an arbitrary piece of data from this run. The kwarg will
+            give it an (HDF5 dataset) name that appears in the resulting 
+            HDF5 file.
+
+        Examples
+        --------
+        >>> # save the status of a laser
+        >>> smldata.event(laser_on=laser_on)
+        
+        >>> # save "data' at a special location "/base/next_group/data"
+        >>> smldata.event({'base': {'next_group' : data}})
+        """
 
         if ('event_time' in kwargs.keys()) or ('fiducials' in kwargs.keys()):
             raise KeyError('`event_time` and `fiducials` are special names'
                            ' reserved for timestamping -- choose a different '
                            'name')
+
+        # *args can be used to pass hdf5 heirarchies (groups/names) in a dict
+        # flatten these and create a single dictionary of (name : value) pairs
+        # when groups will be created in the hdf5, we will use a "/"
+
+        event_data_dict = {}
+        event_data_dict.update(kwargs)
+        for d in args:
+            event_data_dict.update( _flatten_dictionary(d) )
 
 
         # get timestamp data for most recently yielded evt
@@ -247,7 +324,7 @@ class SmallData(object):
 
             # check to see if we already added this field this event
             events_seen = len(self._dlist['fiducials'])
-            for k in kwargs.keys():
+            for k in event_data_dict.keys():
 
                 # if the list is as long as the # evts seen, 
                 # user has tried to add key twice
@@ -260,8 +337,8 @@ class SmallData(object):
             self._dlist_append(self._dlist, 'event_time', time)
             self._dlist_append(self._dlist, 'fiducials', fid)
 
-        for k in kwargs.keys():
-            self._dlist_append(self._dlist, k, kwargs[k])
+        for k in event_data_dict.keys():
+            self._dlist_append(self._dlist, k, event_data_dict[k])
 
         return
 
@@ -294,10 +371,11 @@ class SmallData(object):
         for a specific key.
         """
 
-        if k in [x.name for x in self.file_handle.iter_nodes('/')]:
-            node = self.file_handle.get_node('/%s' % k)
+        try:
+            #print 'trying to get node: %s' % k
+            node = self.file_handle.get_node('/'+k)
 
-        else:
+        except tables.NoSuchNodeError as e: # --> create node
             ex = self._dlist_master[k][0]
             if self._num_or_array(ex) == 'array':
                 a = tables.Atom.from_dtype(ex.dtype)
@@ -306,23 +384,88 @@ class SmallData(object):
                 a = tables.Atom.from_dtype(np.array(ex).dtype)
                 shp = (0,)
 
-            node = self.file_handle.create_earray(where='/', name=k,
-                                                  shape=shp, atom=a)
+            path, _, name = k.rpartition('/')
+            node = self.file_handle.create_earray(where='/'+path, name=name,
+                                                  shape=shp, atom=a,
+                                                  createparents=True)
 
         return node
 
 
-    def save(self, *evt_variables_to_save, **kwargs):
+    def save(self, *args, **kwargs):
+        """
+        Save registered data to an HDF5 file.
+
+        There are 3 behaviors of the arguments to this function:
+
+            1. Decide what 'event data' (declared by SmallData.event())
+               should be saved
+            2. Add summary (ie. any non-event) data using key-value
+               pairs (similar to SmallData.event())
+            3. Add summary (ie. any non-event) data organized in a
+               heirarchy using nested dictionaries (als similar to 
+               SmallData.event())
+
+        These data are then saved to the file specifed in the SmallData
+        constructor.
+
+        Parameters
+        ----------
+        *args : strings
+            A list of the event data names to save, if you want to save a
+            subset. Otherwise save all data to disk. For example, imagine
+            you had called SmallData.event(a=..., b=...). Then smldata.save('b')
+            would not save data labelled 'a'. smldata.save() would save both
+            'a' and 'b'.
+
+        *args : dictionaries
+            In direct analogy to the SmallData.event call, you can also pass
+            HDF5 group heirarchies using nested dictionaries. Each level
+            of the dictionary is a level in the HDF5 group heirarchy.
+
+        **kwargs : datasetname, dataset
+            Similar to SmallData.event, it is possible to save arbitrary
+            singleton data (e.g. at the end of a run, to save an average over
+            some quanitity).
+
+        event_data : bool
+            Special kwarg. If `False`, do not save the event data, just
+            the run summary data. If `True` (default), do.
+
+        Examples
+        --------
+        >>> # save all event data
+        >>> smldata.save()
+
+        >>> # save all event data AND "array_containing_sum"
+        >>> smldata.save(cspad_sum=array_containing_sum)
+        
+        >>> # save 'b' event data, and no other
+        >>> smldata.save('b')
+
+        >>> # save all event data AND "/base/next_group/data"
+        >>> smldata.save({'base': {'next_group' : data}})
+        """
 
         self._gather()
 
         if self.master:
-            self._save(*evt_variables_to_save, **kwargs)
+            self._save(*args, **kwargs)
 
         return
 
 
-    def _save(self, *evt_variables_to_save, **kwargs):
+    def _save(self, *args, **kwargs):
+
+        evt_variables_to_save = [s for s in args if type(s)==str]
+        dictionaries_to_save  = [d for d in args if type(d)==dict]
+        
+
+        dict_to_save = {}
+        dict_to_save.update(kwargs)
+        for d in dictionaries_to_save:
+            dict_to_save.update(_flatten_dictionary(d))
+
 
         if self.file_handle is None:
             # we could accept a 'filename' argument here in the save method
@@ -358,11 +501,15 @@ class SmallData(object):
         
 
         # save "accumulated" data (e.g. averages)
-        for k,v in kwargs.items():
-            v = np.array(v)
-            a = tables.Atom.from_dtype(v.dtype)
-            node = self.file_handle.create_carray(where='/', name=k,
-                                                  shape=v.shape, atom=a, obj=v)
+        for k,v in dict_to_save.items():
+
+            if type(v) is not np.ndarray:
+                v = np.array([v])
+
+            path, _, name = k.rpartition('/')
+            node = self.file_handle.create_carray(where='/'+path, name=name,
+                                                  obj=v,
+                                                  createparents=True)
 
         return
 

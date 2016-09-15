@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-19
+2016-09-14 TJ Lane
+- added support for arbitary HFD5 heirarchies
+
 Tag:V00-13-18
 2016-09-14 Christopher O'Grady
 - fix bug where we weren't saving run summary data
