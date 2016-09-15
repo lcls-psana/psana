@@ -13,7 +13,7 @@ reverse time order.
 
 Tag:V00-13-19
 2016-09-14 TJ Lane
-- added support for arbitary HFD5 heirarchies
+- added support for arbitary HFD5 hierarchies.  Update documentation.
 
 Tag:V00-13-18
 2016-09-14 Christopher O'Grady
@@ -25,7 +25,7 @@ Tag:V00-13-17
 
 Not yet Tagged:
 2016-09-08 David Schneider
-- move mpi4py import and initialization to be dynamic, on demand. This fixes a 
+- move mpi4py import and initialization to be dynamic, on demand. This fixes a
   unit test failure - JIRA PSRT-145
 
 Tag:V00-13-16
