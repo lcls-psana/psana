@@ -34,7 +34,7 @@ class MPIDataSource(object):
     events to many MPI cores to simplify user analysis code.
     """
 
-    def __init__(self, ds_string):
+    def __init__(self, ds_string, **kwargs):
 
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
@@ -42,7 +42,7 @@ class MPIDataSource(object):
         self.size = comm.Get_size()
 
         self.ds_string = ds_string
-        self.__cpp_ds = DataSource(ds_string)
+        self.__cpp_ds = DataSource(ds_string, **kwargs)
 
         if ':idx' in self.ds_string:
             self._ds_type = 'idx'
