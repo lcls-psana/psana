@@ -1,5 +1,21 @@
 
 """
+missing data ideas:
+
+- do an allgather of the keys/types/shapes into "send_list"
+
+- client-side issues:
+- (case 1) when we append data to _dlist we will backfill numbers before adding the new data, roughly done.
+- (case 2) when we gather we check for keys that we didn't see at all OR keys that are "ragged" and backfill.
+  did some stuff here, but needs work.
+- (case 3) no events at all on a client
+- need to construct the missing data for each of the above cases
+
+- master-side issues:
+- (case 4) master also needs to backfill on disk and memory
+"""
+
+"""
 > anticipatable issues
   -- gather_interval > n_cores 
   -- no data
@@ -80,6 +96,18 @@ def _flatten_dictionary(d, parent_key='', sep='/'):
             items.append((new_key, v))
     return dict(items)
 
+class SynchDict(dict):
+    def synchronize(self):
+        tot_send_list = comm.allgather(self)
+        print '***',tot_send_list
+        for node_send_list in tot_send_list:
+            for k in node_send_list:
+                if k not in self.keys():
+                    self[k] = tot_send_list[k]
+    # this helps ensure that we call "gather" in the right order
+    # on all cores
+    def keys(self):
+        return sorted(self)
 
 
 class SmallData(object):
@@ -111,6 +139,8 @@ class SmallData(object):
 
         self._datasource_parent = datasource_parent
         self.save_on_gather     = save_on_gather
+        self._num_send_list     = SynchDict()
+        self._arr_send_list     = SynchDict()
 
         self._dlist = {}
         if self.master:
@@ -168,15 +198,66 @@ class SmallData(object):
 
         return res
 
+    def missing(self,key):
+        if key in self._arr_send_list.keys():
+            t = self._arr_send_list[key][0]
+        elif key in self._num_send_list.keys():
+            t = self._num_send_list[key]
+        else:
+            print self._num_send_list
+            raise KeyError('key %s not found in array or number send_list'%key)
+
+        if t is int:
+            return -99999
+        elif t is float:
+            return np.nan
+        elif t is np.ndarray:
+            # need to handle all numpy float types here?
+            shape = self.arr_send_list[key][1]
+            arr = np.empty(shape,dtype=t)
+            if issubclass(value.dtype, np.float):
+                arr.fill(np.nan)
+            elif issubclass(value.dtype, np.int):
+                arr.fill(-99999)
+            else:
+                raise ValueError('Invalid array type for missing data')
+            return arr
+        else:
+            raise ValueError('Invalid array type for missing data')
+
+    def _synch_send_list(self):
+        for k in self._dlist.keys():
+            val = self._dlist[k][0] # one event
+            data_type = type(val)
+            if data_type is np.ndarray:
+                if k not in self._arr_send_list:
+                    self._arr_send_list[k]=(data_type,val.shape,val.dtype)
+            else:
+                if k not in self._num_send_list:
+                    print '*** adding',k,data_type
+                    self._num_send_list[k]=data_type
+
+        self._arr_send_list.synchronize()
+        self._num_send_list.synchronize()
+
+        return
+
 
     def _gather(self):
 
-        for k in self._dlist.keys():
-            t = self._num_or_array(self._dlist[k][0])
-            if t is 'num':
-                self._gather_numbers(self._dlist[k], k)
-            elif t is 'array':
-                self._gather_arrays(self._dlist[k], k)
+        self._synch_send_list()
+
+        print '*** arr',self._arr_send_list.keys()
+        for k in self._arr_send_list.keys():
+            if k not in self._dlist.keys(): self._dlist[k] = []
+            self._backfill(self._nevents,self._dlist[k],self.missing(k))
+            self._gather_arrays(self._dlist[k], k)
+
+        print '*** num',self._num_send_list.keys()
+        for k in self._num_send_list.keys():
+            if k not in self._dlist.keys(): self._dlist[k] = []
+            self._backfill(self._nevents,self._dlist[k],self.missing(k))
+            self._gather_numbers(self._dlist[k], k)
 
         self._dlist = {}  # forget all the data we just sent
 
@@ -202,7 +283,7 @@ class SmallData(object):
     def _gather_numbers(self, num_list, key):
 
         lengths = np.array(comm.gather(len(num_list))) # get list of lengths
-        mysend = np.array(num_list)
+        mysend = np.array(num_list,dtype=self._num_send_list[key])
         myrecv = None
 
         if self.master:
@@ -259,6 +340,34 @@ class SmallData(object):
 
             # finally, insert the new arrays into master's dlist
             self._dlist_append(self._dlist_master, key, reshaped_recv)
+
+        return
+
+
+    @property
+    def _nevents(self):
+        if 'fiducials' in self._dlist:
+            return len(self._dlist['fiducials'])
+        else:
+            return 0
+
+    @staticmethod
+    def _backfill(target_events,dlist_element,fill_value):
+        numfill = target_events-len(dlist_element)-1
+        print 'numfill',numfill
+        if numfill>0:
+            dlist_element.extend([fill_value]*numfill)
+
+
+    def _dlist_append_client(self, key, value):
+
+        if key not in self._dlist.keys():
+            self._dlist[key] = []
+
+        # patch up _dlist with missing data before we add new values
+        self._backfill(self._nevents,self._dlist[key],self.missing(key))
+
+        self._dlist[key].append(value)
 
         return
 
@@ -334,11 +443,11 @@ class SmallData(object):
 
         # --> otherwise this is a new event
         else:
-            self._dlist_append(self._dlist, 'event_time', time)
-            self._dlist_append(self._dlist, 'fiducials', fid)
+            self._dlist_append_client('event_time', time)
+            self._dlist_append_client('fiducials', fid)
 
         for k in event_data_dict.keys():
-            self._dlist_append(self._dlist, k, event_data_dict[k])
+            self._dlist_append_client(k, event_data_dict[k])
 
         return
 
