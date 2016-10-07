@@ -28,6 +28,11 @@ missing data ideas:
 
 ---------------------------------------------------------------------------------------------
 
+> user forgets to call save, they get a small but empty HDF5
+-- atexit
+-- use a destructor: __del__ (prone to circular ref issues)
+-- use "with" statement + __exit__ (may affect interface)
+
 > nightly test
 
 > Saving variable length event data:
@@ -97,11 +102,13 @@ def _flatten_dictionary(d, parent_key='', sep='/'):
     return dict(items)
 
 
+def remove_values(the_list, val):
+   return [value for value in the_list if value != val]
+
+
 class SynchDict(dict):
     def synchronize(self):
-        print 'prep to sync', rank
         tot_send_list = comm.allgather(self)
-        print 'syncd', rank
         for node_send_list in tot_send_list:
             for k in node_send_list:
                 if k not in self.keys():
@@ -236,23 +243,32 @@ class SmallData(object):
 
     def _gather(self):
 
+        # "send lists" hold a catalogue of the data keys to expect
+        # aggregated across all ranks
         self._arr_send_list.synchronize()
         self._num_send_list.synchronize()
 
+        # for all data in our aggregated catalogue, gather
         for k in self._arr_send_list.keys():
             if k not in self._dlist.keys(): self._dlist[k] = []
-            self._backfill(self._nevents, self._dlist[k], self.missing(k))
+            self._backfill_client(self._nevents, self._dlist[k], self.missing(k))
             self._gather_arrays(self._dlist[k], k)
 
         for k in self._num_send_list.keys():
             if k not in self._dlist.keys(): self._dlist[k] = []
-            self._backfill(self._nevents, self._dlist[k], self.missing(k))
+            self._backfill_client(self._nevents, self._dlist[k], self.missing(k))
             self._gather_numbers(self._dlist[k], k)
 
         self._dlist = {}  # forget all the data we just sent
 
-        # if we are the master, sort
+        # if we are the master:
+        #   (1) sort data by time
+        #   (2) backfill missing data [to beginning of time, memory + disk]
+        #   (3) save if requested
+
         if self.master:
+
+            # (1) sort data by time
             for k in self._dlist_master.keys():
 
                 if k is 'event_time':
@@ -261,9 +277,22 @@ class SmallData(object):
                 self._dlist_master[k][-1] = [x for (y,x) in 
                                              sorted( zip(self._dlist_master['event_time'][-1], 
                                                          self._dlist_master[k][-1]) ) ]
-
+            
             self._dlist_master['event_time'][-1] = sorted(self._dlist_master['event_time'][-1])
 
+
+            # (2) backfill missing data
+            for k in self._dlist_master.keys():
+                
+                events_in_mem = sum([len(x) for x in self._dlist_master['fiducials']])
+                target_events = self._nevents_on_disk + events_in_mem
+                print k, target_events, self._nevents_on_disk, events_in_mem
+                self._dlist_master[k] = self._backfill_master(target_events, 
+                                                              self._dlist_master[k], 
+                                                              self.missing(k))
+
+
+            # (3) save if requested
             if self.save_on_gather:
                 self._save() # save all event data on gather
 
@@ -271,8 +300,6 @@ class SmallData(object):
 
 
     def _gather_numbers(self, num_list, key):
-
-        print 'calling gather num', self.master
 
         lengths = np.array(comm.gather(len(num_list))) # get list of lengths
         mysend = np.array(num_list,dtype=self._num_send_list[key])
@@ -282,12 +309,9 @@ class SmallData(object):
             myrecv = np.empty((sum(lengths)),mysend.dtype) # allocate receive buffer
 
         comm.Gatherv(sendbuf=mysend, recvbuf=[myrecv, lengths])
-        if self.master: print 'myrecv', myrecv
 
         if self.master:
             self._dlist_append(self._dlist_master, key, myrecv)
-
-        print 'finished gather num', self.master
 
         return
 
@@ -350,32 +374,52 @@ class SmallData(object):
             return 0
 
 
+    @property
+    def _nevents_on_disk(self):
+        try:
+            self.file_handle.get_node('/', 'fiducials')
+            return len(self.file_handle.root.fiducials)
+        except tables.NoSuchNodeError:
+            return 0
+
+
     @staticmethod
-    def _backfill(target_events, dlist_element, fill_value):
+    def _backfill_client(target_events, dlist_element, fill_value):
         numfill = target_events - len(dlist_element)
-        if numfill>0:
+        if numfill > 0:
             dlist_element.extend([fill_value]*numfill)
         return
 
 
+    @staticmethod
+    def _backfill_master(target_events, dlist_element, fill_value):
+        numfill = target_events - sum([len(x) for x in dlist_element])
+        print 'filling %d' % numfill
+        if numfill > 0:
+            dlist_element = [[fill_value]*numfill] + dlist_element
+        return dlist_element
+
+
     def _dlist_append_client(self, key, value):
+
+        data_type = type(value)
+
+        if data_type is np.ndarray:
+            value = np.atleast_1d(value)
+            if key not in self._arr_send_list:
+                self._arr_send_list[key] = (data_type, value.shape, value.dtype)
+
+        else:
+            if key not in self._num_send_list:
+                self._num_send_list[key] = data_type
 
         if key not in self._dlist.keys():
             self._dlist[key] = []
 
-            # add the key to the "send_list"
-            data_type = type(value)
-            if data_type is np.ndarray:
-                if key not in self._arr_send_list:
-                    self._arr_send_list[key] = (data_type, value.shape, value.dtype)
-            else:
-                if key not in self._num_send_list:
-                    self._num_send_list[key] = data_type
-
         # patch up _dlist with missing data before we add new values
-        self._backfill(self._nevents - 1,
-                       self._dlist[key],
-                       self.missing(key))
+        self._backfill_client(self._nevents - 1,
+                              self._dlist[key],
+                              self.missing(key))
 
         self._dlist[key].append(value)
 
@@ -610,7 +654,12 @@ class SmallData(object):
             # for each item to save, write to disk
             for k in keys_to_save:
                 if len(self._dlist_master[k]) > 0:
+
+                    # make a list of lists of arrays a single np array
+                    #     note "[]" due to gathers with no data (for any rank)
+                    self._dlist_master[k] = remove_values(self._dlist_master[k], [])
                     self._dlist_master[k] = np.concatenate(self._dlist_master[k])
+
                     node = self._get_node(k)
                     node.append( self._dlist_master[k] )
                     self._dlist_master[k] = []
