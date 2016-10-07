@@ -155,6 +155,7 @@ class SmallData(object):
         self._dlist = {}
         if self.master:
             self._dlist_master = {}
+            self._newkeys = []
 
         if filename and self.master:
             self.file_handle = tables.File(filename, 'w')
@@ -264,7 +265,15 @@ class SmallData(object):
         # if we are the master:
         #   (1) sort data by time
         #   (2) backfill missing data [to beginning of time, memory + disk]
+        #       this must be after the sort, because there are no timestamps
+        #       to sort backfilled data
         #   (3) save if requested
+
+        # note that _dlist_master is different than the client _dlist's.  it is a list of lists,
+        # one list for each gather that has happened since the last save.  the style of
+        # the contents of _dlist_master is also changed by the "sort" call: individual numbers
+        # (not arrays) in a gather are originally arrays, but the sort converts them into lists
+        # of numbers.
 
         if self.master:
 
@@ -274,15 +283,15 @@ class SmallData(object):
                 if k is 'event_time':
                     continue
                     
+                # "-1" here says we are only sorting the result from the most recent gather
                 self._dlist_master[k][-1] = [x for (y,x) in 
                                              sorted( zip(self._dlist_master['event_time'][-1], 
                                                          self._dlist_master[k][-1]) ) ]
             
             self._dlist_master['event_time'][-1] = sorted(self._dlist_master['event_time'][-1])
 
-
             # (2) backfill missing data
-            for k in self._dlist_master.keys():
+            for k in self._newkeys:
                 
                 events_in_mem = sum([len(x) for x in self._dlist_master['fiducials']])
                 target_events = self._nevents_on_disk + events_in_mem
@@ -290,7 +299,7 @@ class SmallData(object):
                 self._dlist_master[k] = self._backfill_master(target_events, 
                                                               self._dlist_master[k], 
                                                               self.missing(k))
-
+            self._newkeys=[]
 
             # (3) save if requested
             if self.save_on_gather:
@@ -426,11 +435,11 @@ class SmallData(object):
         return
 
 
-    @staticmethod
-    def _dlist_append(dlist, key, value):
+    def _dlist_append(self, dlist, key, value):
 
         if key not in dlist.keys():
             dlist[key] = [value]
+            self._newkeys.append(key)
         else:
             dlist[key].append(value)
 
@@ -680,6 +689,3 @@ class SmallData(object):
                                                   createparents=True)
 
         return
-
-
-
