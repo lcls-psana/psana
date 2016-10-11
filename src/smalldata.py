@@ -87,6 +87,9 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
+MISSING_INT = -99999
+MISSING_FLOAT = np.nan
+
 
 def _flatten_dictionary(d, parent_key='', sep='/'):
     """
@@ -206,8 +209,6 @@ class SmallData(object):
 
     def missing(self, key):
 
-        MISSING_INT = -99999
-        MISSING_FLOAT = np.nan
 
 
         if key in self._num_send_list.keys():
@@ -295,7 +296,6 @@ class SmallData(object):
                 
                 events_in_mem = sum([len(x) for x in self._dlist_master['fiducials']])
                 target_events = self._nevents_on_disk + events_in_mem
-                print k, target_events, self._nevents_on_disk, events_in_mem
                 self._dlist_master[k] = self._backfill_master(target_events, 
                                                               self._dlist_master[k], 
                                                               self.missing(k))
@@ -403,7 +403,6 @@ class SmallData(object):
     @staticmethod
     def _backfill_master(target_events, dlist_element, fill_value):
         numfill = target_events - sum([len(x) for x in dlist_element])
-        print 'filling %d' % numfill
         if numfill > 0:
             dlist_element = [[fill_value]*numfill] + dlist_element
         return dlist_element
