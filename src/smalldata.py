@@ -228,7 +228,7 @@ class SmallData(object):
             shape = self._arr_send_list[key][1]
             dtype = self._arr_send_list[key][2]
 
-            missing_value = np.empty(shape, dtype=t)
+            missing_value = np.empty(shape, dtype=dtype)
 
             if dtype in [int, np.int8, np.int16, np.int32, np.int64, np.int]:
                 missing_value.fill(MISSING_INT)
@@ -253,6 +253,7 @@ class SmallData(object):
         # for all data in our aggregated catalogue, gather
         for k in self._arr_send_list.keys():
             if k not in self._dlist.keys(): self._dlist[k] = []
+            #if k == 'a': print self._dlist[k]
             self._backfill_client(self._nevents, self._dlist[k], self.missing(k))
             self._gather_arrays(self._dlist[k], k)
 

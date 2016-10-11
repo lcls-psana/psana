@@ -3,6 +3,7 @@
 Note: expects to be called with 1 or 4 cores, though any number should work...
 """
 
+import os
 import abc
 import h5py
 import psana
@@ -45,6 +46,34 @@ class TestSmallData(object):
     def missing(self):
         return
 
+
+    def d_element(self, drank, nevt):
+        """
+        builder function for array d, which is a staggered example
+        where each core behaves differently
+        """
+
+        if drank == 0:
+            ret = self.dataset()
+
+        elif drank == 1:
+            if nevt + 1 > self.gather_after:
+                ret = self.dataset()
+            else:
+                ret = None
+
+        elif drank == 2:
+            if nevt > self.gather_after:
+                ret = self.dataset()
+            else:
+                ret = None
+
+        else:
+            ret = None
+
+        return ret
+
+
     def generate_h5(self): 
 
         for nevt,evt in enumerate(self.dsource.events()):
@@ -65,16 +94,9 @@ class TestSmallData(object):
 
             # dataset d: test all cores different
             if size > 3:
-                if rank == 0:
-                    self.smldata.event(d=self.dataset())
-                elif rank == 1:
-                    if nevt + 1 > self.gather_after:
-                        self.smldata.event(d=self.dataset())
-                elif rank == 2:
-                    if nevt > self.gather_after:
-                        self.smldata.event(d=self.dataset())
-                else:
-                    pass
+                dret = self.d_element(rank, nevt)
+                if dret is not None:
+                    self.smldata.event(d=dret)
 
 
             # gather after indicated events
@@ -92,6 +114,7 @@ class TestSmallData(object):
 
         return
 
+
     def validate_h5(self):
 
         if rank == 0:
@@ -99,21 +122,46 @@ class TestSmallData(object):
             expected_a = [self.dataset()] * (self.end_after + 1) * size
             expected_b = [self.missing()] * self.gather_after * size + \
                          [self.dataset()] * (self.end_after + 1 - self.gather_after) * size
-            expected_c = [self.missing()] * (self.gather_after + 1) * size+ \
+            expected_c = [self.missing()] * (self.gather_after + 1) * size + \
                          [self.dataset()] * (self.end_after - self.gather_after) * size
-            expected_d = None # todo
+
+            expected_d = []
+            for nevt in range(self.end_after + 1):
+                for drank in range(size):
+                    de = self.d_element(drank, nevt)
+                    if de is not None:
+                        expected_d.append( self.d_element(drank, nevt) )
+                    else:
+                        expected_d.append( self.missing() )
 
 
             f = h5py.File(self.filename)
+
             np.testing.assert_allclose( np.array(f['a']),
-                                        np.array(expected_a) )
+                                        np.array(expected_a),
+                                        err_msg='mismatch in a' )
             np.testing.assert_allclose( np.array(f['b']),
-                                        np.array(expected_b) )
+                                        np.array(expected_b),
+                                        err_msg='mismatch in b' )
             np.testing.assert_allclose( np.array(f['c']), 
-                                        np.array(expected_c) )
+                                        np.array(expected_c),
+                                        err_msg='mismatch in c' )
+
+            if 'd' in f.keys():
+                np.testing.assert_allclose( np.array(f['d']),
+                                            np.array(expected_d),
+                                            err_msg='mismatch in d' )
+
             f.close()
 
         return
+
+
+    def teardown(self):
+        if rank == 0:
+            os.remove(self.filename)
+        return
+
 
     def test_h5gen(self):
         self.generate_h5()
@@ -135,7 +183,7 @@ class TestFloat(TestSmallData):
 
 class TestIntArray(TestSmallData):
     def dataset(self):
-        return np.ones((1,2,3))
+        return np.ones((1,2,3)).astype(np.int)
     def missing(self):
         return smalldata_mod.MISSING_INT * np.ones(self.dataset().shape)
 
@@ -148,10 +196,11 @@ class TestFloatArray(TestSmallData):
 
 if __name__ == '__main__':
 
-    for Test in [TestInt, TestFloat]:# , TestIntArray, TestFloatArray]:
+    for Test in [TestInt, TestFloat, TestIntArray, TestFloatArray]:
         t = Test()
         t.setup()
-        print t.filename
+        if rank == 0: print 'Testing: %s' % t.filename
         t.test_h5gen()
+        t.teardown()
 
 
