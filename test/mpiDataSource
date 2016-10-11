@@ -1,0 +1,25 @@
+#!@PYTHON@
+ 
+import sys
+import unittest
+import psana
+import Detector
+import numpy as np
+import os
+from AppUtils.AppDataPath import AppDataPath
+
+class TestMPIDataSource(unittest.TestCase) :
+ 
+    def setUp(self):
+
+    	self.ds = psana.DataSource("/reg/g/psdm/data_test/Translator/test_081_xpp_xppi0214_e439-r0054-s00-c00.xtc")
+        return
+ 
+
+    def test_runmpi(self):
+        scriptDir = AppDataPath('psana').path()
+        status = os.system('mpirun -n 4 python '+scriptDir+'/mpids_test.py')
+        assert status==0
+
+if __name__ == '__main__':
+     unittest.main(argv=[sys.argv[0], '-v'])
