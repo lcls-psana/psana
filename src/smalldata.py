@@ -254,12 +254,12 @@ class SmallData(object):
         for k in self._arr_send_list.keys():
             if k not in self._dlist.keys(): self._dlist[k] = []
             #if k == 'a': print self._dlist[k]
-            self._backfill_client(self._nevents, self._dlist[k], self.missing(k))
+            self._backfill_client(self._nevents, self._dlist[k], k)
             self._gather_arrays(self._dlist[k], k)
 
         for k in self._num_send_list.keys():
             if k not in self._dlist.keys(): self._dlist[k] = []
-            self._backfill_client(self._nevents, self._dlist[k], self.missing(k))
+            self._backfill_client(self._nevents, self._dlist[k], k)
             self._gather_numbers(self._dlist[k], k)
 
         self._dlist = {}  # forget all the data we just sent
@@ -393,10 +393,10 @@ class SmallData(object):
             return 0
 
 
-    @staticmethod
-    def _backfill_client(target_events, dlist_element, fill_value):
+    def _backfill_client(self, target_events, dlist_element, key):
         numfill = target_events - len(dlist_element)
         if numfill > 0:
+            fill_value = self.missing(key)
             dlist_element.extend([fill_value]*numfill)
         return
 
@@ -428,7 +428,7 @@ class SmallData(object):
         # patch up _dlist with missing data before we add new values
         self._backfill_client(self._nevents - 1,
                               self._dlist[key],
-                              self.missing(key))
+                              key)
 
         self._dlist[key].append(value)
 
