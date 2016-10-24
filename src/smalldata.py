@@ -28,6 +28,8 @@ missing data ideas:
 
 ---------------------------------------------------------------------------------------------
 
+> call MPI.abort() tests
+
 > user forgets to call save, they get a small but empty HDF5
 -- atexit
 -- use a destructor: __del__ (prone to circular ref issues)
@@ -47,6 +49,10 @@ missing data ideas:
 > always write certain detectors?
 
 > chunking for performance?
+
+> tables.close() warning
+
+> MPI.finalize() [necessary?]
 
 >>> from Silke
 - put datasets in user-definable groups [on the list]
@@ -209,8 +215,6 @@ class SmallData(object):
 
     def missing(self, key):
 
-
-
         if key in self._num_send_list.keys():
             t = self._num_send_list[key]
 
@@ -343,7 +347,7 @@ class SmallData(object):
             mysend = np.concatenate([ x.reshape(-1) for x in array_list ])
             mysend = np.ascontiguousarray(mysend)
         else:
-            mysend = np.array([])
+            mysend = np.array([], dtype=self._arr_send_list[key][2])
 
         # master computes how many array elements to expect, 
         # recvs in linear array
