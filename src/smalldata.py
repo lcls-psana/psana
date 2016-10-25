@@ -28,14 +28,10 @@ missing data ideas:
 
 ---------------------------------------------------------------------------------------------
 
-> call MPI.abort() tests
-
 > user forgets to call save, they get a small but empty HDF5
 -- atexit
 -- use a destructor: __del__ (prone to circular ref issues)
 -- use "with" statement + __exit__ (may affect interface)
-
-> nightly test
 
 > Saving variable length event data:
 -- Automatic detection of vlen at sh5.save()
@@ -53,6 +49,8 @@ missing data ideas:
 > tables.close() warning
 
 > MPI.finalize() [necessary?]
+
+> How do people access _dlist_master for applications like psmon?
 
 >>> from Silke
 - put datasets in user-definable groups [on the list]
