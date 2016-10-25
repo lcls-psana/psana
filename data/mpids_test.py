@@ -23,7 +23,7 @@ class TestSmallData(object):
     def setup(self):
 
         self.filename = self.__class__.__name__ + '.h5'
-        self.gather_interval = 5
+        self.gather_interval = 2
 
         self.dsource = psana.MPIDataSource('exp=xpptut15:run=54:smd')
         self.smldata = self.dsource.small_data(self.filename, 
@@ -79,8 +79,8 @@ class TestSmallData(object):
         for nevt,evt in enumerate(self.dsource.events()):
 
             # dataset a: always there
-            self.smldata.event(a=self.dataset())
-
+            tmp = self.dataset()
+            self.smldata.event(a=tmp)
 
             # dataset b: missing data, but some data before gather
             if nevt + 1 > self.gather_after:
@@ -185,7 +185,7 @@ class TestIntArray(TestSmallData):
     def dataset(self):
         return np.ones((1,2,3)).astype(np.int)
     def missing(self):
-        return smalldata_mod.MISSING_INT * np.ones(self.dataset().shape)
+        return smalldata_mod.MISSING_INT * np.ones(self.dataset().shape, dtype=np.int)
 
 class TestFloatArray(TestSmallData):
     def dataset(self):
@@ -196,11 +196,13 @@ class TestFloatArray(TestSmallData):
 
 if __name__ == '__main__':
 
-    for Test in [TestInt, TestFloat, TestIntArray, TestFloatArray]:
-        t = Test()
-        t.setup()
-        if rank == 0: print 'Testing: %s' % t.filename
-        t.test_h5gen()
-        t.teardown()
-
-
+    try:
+        for Test in [TestInt, TestFloat, TestIntArray, TestFloatArray]:
+            t = Test()
+            t.setup()
+            if rank == 0: print 'Testing: %s' % t.filename
+            t.test_h5gen()
+            t.teardown()
+    except AssertionError as e:
+        print e
+        comm.Abort(1)

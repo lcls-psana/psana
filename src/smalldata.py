@@ -282,33 +282,35 @@ class SmallData(object):
         # of numbers.
 
         if self.master:
+            # handle the case of zero events
+            if len(self._dlist_master.keys()) > 0:
 
-            # (1) sort data by time
-            for k in self._dlist_master.keys():
+                # (1) sort data by time
+                for k in self._dlist_master.keys():
 
-                if k is 'event_time':
-                    continue
+                    if k is 'event_time':
+                        continue
                     
-                # "-1" here says we are only sorting the result from the most recent gather
-                self._dlist_master[k][-1] = [x for (y,x) in 
-                                             sorted( zip(self._dlist_master['event_time'][-1], 
-                                                         self._dlist_master[k][-1]) ) ]
+                    # "-1" here says we are only sorting the result from the most recent gather
+                    self._dlist_master[k][-1] = [x for (y,x) in 
+                                                 sorted( zip(self._dlist_master['event_time'][-1], 
+                                                             self._dlist_master[k][-1]) ) ]
             
-            self._dlist_master['event_time'][-1] = sorted(self._dlist_master['event_time'][-1])
+                self._dlist_master['event_time'][-1] = sorted(self._dlist_master['event_time'][-1])
 
-            # (2) backfill missing data
-            for k in self._newkeys:
+                # (2) backfill missing data
+                for k in self._newkeys:
                 
-                events_in_mem = sum([len(x) for x in self._dlist_master['fiducials']])
-                target_events = self._nevents_on_disk + events_in_mem
-                self._dlist_master[k] = self._backfill_master(target_events, 
-                                                              self._dlist_master[k], 
-                                                              self.missing(k))
-            self._newkeys=[]
+                    events_in_mem = sum([len(x) for x in self._dlist_master['fiducials']])
+                    target_events = self._nevents_on_disk + events_in_mem
+                    self._dlist_master[k] = self._backfill_master(target_events, 
+                                                                  self._dlist_master[k], 
+                                                                  self.missing(k))
+                self._newkeys=[]
 
-            # (3) save if requested
-            if self.save_on_gather:
-                self._save() # save all event data on gather
+                # (3) save if requested
+                if self.save_on_gather:
+                    self._save() # save all event data on gather
 
         return
 

@@ -93,25 +93,27 @@ class MPIDataSource(object):
 
             try:
 
-                nevent = 0
+                nevent = -1
                 while True:
+
+                    nevent += 1
 
                     evt = psana_level.events().next()
 
-                    # logic for regular gathers
-                    if (self.gather_interval is not None) and \
-                       (nevent > 0)                       and \
-                       (nevent % self.gather_interval==0):
+                    if (self.global_gather_interval is not None) and \
+                       (nevent > 1)                       and \
+                       (nevent % self.global_gather_interval==0):
                         self.sd._gather()
 
+                    # logic for regular gathers
                     if nevent % self.size == self.rank:
                         self._currevt = evt
                         yield evt
 
-                    nevent += 1
 
             # logic for final gather (after all events seen)
             except StopIteration as e:
+                print '&&& final gather',self.rank
                 self.sd._gather()
                 raise StopIteration(e)
 
@@ -148,7 +150,8 @@ class MPIDataSource(object):
             results are gathered from all MPI cores
         gather_interval: unsigned int, optional (default None)
             If set to unsigned integer "N", gather results
-            from all MPI cores every "N" events.  If not set,
+            from all MPI cores every "N" events.  Events are
+            counted separately on each core.  If not set,
             only gather results from all cores at end-run.
         """
 
@@ -160,7 +163,7 @@ class MPIDataSource(object):
         # -- SmallData must know about the _currevt to "timestamp" its data
         # -- DataSource needs to call SmallData's _gather method
 
-        self.gather_interval = gather_interval
+        self.global_gather_interval = gather_interval*self.size
         self.sd = SmallData(self, filename=filename, 
                             save_on_gather=save_on_gather)
 
