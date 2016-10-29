@@ -288,7 +288,11 @@ class SmallData(object):
 
                     if k is 'event_time':
                         continue
-                    
+                   
+                    # check if there are non-unique times
+                    if len(self._dlist_master['event_time'][-1]) > len(set(self._dlist_master['event_time'][-1])):
+                        raise RuntimeError('non-unique timestamp')
+
                     # "-1" here says we are only sorting the result from the most recent gather
                     self._dlist_master[k][-1] = [x for (y,x) in 
                                                  sorted( zip(self._dlist_master['event_time'][-1], 

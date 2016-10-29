@@ -2,6 +2,7 @@
 from datasource import DataSource
 from det_interface import DetNames
 
+
 class Step(object):
     """
     An object that represents a set of events within
@@ -124,11 +125,15 @@ class MPIDataSource(object):
     def env(self):
         return self.__cpp_ds.env()
 
+
     def steps(self):
         for step in self.__cpp_ds.steps():
             yield Step(step, self)
 
-    def runs(self): pass
+
+    def runs(self):
+        raise NotImplementedError()
+
 
     def detnames(self, which='detectors'):
         # this could prob be better
@@ -136,7 +141,7 @@ class MPIDataSource(object):
 
 
     def small_data(self, filename=None, 
-                   save_on_gather=False, gather_interval=None):
+                   save_on_gather=False, gather_interval=100):
         """
         Returns an object that manages small per-event data as
         well as non-event data (e.g. a sum of an image over a run)
@@ -145,10 +150,12 @@ class MPIDataSource(object):
         ----------
         filename : string, optional
             A filename to use for saving the small data
+
         save_on_gather: bool, optional (default False)
             If true, save data to HDF5 file everytime
             results are gathered from all MPI cores
-        gather_interval: unsigned int, optional (default None)
+
+        gather_interval: unsigned int, optional (default 100)
             If set to unsigned integer "N", gather results
             from all MPI cores every "N" events.  Events are
             counted separately on each core.  If not set,

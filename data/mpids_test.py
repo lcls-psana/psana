@@ -8,6 +8,7 @@ import abc
 import h5py
 import psana
 import numpy as np
+from math import ceil
 
 from psana import smalldata as smalldata_mod
 
@@ -27,7 +28,7 @@ class TestSmallData(object):
 
         self.dsource = psana.MPIDataSource('exp=xpptut15:run=54:smd')
         self.smldata = self.dsource.small_data(self.filename, 
-                                               gather_interval=self.gather_interval)
+                                               gather_interval=5)
 
         self.gather_after = 3 # events (for each core)
         self.end_after    = 5 # events (for each core)
@@ -106,9 +107,12 @@ class TestSmallData(object):
 
             # break after indicated events
             if nevt == self.end_after:
+
+                print rank, nevt, self.smldata._nevents
                 break
 
         self.smldata.save()
+        print 'psave', rank, nevt, self.smldata._nevents
         if self.smldata.master:
             self.smldata.file_handle.close()
 
@@ -118,6 +122,7 @@ class TestSmallData(object):
     def validate_h5(self):
 
         if rank == 0:
+
 
             expected_a = [self.dataset()] * (self.end_after + 1) * size
             expected_b = [self.missing()] * self.gather_after * size + \
@@ -134,9 +139,7 @@ class TestSmallData(object):
                     else:
                         expected_d.append( self.missing() )
 
-
             f = h5py.File(self.filename)
-
             np.testing.assert_allclose( np.array(f['a']),
                                         np.array(expected_a),
                                         err_msg='mismatch in a' )
