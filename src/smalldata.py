@@ -232,7 +232,7 @@ class SmallData(object):
 
             missing_value = np.empty(shape, dtype=dtype)
 
-            if dtype in [int, np.int8, np.int16, np.int32, np.int64, np.int]:
+            if dtype in [int, np.int8, np.int16, np.int32, np.int64, np.int, np.uint8, np.uint16, np.uint32, np.uint64, np.uint]:
                 missing_value.fill(MISSING_INT)
             elif dtype in [float, np.float16, np.float32, np.float64, np.float128, np.float]:
                 missing_value.fill(MISSING_FLOAT)

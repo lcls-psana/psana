@@ -114,7 +114,6 @@ class MPIDataSource(object):
 
             # logic for final gather (after all events seen)
             except StopIteration as e:
-                print '&&& final gather',self.rank
                 self.sd._gather()
                 raise StopIteration(e)
 
