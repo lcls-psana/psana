@@ -10,25 +10,34 @@ class Step(object):
     as a `calib-cycle`.
     """
     def __init__(self, psana_step, ds_parent):
+        """
+        Create an MPIDataSource compatible Step object.
+
+        Parameters
+        ----------
+        psana_step : psana.Step
+            An instance of psana.Step
+
+        ds_parent : psana.DataSoure
+            The DataSource object that created the Step
+        """
         self._psana_step = psana_step
         self._ds_parent = ds_parent
         return
 
+
     def events(self):
         """
         Returns a python generator of events.
-
-        Parameters
-        ----------
-        None
         """
         return self._ds_parent._event_gen(self._psana_step)
 
-    # TODO ? add env method
+
+    def env(self):
+        return self._psana_step.env()
 
 
 class MPIDataSource(object):
-
     """
     A wrapper for psana.Datasource that
     maintains the same interface but hides distribution of
@@ -36,11 +45,44 @@ class MPIDataSource(object):
     """
 
     def __init__(self, ds_string, **kwargs):
+        """
+        Create a wrapper for psana.Datasource that
+        maintains the same interface but hides distribution of
+        events to many MPI cores to simplify user analysis code.
+
+        Parameters
+        ----------
+        ds_string : str
+            A DataSource string, e.g. "exp=xpptut15:run=54:smd" that
+            specifies the experiment and run to access.
+
+        Example
+        -------
+        >>> ds = psana.MPIDataSource('exp=xpptut15:run=54:smd')
+        >>> smldata = ds.small_data('my.h5')
+        >>> cspad = psana.Detector('cspad')
+        >>> for evt in ds.events():
+        >>>     mu = np.mean( cspad.calib(evt)
+        >>>     smldata.append(cspad_mean=mu)
+
+        See Also
+        --------
+        psana.DataSource
+            The serial data access method this class is based on
+
+        MPIDataSource.small_data
+            Method to create a SmallData object that can aggregate
+            data in a parallel fashion.
+        """
+
 
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         self.rank = comm.Get_rank()
         self.size = comm.Get_size()
+
+        if not ':smd' in ds_string:
+            ds_string += ':smd'
 
         self.ds_string = ds_string
         self.__cpp_ds = DataSource(ds_string, **kwargs)
@@ -64,10 +106,6 @@ class MPIDataSource(object):
     def events(self):
         """
         Returns a python generator of events.
-
-        Parameters
-        ----------
-        None
         """
         return self._event_gen(self.__cpp_ds)
 
@@ -77,48 +115,41 @@ class MPIDataSource(object):
         psana_level is a DataSource, Run, Step object with a .events() method
         """
 
-        if self._ds_type in ['std', 'shmem']:
-            for evt in psana_level.events():
+        # this code keeps track of the global (total) number of events
+        # seen, and contains logic for when to call MPI gather
+
+        # the try/except loop enforces the fact that we wish to gather
+        # after all events (in eg Step/Run) have been processed -- we watch
+        # for the StopIteration exception indicating the final event, then
+        # catch it, gather, then re-raise it
+
+        try:
+
+            nevent = -1
+            while True:
+
+                nevent += 1
+
+                evt = psana_level.events().next()
+
+                # logic for regular gathers
+                if (self.global_gather_interval is not None) and \
+                   (nevent > 1)                              and \
+                   (nevent % self.global_gather_interval==0):
+                    self.sd._gather()
+
+                #if nevent % self.size == self.rank:
+                #    self._currevt = evt
+                #    yield evt
                 self._currevt = evt
                 yield evt
 
-        elif self._ds_type == 'smd':
+        # logic for final gather (after all events seen)
+        except StopIteration as e:
+            self.sd._gather()
+            raise StopIteration(e)
 
-            # this code keeps track of the global (total) number of events
-            # seen, and contains logic for when to call MPI gather
-
-            # the try/except loop enforces the fact that we wish to gather
-            # after all events (in eg Step/Run) have been processed -- we watch
-            # for the StopIteration exception indicating the final event, then
-            # catch it, gather, then re-raise it
-
-            try:
-
-                nevent = -1
-                while True:
-
-                    nevent += 1
-
-                    evt = psana_level.events().next()
-
-                    if (self.global_gather_interval is not None) and \
-                       (nevent > 1)                       and \
-                       (nevent % self.global_gather_interval==0):
-                        self.sd._gather()
-
-                    # logic for regular gathers
-                    if nevent % self.size == self.rank:
-                        self._currevt = evt
-                        yield evt
-
-
-            # logic for final gather (after all events seen)
-            except StopIteration as e:
-                self.sd._gather()
-                raise StopIteration(e)
-
-        else:
-            raise RuntimeError('%s not valid ds_type' % ds_type)
+        return
 
 
     def env(self):
@@ -135,7 +166,19 @@ class MPIDataSource(object):
 
 
     def detnames(self, which='detectors'):
-        # this could prob be better
+        """
+        List the detectors contained in this datasource.
+
+        Parameters
+        ----------
+        which : str
+            One of: "detectors", "epics", "all".
+
+        Returns
+        -------
+        detnames : str
+            A list of detector names and aliases
+        """
         return DetNames(which, local_env=self.__cpp_ds.env())
 
 
@@ -159,6 +202,15 @@ class MPIDataSource(object):
             from all MPI cores every "N" events.  Events are
             counted separately on each core.  If not set,
             only gather results from all cores at end-run.
+
+        Example
+        -------
+        >>> ds = psana.MPIDataSource('exp=xpptut15:run=54:smd')
+        >>> smldata = ds.small_data('my.h5')
+        >>> cspad = psana.Detector('cspad')
+        >>> for evt in ds.events():
+        >>>     mu = np.mean( cspad.calib(evt)
+        >>>     smldata.append(cspad_mean=mu)
         """
 
         # defer the import because cctbx gets unhappy with
