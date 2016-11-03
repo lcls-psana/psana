@@ -1,32 +1,6 @@
-
-
 """
 
--- Note 9/29 
-
-* we believe we can handle cases 1-3 below
-* currently there is still an issue of a "ragged" exit
-  (e.g. for 2 cores, with gather interval 1 and break after 1 global evt)
-  > we believe the way to fix this is to implement a datasource.break() method
-  > not idea
-* still need to implement fix for case 4
-
-
-missing data ideas:
-
-- do an allgather of the keys/types/shapes into "send_list"
-
-- client-side issues:
-- (case 1) when we append data to _dlist we will backfill numbers before adding the new data, roughly done.
-- (case 2) when we gather we check for keys that we didn't see at all OR keys that are "ragged" and backfill.
-  did some stuff here, but needs work.
-- (case 3) no events at all on a client
-- need to construct the missing data for each of the above cases
-
-- master-side issues:
-- (case 4) master also needs to backfill on disk and memory
-
----------------------------------------------------------------------------------------------
+existing issue to remember:
 
 > user forgets to call save, they get a small but empty HDF5
 -- atexit
@@ -48,22 +22,19 @@ missing data ideas:
 
 > tables.close() warning
 
-> MPI.finalize() [necessary?]
+> MPI.finalize() [necessary?]. mpi4py person says we should need to call this.
+  previous crashes could have been operator-error.  wait until we have
+  evidence this is necessary.
 
 > How do people access _dlist_master for applications like psmon?
 
 >>> from Silke
-- put datasets in user-definable groups [on the list]
 - storing extra "attributes" or datasets with stuff like ROI (like summary/config field)
 - think about cube problem
-- summary data (e.g. cube) and event data could be in different files.  maybe we provide the option
-  for multiple smallh5 files [done]
 - user-controlled mode for event distribution (e.g. based on delay-time)
-- detectors come and go from run to run and not crash
 - always write detectors like phasecav
-- put in Nan's for missing data (requires everything has to be a float)
 
->>> from Jason
+>>> xarray thoughts from Jason:
 - coordinates/attributes for everything, using h5netcdf
 - for analyzing the small-data: xarray makes it easy to select/filter,
   and will keep track of coordinates for you
@@ -73,9 +44,9 @@ missing data ideas:
 - wildcard to merge multiple files
 - didn't support variable length data? (maybe can do this)
 - treats NaNs correctly
-- merge fast and slow detectors (eventcode 40 and 42)
+- would merge fast and slow detectors (e.g. eventcode 40 and 42)
 - handles dropped data
-- not clear that we can write pieces while taking data?  look at it.
+- not clear that xarray can write pieces while taking data?
 - probably supports hierarchy of hdf5 groups in h5netcdf, but might
   make it more difficult to cut/merge/sort in xarray
 """
@@ -83,7 +54,6 @@ missing data ideas:
 import numpy as np
 import tables
 import collections
-from operator import itemgetter
 
 from _psana import EventId
 
@@ -115,6 +85,11 @@ def remove_values(the_list, val):
 
 
 class SynchDict(dict):
+    """
+    Class used to keep track of all arrays that need to be gathered
+    (a.k.a. "send_list").  This dictionary is synched before every call
+    to gather.
+    """
     def synchronize(self):
         tot_send_list = comm.allgather(self)
         for node_send_list in tot_send_list:
@@ -213,7 +188,10 @@ class SmallData(object):
 
 
     def missing(self, key):
-
+        """
+        Use the send_list to figure out the correct types and fill
+        values for missing data
+        """
         if key in self._num_send_list.keys():
             t = self._num_send_list[key]
 
@@ -248,6 +226,9 @@ class SmallData(object):
 
 
     def _gather(self):
+        """
+        Gather arrays and numbers from all MPI ranks.
+        """
 
         # "send lists" hold a catalogue of the data keys to expect
         # aggregated across all ranks
@@ -397,6 +378,21 @@ class SmallData(object):
             return 0
 
 
+    """
+    missing data ideas:
+
+    - do an allgather of the keys/types/shapes into "send_list"
+
+    - client-side issues:
+    - (case 1) when we append data to _dlist we will backfill numbers before adding the new data, roughly done.
+    - (case 2) when we gather we check for keys that we didn't see at all OR keys that are "ragged" and backfill.
+    - (case 3) no events at all on a client
+    - need to construct the missing data for each of the above cases
+
+    - master-side issues:
+    - (case 4) master also needs to backfill on disk and memory
+    """
+
     def _backfill_client(self, target_events, dlist_element, key):
         numfill = target_events - len(dlist_element)
         if numfill > 0:
@@ -474,12 +470,16 @@ class SmallData(object):
         >>> smldata.event({'base': {'next_group' : data}})
         """
 
+        # get timestamp data for most recently yielded evt
+        evt_id = self._datasource_parent._currevt.get(EventId)
+        if evt_id is None: return  # can't do anything without a timestamp
+
         if ('event_time' in kwargs.keys()) or ('fiducials' in kwargs.keys()):
             raise KeyError('`event_time` and `fiducials` are special names'
                            ' reserved for timestamping -- choose a different '
                            'name')
 
-        # *args can be used to pass hdf5 heirarchies (groups/names) in a dict
+        # *args can be used to pass hdf5 hierarchies (groups/names) in a dict
         # flatten these and create a single dictionary of (name : value) pairs
         # when groups will be created in the hdf5, we will use a "/"
 
@@ -488,9 +488,6 @@ class SmallData(object):
         for d in args:
             event_data_dict.update( _flatten_dictionary(d) )
 
-
-        # get timestamp data for most recently yielded evt
-        evt_id = self._datasource_parent._currevt.get(EventId)
 
         time = evt_id.time()[0] << 32 | evt_id.time()[1] # chris' craziness
         fid  = evt_id.fiducials()

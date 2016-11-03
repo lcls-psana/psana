@@ -138,11 +138,9 @@ class MPIDataSource(object):
                    (nevent % self.global_gather_interval==0):
                     self.sd._gather()
 
-                #if nevent % self.size == self.rank:
-                #    self._currevt = evt
-                #    yield evt
-                self._currevt = evt
-                yield evt
+                if nevent % self.size == self.rank:
+                    self._currevt = evt
+                    yield evt
 
         # logic for final gather (after all events seen)
         except StopIteration as e:

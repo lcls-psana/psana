@@ -107,12 +107,9 @@ class TestSmallData(object):
 
             # break after indicated events
             if nevt == self.end_after:
-
-                print rank, nevt, self.smldata._nevents
                 break
 
         self.smldata.save()
-        print 'psave', rank, nevt, self.smldata._nevents
         if self.smldata.master:
             self.smldata.file_handle.close()
 
@@ -154,6 +151,10 @@ class TestSmallData(object):
                 np.testing.assert_allclose( np.array(f['d']),
                                             np.array(expected_d),
                                             err_msg='mismatch in d' )
+
+            fid_arr = np.array(f['fiducials'])
+            assert np.all((fid_arr[1:]-fid_arr[:-1])==3), \
+                'fiducials not in order'
 
             f.close()
 
