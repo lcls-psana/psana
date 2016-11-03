@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag:V00-13-21
+2016-11-03 Christopher O'Grady
+- update test to use data from /reg/g/psdm/data_test and more
+  random h5 filename
+
 Tag:V00-13-20
 2016-11-02 TJ Lane and Christopher O'Grady
 - support missing data, added tests, many bug fixes.

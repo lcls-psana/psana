@@ -8,7 +8,7 @@ import abc
 import h5py
 import psana
 import numpy as np
-from math import ceil
+from uuid import uuid4
 
 from psana import smalldata as smalldata_mod
 
@@ -23,10 +23,10 @@ class TestSmallData(object):
 
     def setup(self):
 
-        self.filename = self.__class__.__name__ + '.h5'
+        self.filename = '/tmp/' + str(uuid4()) + '.h5'
         self.gather_interval = 2
 
-        self.dsource = psana.MPIDataSource('exp=xpptut15:run=54:smd')
+        self.dsource = psana.MPIDataSource('exp=sxrk4816:run=66:smd:dir=/reg/g/psdm/data_test/multifile/test_028_sxrk4816')
         self.smldata = self.dsource.small_data(self.filename, 
                                                gather_interval=5)
 
