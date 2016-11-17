@@ -118,34 +118,22 @@ class MPIDataSource(object):
         # this code keeps track of the global (total) number of events
         # seen, and contains logic for when to call MPI gather
 
-        # the try/except loop enforces the fact that we wish to gather
-        # after all events (in eg Step/Run) have been processed -- we watch
-        # for the StopIteration exception indicating the final event, then
-        # catch it, gather, then re-raise it
+        nevent = -1
+        while True:
 
-        try:
+            nevent += 1
 
-            nevent = -1
-            while True:
+            evt = psana_level.events().next()
 
-                nevent += 1
+            # logic for regular gathers
+            if (self.global_gather_interval is not None) and \
+               (nevent > 1)                              and \
+               (nevent % self.global_gather_interval==0):
+                self.sd._gather()
 
-                evt = psana_level.events().next()
-
-                # logic for regular gathers
-                if (self.global_gather_interval is not None) and \
-                   (nevent > 1)                              and \
-                   (nevent % self.global_gather_interval==0):
-                    self.sd._gather()
-
-                if nevent % self.size == self.rank:
-                    self._currevt = evt
-                    yield evt
-
-        # logic for final gather (after all events seen)
-        except StopIteration as e:
-            self.sd._gather()
-            raise StopIteration(e)
+            if nevent % self.size == self.rank:
+                self._currevt = evt
+                yield evt
 
         return
 
