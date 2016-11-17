@@ -14,6 +14,8 @@ existing issue to remember:
    get surprised
 
 > metadata
+-- docstrings for default values
+-- user interface for adding attributes/info/units (e.g. smld.attribute(a='a is great'))
 -- xarray compatability?
 
 > always write certain detectors?
@@ -55,7 +57,7 @@ import numpy as np
 import tables
 import collections
 
-from _psana import EventId
+from _psana import EventId, Source, Bld
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
@@ -64,6 +66,10 @@ size = comm.Get_size()
 
 MISSING_INT = -99999
 MISSING_FLOAT = np.nan
+
+INT_TYPES   = [int, np.int8, np.int16, np.int32, np.int64,
+               np.int, np.uint8, np.uint16, np.uint32, np.uint64, np.uint]
+FLOAT_TYPES = [float, np.float16, np.float32, np.float64, np.float128, np.float]
 
 
 def _flatten_dictionary(d, parent_key='', sep='/'):
@@ -135,6 +141,7 @@ class SmallData(object):
         self._num_send_list     = SynchDict()
         self._arr_send_list     = SynchDict()
 
+        # storage space for event data
         self._dlist = {}
         if self.master:
             self._dlist_master = {}
@@ -150,6 +157,11 @@ class SmallData(object):
     @property
     def master(self):
         return (rank == 0)
+
+
+    @property
+    def currevt(self):
+        return self._datasource_parent._currevt
 
 
     @staticmethod
@@ -192,12 +204,14 @@ class SmallData(object):
         Use the send_list to figure out the correct types and fill
         values for missing data
         """
+
+
         if key in self._num_send_list.keys():
             t = self._num_send_list[key]
 
-            if t in [int, np.int8, np.int16, np.int32, np.int64, np.int]:
+            if t in INT_TYPES:
                 missing_value = MISSING_INT
-            elif t in [float, np.float16, np.float32, np.float64, np.float128, np.float]:
+            elif t in FLOAT_TYPES:
                 missing_value = MISSING_FLOAT
             else:
                 raise ValueError('%s :: Invalid num type for missing data' % str(t))
@@ -211,10 +225,9 @@ class SmallData(object):
 
             missing_value = np.empty(shape, dtype=dtype)
 
-            if dtype in [int, np.int8, np.int16, np.int32, np.int64, 
-                         np.int, np.uint8, np.uint16, np.uint32, np.uint64, np.uint]:
+            if dtype in INT_TYPES:
                 missing_value.fill(MISSING_INT)
-            elif dtype in [float, np.float16, np.float32, np.float64, np.float128, np.float]:
+            elif dtype in FLOAT_TYPES:
                 missing_value.fill(MISSING_FLOAT)
             else:
                 raise ValueError('%s :: Invalid array type for missing data' % str(dtype))
@@ -378,20 +391,18 @@ class SmallData(object):
             return 0
 
 
-    """
-    missing data ideas:
-
-    - do an allgather of the keys/types/shapes into "send_list"
-
-    - client-side issues:
-    - (case 1) when we append data to _dlist we will backfill numbers before adding the new data, roughly done.
-    - (case 2) when we gather we check for keys that we didn't see at all OR keys that are "ragged" and backfill.
-    - (case 3) no events at all on a client
-    - need to construct the missing data for each of the above cases
-
-    - master-side issues:
-    - (case 4) master also needs to backfill on disk and memory
-    """
+    # missing data ideas:
+    # 
+    # - do an allgather of the keys/types/shapes into "send_list"
+    # 
+    # * client-side issues:
+    # - (case 1) when we append data to _dlist we will backfill numbers before adding the new data, roughly done.
+    # - (case 2) when we gather we check for keys that we didn't see at all OR keys that are "ragged" and backfill.
+    # - (case 3) no events at all on a client
+    # - need to construct the missing data for each of the above cases
+    # 
+    # * master-side issues:
+    # - (case 4) master also needs to backfill on disk and memory
 
     def _backfill_client(self, target_events, dlist_element, key):
         numfill = target_events - len(dlist_element)
@@ -471,7 +482,7 @@ class SmallData(object):
         """
 
         # get timestamp data for most recently yielded evt
-        evt_id = self._datasource_parent._currevt.get(EventId)
+        evt_id = self.currevt.get(EventId)
         if evt_id is None: return  # can't do anything without a timestamp
 
         if ('event_time' in kwargs.keys()) or ('fiducials' in kwargs.keys()):
@@ -509,9 +520,46 @@ class SmallData(object):
         else:
             self._dlist_append_client('event_time', time)
             self._dlist_append_client('fiducials', fid)
+            self._event_default()
 
         for k in event_data_dict.keys():
             self._dlist_append_client(k, event_data_dict[k])
+
+        return
+
+
+    def _event_default(self):
+        """
+        Cherry-picked machine parameters we think will be useful
+        for basically every experiment
+        """
+
+        default = {}
+
+        ebeam_ddl = self.currevt.get(Bld.BldDataEBeamV7, Source('EBeam'))
+        default['ebeam/charge']        = ebeam_ddl.ebeamCharge()
+        default['ebeam/dump_charge']   = ebeam_ddl.ebeamDumpCharge()
+        default['ebeam/L3_energy']     = ebeam_ddl.ebeamL3Energy()
+        default['ebeam/photon_energy'] = ebeam_ddl.ebeamPhotonEnergy()
+        default['ebeam/pk_curr_bc2']   = ebeam_ddl.ebeamPkCurrBC2()
+
+        pc_ddl = self.currevt.get(Bld.BldDataPhaseCavity, 
+                                  Source('BldInfo(PhaseCavity)'))
+        default['phase_cav/charge1']    = pc_ddl.charge1()
+        default['phase_cav/charge2']    = pc_ddl.charge2()
+        default['phase_cav/fit_time_1'] = pc_ddl.fitTime1()
+        default['phase_cav/fit_time_2'] = pc_ddl.fitTime2()
+
+        gdet_ddl = self.currevt.get(Bld.BldDataFEEGasDetEnergyV1, 
+                                    Source('BldInfo(FEEGasDetEnergy)'))
+        default['gas_detector/f_11_ENRC'] = gdet_ddl.f_11_ENRC()
+        default['gas_detector/f_12_ENRC'] = gdet_ddl.f_12_ENRC()
+        default['gas_detector/f_21_ENRC'] = gdet_ddl.f_21_ENRC()
+        default['gas_detector/f_22_ENRC'] = gdet_ddl.f_22_ENRC()
+        default['gas_detector/f_63_ENRC'] = gdet_ddl.f_63_ENRC()
+        default['gas_detector/f_64_ENRC'] = gdet_ddl.f_64_ENRC()
+
+        self.event(default)
 
         return
 
@@ -690,3 +738,11 @@ class SmallData(object):
                                                   createparents=True)
 
         return
+
+
+    def close(self):
+        """
+        Close the HDF5 file used for writing.
+        """
+        if self.master:
+            self.file_handle.close()

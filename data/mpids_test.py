@@ -26,12 +26,14 @@ class TestSmallData(object):
         self.filename = '/tmp/' + str(uuid4()) + '.h5'
         self.gather_interval = 2
 
-        self.dsource = psana.MPIDataSource('exp=sxrk4816:run=66:smd:dir=/reg/g/psdm/data_test/multifile/test_028_sxrk4816')
+        dstr = 'exp=sxrk4816:run=66:smd:dir=/reg/g/psdm/data_test/multifile/test_028_sxrk4816'
+        self.dsource = psana.MPIDataSource(dstr)
         self.smldata = self.dsource.small_data(self.filename, 
                                                gather_interval=5)
 
         self.gather_after = 3 # events (for each core)
         self.end_after    = 5 # events (for each core)
+        #self.dsource.break_after(self.end_after * size)
 
         assert self.gather_after > 2, 'gather after should be >= 3'
         assert self.gather_after < self.end_after
@@ -110,8 +112,7 @@ class TestSmallData(object):
                 break
 
         self.smldata.save()
-        if self.smldata.master:
-            self.smldata.file_handle.close()
+        self.smldata.close()
 
         return
 

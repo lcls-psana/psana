@@ -98,7 +98,8 @@ class MPIDataSource(object):
         else:
             self._ds_type = 'std'
 
-        self._currevt = None # the current event
+        self._currevt     = None   # the current event
+        self._break_after = 2**62  # max num events
 
         return
 
@@ -119,7 +120,7 @@ class MPIDataSource(object):
         # seen, and contains logic for when to call MPI gather
 
         nevent = -1
-        while True:
+        while nevent < self._break_after-1:
 
             nevent += 1
 
@@ -149,6 +150,28 @@ class MPIDataSource(object):
 
     def runs(self):
         raise NotImplementedError()
+
+
+    def break_after(self, n_events):
+        """
+        Limit the datasource to `n_events` (max global events).
+
+        Unfortunately, you CANNOT break safely out of an event iteration
+        loop when running in parallel. Sometimes, one core will break, but
+        his buddies will keep chugging. Then they get stuck waiting for him
+        to catch up, with no idea that he's given up!
+
+        Instead, use this function to stop iteration safely.
+
+        Parameters
+        ----------
+        n_events : int
+            The GLOBAL number of events to include in the datasource
+            (ie. break out of an event loop after this number of 
+            events have been processed)
+        """
+        self._break_after = n_events
+        return
 
 
     def detnames(self, which='detectors'):
