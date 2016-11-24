@@ -11,6 +11,9 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+2016-11-23 Christopher O'Grady
+- Fix crash when iterating over events without opening small_data file
+
 Tag:V00-13-21
 2016-11-03 Christopher O'Grady
 - update test to use data from /reg/g/psdm/data_test and more

@@ -84,6 +84,7 @@ class MPIDataSource(object):
         if not ':smd' in ds_string:
             ds_string += ':smd'
 
+        self.global_gather_interval = None
         self.ds_string = ds_string
         self.__cpp_ds = DataSource(ds_string, **kwargs)
 
