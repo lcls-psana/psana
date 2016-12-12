@@ -10,9 +10,51 @@ def _getEnv(local_env=None):
     else:
         return local_env
 
-def Detector(name, local_env=None):
+def Detector(name, local_env=None, accept_missing=False):
+    """
+    Create a python Detector from a string identifier.
+
+    Parameters
+    ----------
+    source_string : str
+        A string identifying a piece of data to access, examples include:
+          - 'cspad'                  # a DAQ detector alias
+          - 'XppGon.0:Cspad.0'       # a DAQ detector full-name
+          - 'DIAG:FEE1:202:241:Data' # an EPICS variable name (or alias)
+          - 'EBeam'                  # a BldInfo identifier\n
+        The idea is that you should be able to pass something that makes
+        sense to you as a human here, and you automatically get the right
+        detector object in return.
+
+    local_env : psana.Env
+        The psana environment object associated with the psana.DataSource
+        you are interested in (from method DataSource.env()).
+
+    accept_missing : bool
+        If False, KeyError exception will be raised if "name" is not
+        present in the current DataSource.  If True, an object will
+        be returned that returns None for all method calls.  This allows
+        software to not crash if a detector is missing from a run.
+
+    Returns
+    -------
+    A psana-python detector object. Try detector(psana.Event) to
+    access your data.
+
+    HOW TO GET MORE HELP
+    --------------------
+    The Detector method returns an object that has methods that
+    change depending on the detector type. To see help for a particular
+    detector type execute commands similar to the following
+
+    env = DataSource('exp=xpptut15:run=54').env()
+    det = Detector('cspad',env)
+
+    and then use the standard ipython "det?" command (and tab completion) to
+    see the documentation for that particular detector type.
+    """
     env = _getEnv(local_env)
-    return _detector_factory(name, env)
+    return _detector_factory(name, env, accept_missing=accept_missing)
 
 def _epicsNames(local_env=None):
     env = _getEnv(local_env)

@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-13-22
+2016-12-12 Christopher O'Grady
+- add support to not crash when detector is missing
+
 2016-11-23 Christopher O'Grady
 - Fix crash when iterating over events without opening small_data file
 
