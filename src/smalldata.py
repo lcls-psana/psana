@@ -1,34 +1,22 @@
+
 """
 
 existing issue to remember:
+
+> How do people access _dlist_master for applications like psmon?
 
 > user forgets to call save, they get a small but empty HDF5
 -- atexit
 -- use a destructor: __del__ (prone to circular ref issues)
 -- use "with" statement + __exit__ (may affect interface)
 
-> Saving variable length event data:
--- Automatic detection of vlen at sh5.save()
--- Explicit declare of vlen at sh5.flush()
--- We will try out best to autodetect vlen, and raise if we
-   get surprised
-
 > metadata
 -- docstrings for default values
 -- user interface for adding attributes/info/units (e.g. smld.attribute(a='a is great'))
 -- xarray compatability?
 
-> always write certain detectors?
-
 > chunking for performance?
 
-> tables.close() warning
-
-> MPI.finalize() [necessary?]. mpi4py person says we should need to call this.
-  previous crashes could have been operator-error.  wait until we have
-  evidence this is necessary.
-
-> How do people access _dlist_master for applications like psmon?
 
 >>> from Silke
 - storing extra "attributes" or datasets with stuff like ROI (like summary/config field)
@@ -58,6 +46,7 @@ import tables
 import collections
 
 from _psana import EventId, Source, Bld
+from psana import Detector, DetNames
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
@@ -140,6 +129,8 @@ class SmallData(object):
         self.save_on_gather     = save_on_gather
         self._num_send_list     = SynchDict()
         self._arr_send_list     = SynchDict()
+
+        self._initialize_default_detectors()
 
         # storage space for event data
         self._dlist = {}
@@ -528,6 +519,35 @@ class SmallData(object):
         return
 
 
+    def _initialize_default_detectors(self):
+
+        self._default_detectors = []
+
+        for detector_name in ['EBeam', 'PhaseCavity', 'FEEGasDetEnergy']:
+            try:
+                det = Detector(detector_name)
+                self._default_detectors.append(det)
+            except KeyError as e:
+                pass
+
+        # add all Evrs (there may be more than one)
+        self._evr_cfgcodes = [] 
+        for n in DetNames():
+            if ':Evr.' in n[0]:
+                det = Detector(n[0])
+                self._default_detectors.append(det)
+
+                cfg = det._fetch_configs()
+                assert len(cfg) == 1
+                self._evr_cfgcodes += [e.code() for e in cfg[0].eventcodes()]
+
+        self._evr_cfgcodes = set(self._evr_cfgcodes)
+        self._evr_cfgcodes = list(self._evr_cfgcodes)
+        self._evr_cfgcodes.sort()
+
+        return
+
+
     def _event_default(self):
         """
         Cherry-picked machine parameters we think will be useful
@@ -536,29 +556,44 @@ class SmallData(object):
 
         default = {}
 
-        ebeam_ddl = self.currevt.get(Bld.BldDataEBeamV7, Source('EBeam'))
-        default['ebeam/charge']        = ebeam_ddl.ebeamCharge()
-        default['ebeam/dump_charge']   = ebeam_ddl.ebeamDumpCharge()
-        default['ebeam/L3_energy']     = ebeam_ddl.ebeamL3Energy()
-        default['ebeam/photon_energy'] = ebeam_ddl.ebeamPhotonEnergy()
-        default['ebeam/pk_curr_bc2']   = ebeam_ddl.ebeamPkCurrBC2()
+        for det in self._default_detectors:
 
-        pc_ddl = self.currevt.get(Bld.BldDataPhaseCavity, 
-                                  Source('BldInfo(PhaseCavity)'))
-        default['phase_cav/charge1']    = pc_ddl.charge1()
-        default['phase_cav/charge2']    = pc_ddl.charge2()
-        default['phase_cav/fit_time_1'] = pc_ddl.fitTime1()
-        default['phase_cav/fit_time_2'] = pc_ddl.fitTime2()
+            if det.name.dev == 'EBeam':
+                ebeam_ddl = det.get(self.currevt)
+                if ebeam_ddl is not None:
+                    default['ebeam/charge']        = ebeam_ddl.ebeamCharge()
+                    default['ebeam/dump_charge']   = ebeam_ddl.ebeamDumpCharge()
+                    default['ebeam/L3_energy']     = ebeam_ddl.ebeamL3Energy()
+                    default['ebeam/photon_energy'] = ebeam_ddl.ebeamPhotonEnergy()
+                    default['ebeam/pk_curr_bc2']   = ebeam_ddl.ebeamPkCurrBC2()
 
-        gdet_ddl = self.currevt.get(Bld.BldDataFEEGasDetEnergyV1, 
-                                    Source('BldInfo(FEEGasDetEnergy)'))
-        default['gas_detector/f_11_ENRC'] = gdet_ddl.f_11_ENRC()
-        default['gas_detector/f_12_ENRC'] = gdet_ddl.f_12_ENRC()
-        default['gas_detector/f_21_ENRC'] = gdet_ddl.f_21_ENRC()
-        default['gas_detector/f_22_ENRC'] = gdet_ddl.f_22_ENRC()
-        default['gas_detector/f_63_ENRC'] = gdet_ddl.f_63_ENRC()
-        default['gas_detector/f_64_ENRC'] = gdet_ddl.f_64_ENRC()
+            if det.name.dev == 'PhaseCavity':
+                pc_ddl = det.get(self.currevt)
+                if pc_ddl is not None:
+                    default['phase_cav/charge1']    = pc_ddl.charge1()
+                    default['phase_cav/charge2']    = pc_ddl.charge2()
+                    default['phase_cav/fit_time_1'] = pc_ddl.fitTime1()
+                    default['phase_cav/fit_time_2'] = pc_ddl.fitTime2()
 
+            if det.name.dev == 'FEEGasDetEnergy':
+                gdet_ddl = det.get(self.currevt)
+                if gdet_ddl is not None:
+                    default['gas_detector/f_11_ENRC'] = gdet_ddl.f_11_ENRC()
+                    default['gas_detector/f_12_ENRC'] = gdet_ddl.f_12_ENRC()
+                    default['gas_detector/f_21_ENRC'] = gdet_ddl.f_21_ENRC()
+                    default['gas_detector/f_22_ENRC'] = gdet_ddl.f_22_ENRC()
+                    default['gas_detector/f_63_ENRC'] = gdet_ddl.f_63_ENRC()
+                    default['gas_detector/f_64_ENRC'] = gdet_ddl.f_64_ENRC()
+
+            if det.name.dev == 'Evr':
+                evr_codes = det.eventCodes(self.currevt, this_fiducial_only=True)
+                if evr_codes is not None:
+                    for c in self._evr_cfgcodes:
+                        if c in evr_codes:
+                            default['evr/code_%d' % c] = 1
+                        else:
+                            default['evr/code_%d' % c] = 0
+                
         self.event(default)
 
         return
@@ -746,3 +781,5 @@ class SmallData(object):
         """
         if self.master:
             self.file_handle.close()
+
+
