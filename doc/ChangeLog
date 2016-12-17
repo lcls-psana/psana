@@ -11,6 +11,11 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-13-24
+2016-12-12 Christopher O'Grady
+- Fix smalldata bug in case where users reuse the
+  same arrays for multiple events.
+
 Tag: V00-13-23
 2016-12-12 TJ Lane and Christopher O'Grady
 - added default detectors

@@ -432,7 +432,12 @@ class SmallData(object):
                               self._dlist[key],
                               key)
 
-        self._dlist[key].append(value)
+        if data_type is np.ndarray:
+            # save a copy of the array (not a reference) in case the
+            # user reuses the same array memory for the next event
+            self._dlist[key].append(np.copy(value))
+        else:
+            self._dlist[key].append(value)
 
         return
 
