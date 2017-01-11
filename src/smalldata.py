@@ -4,6 +4,17 @@
 existing issue to remember:
 
 > How do people access _dlist_master for applications like psmon?
+  -- we worked on this on 12/20 (changes made marked with this date)
+  -- we moved a concatenate step from _save to _gather which gives
+     dlist_master a nice array form (you just ask for the 0th element of
+     dlist_master after _gather)
+  -- discussed how to make this data available. Two options:
+     * callback [fxn gets called and passed dlist_master after gather]
+     * if smd.master AND smd.just_gathered:
+         do stuff
+  -- leaning towards callback... probably neater but more sophisticated
+  -- currently data are removed on save, may be issue if user is just
+     e.g. getting data for plots and not saving! (will get duplicate data)
 
 > user forgets to call save, they get a small but empty HDF5
 -- atexit
@@ -115,10 +126,11 @@ class SmallData(object):
 
         Parameters
         ----------
-        gather_interval : int
-            The number of events a single process must see before the results
-            get gathered for processing. If `None`, then only gather results
-            when `save` is called.
+        datasource_parent : psana.DataSource
+            The data source from which to generate small data
+
+        filename : str
+            The path at which to save (in HDF5 format)
 
         save_on_gather : bool
             Whether to save the results to disk periodically (after the
@@ -289,7 +301,13 @@ class SmallData(object):
                     self._dlist_master[k] = self._backfill_master(target_events, 
                                                                   self._dlist_master[k], 
                                                                   self.missing(k))
-                self._newkeys=[]
+                self._newkeys = []
+
+                # () re-shape dlist master data into single np array (per key)
+                # tjl 12/20
+                for k in self._dlist_master.keys():
+                    self._dlist_master[k] = remove_values(self._dlist_master[k], [])
+                    self._dlist_master[k] = [ np.concatenate(self._dlist_master[k]) ]
 
                 # (3) save if requested
                 if self.save_on_gather:
@@ -637,7 +655,11 @@ class SmallData(object):
             node = self.file_handle.get_node('/'+k)
 
         except tables.NoSuchNodeError as e: # --> create node
-            ex = self._dlist_master[k][0]
+
+            # first [0] gets rid of list type, second [0] asks for 1st
+            # event's data to use as a shape template (tjl 12/20)
+            ex = self._dlist_master[k][0][0]
+
             if self._num_or_array(ex) == 'array':
                 a = tables.Atom.from_dtype(ex.dtype)
                 shp = tuple([0] + list(ex.shape))
@@ -755,11 +777,13 @@ class SmallData(object):
 
                     # make a list of lists of arrays a single np array
                     #     note "[]" due to gathers with no data (for any rank)
-                    self._dlist_master[k] = remove_values(self._dlist_master[k], [])
-                    self._dlist_master[k] = np.concatenate(self._dlist_master[k])
+
+                    # tjl 12/20
+                    #self._dlist_master[k] = remove_values(self._dlist_master[k], [])
+                    #self._dlist_master[k] = np.concatenate(self._dlist_master[k])
 
                     node = self._get_node(k)
-                    node.append( self._dlist_master[k] )
+                    node.append( self._dlist_master[k][0] ) # change tjl 12/20 add [0]
                     self._dlist_master[k] = []
                 else:
                     #print 'Warning: no data to save for key %s' % k
