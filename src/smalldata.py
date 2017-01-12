@@ -1,25 +1,6 @@
 
 """
-
-existing issue to remember:
-
-> How do people access _dlist_master for applications like psmon?
-  -- we worked on this on 12/20 (changes made marked with this date)
-  -- we moved a concatenate step from _save to _gather which gives
-     dlist_master a nice array form (you just ask for the 0th element of
-     dlist_master after _gather)
-  -- discussed how to make this data available. Two options:
-     * callback [fxn gets called and passed dlist_master after gather]
-     * if smd.master AND smd.just_gathered:
-         do stuff
-  -- leaning towards callback... probably neater but more sophisticated
-  -- currently data are removed on save, may be issue if user is just
-     e.g. getting data for plots and not saving! (will get duplicate data)
-
-> user forgets to call save, they get a small but empty HDF5
--- atexit
--- use a destructor: __del__ (prone to circular ref issues)
--- use "with" statement + __exit__ (may affect interface)
+> vlen data
 
 > metadata
 -- docstrings for default values
@@ -90,6 +71,23 @@ def remove_values(the_list, val):
    return [value for value in the_list if value != val]
 
 
+def _num_or_array(obj):
+
+    data_type = type(obj)
+    if ((data_type in [int, float]) or
+         np.issubdtype(data_type, np.integer) or
+         np.issubdtype(data_type, np.float)):
+        s = 'num'
+
+    elif data_type is np.ndarray:
+        s = 'array'
+
+    else:
+        raise TypeError('object is not number or array')
+
+    return s
+
+
 class SynchDict(dict):
     """
     Class used to keep track of all arrays that need to be gathered
@@ -121,7 +119,7 @@ class SmallData(object):
 
     """
 
-    def __init__(self, datasource_parent, filename=None, save_on_gather=False):
+    def __init__(self, datasource_parent, filename=None, keys_to_save=[]):
         """
 
         Parameters
@@ -131,16 +129,12 @@ class SmallData(object):
 
         filename : str
             The path at which to save (in HDF5 format)
-
-        save_on_gather : bool
-            Whether to save the results to disk periodically (after the
-            results get gathered)
         """
 
         self._datasource_parent = datasource_parent
-        self.save_on_gather     = save_on_gather
         self._num_send_list     = SynchDict()
         self._arr_send_list     = SynchDict()
+        self._monitors          = [] # aka "callbacks"
 
         self._initialize_default_detectors()
 
@@ -150,8 +144,15 @@ class SmallData(object):
             self._dlist_master = {}
             self._newkeys = []
 
-        if filename and self.master:
-            self.file_handle = tables.File(filename, 'w')
+        if filename:
+            if self.master:
+                self._small_file = SmallFile(filename, keys_to_save)
+                self.add_monitor_function(self._small_file.save_event_data)
+                self.close = self._small_file.close # expose this fxn
+                self.save  = self._small_file.save  # expose this fxn
+            else: # not master
+                self.close = lambda : None # ensures consistency between ranks
+                self.save  = lambda *args, **kwargs : None
 
         return
 
@@ -167,22 +168,10 @@ class SmallData(object):
         return self._datasource_parent._currevt
 
 
-    @staticmethod
-    def _num_or_array(obj):
+    def add_monitor_function(self, fxn):
+        self._monitors.append(fxn)
+        return
 
-        data_type = type(obj)
-        if ((data_type in [int, float]) or
-             np.issubdtype(data_type, np.integer) or
-             np.issubdtype(data_type, np.float)):
-            s = 'num'
-
-        elif data_type is np.ndarray:
-            s = 'array'
-
-        else:
-            raise TypeError('object is not number or array')
-
-        return s
 
 
     def _sort(self, obj, sort_order):
@@ -270,7 +259,9 @@ class SmallData(object):
         #   (2) backfill missing data [to beginning of time, memory + disk]
         #       this must be after the sort, because there are no timestamps
         #       to sort backfilled data
-        #   (3) save if requested
+        #   (3) re-shape dlist master data into single np array (per key)
+        #   (4) callback monitor functions (includes save, if requested)
+        #   (5) clear the dlist_master
 
         # note that _dlist_master is different than the client _dlist's.  it is a list of lists,
         # one list for each gather that has happened since the last save.  the style of
@@ -297,21 +288,31 @@ class SmallData(object):
                 for k in self._newkeys:
                 
                     events_in_mem = sum([len(x) for x in self._dlist_master['fiducials']])
-                    target_events = self._nevents_on_disk + events_in_mem
+                    target_events = events_in_mem
+                    if hasattr(self, '_small_file'):
+                        target_events += self._small_file.nevents_on_disk
+
                     self._dlist_master[k] = self._backfill_master(target_events, 
                                                                   self._dlist_master[k], 
                                                                   self.missing(k))
                 self._newkeys = []
 
-                # () re-shape dlist master data into single np array (per key)
-                # tjl 12/20
+                # (3) re-shape dlist master data into single np array (per key)
                 for k in self._dlist_master.keys():
                     self._dlist_master[k] = remove_values(self._dlist_master[k], [])
-                    self._dlist_master[k] = [ np.concatenate(self._dlist_master[k]) ]
+                    if len(self._dlist_master[k]) > 0: # dont crash np.concatenate
+                        #self._dlist_master[k] = [ np.concatenate(self._dlist_master[k]) ]
+                        self._dlist_master[k] = np.concatenate(self._dlist_master[k])
+                    else:
+                        self._dlist_master[k] = np.array()
 
-                # (3) save if requested
-                if self.save_on_gather:
-                    self._save() # save all event data on gather
+                # (4) callback monitor functions (includes save, if requested)
+                for f in self._monitors:
+                    f(self._dlist_master)
+
+                # (5) clear the dlist_master
+                for k in self._dlist_master.keys():
+                    self._dlist_master[k] = []
 
         return
 
@@ -388,15 +389,6 @@ class SmallData(object):
         if 'fiducials' in self._dlist:
             return len(self._dlist['fiducials'])
         else:
-            return 0
-
-
-    @property
-    def _nevents_on_disk(self):
-        try:
-            self.file_handle.get_node('/', 'fiducials')
-            return len(self.file_handle.root.fiducials)
-        except tables.NoSuchNodeError:
             return 0
 
 
@@ -635,7 +627,7 @@ class SmallData(object):
 
 
     def _mpi_reduce(self, value, function):
-        t = self._num_or_array(value)
+        t = _num_or_array(value)
         if t is 'num':
             s = comm.reduce(value, function)
         elif t is 'array':
@@ -644,7 +636,15 @@ class SmallData(object):
         return s
 
 
-    def _get_node(self, k):
+class SmallFile(object):
+
+    def __init__(self, filename, keys_to_save=[]):
+        self.file_handle = tables.File(filename, 'w')
+        self.keys_to_save = keys_to_save
+        return
+
+
+    def _get_node(self, k, dlist_master):
         """
         Retrieve or create (if necessary) the pytables node
         for a specific key.
@@ -656,14 +656,12 @@ class SmallData(object):
 
         except tables.NoSuchNodeError as e: # --> create node
 
-            # first [0] gets rid of list type, second [0] asks for 1st
-            # event's data to use as a shape template (tjl 12/20)
-            ex = self._dlist_master[k][0][0]
+            ex = dlist_master[k][0]
 
-            if self._num_or_array(ex) == 'array':
+            if _num_or_array(ex) == 'array':
                 a = tables.Atom.from_dtype(ex.dtype)
                 shp = tuple([0] + list(ex.shape))
-            elif self._num_or_array(ex) == 'num':
+            elif _num_or_array(ex) == 'num':
                 a = tables.Atom.from_dtype(np.array(ex).dtype)
                 shp = (0,)
 
@@ -673,6 +671,15 @@ class SmallData(object):
                                                   createparents=True)
 
         return node
+
+
+    @property
+    def nevents_on_disk(self):
+        try:
+            self.file_handle.get_node('/', 'fiducials')
+            return len(self.file_handle.root.fiducials)
+        except tables.NoSuchNodeError:
+            return 0
 
 
     def save(self, *args, **kwargs):
@@ -686,7 +693,7 @@ class SmallData(object):
             2. Add summary (ie. any non-event) data using key-value
                pairs (similar to SmallData.event())
             3. Add summary (ie. any non-event) data organized in a
-               heirarchy using nested dictionaries (als similar to 
+               heirarchy using nested dictionaries (similar to 
                SmallData.event())
 
         These data are then saved to the file specifed in the SmallData
@@ -694,13 +701,6 @@ class SmallData(object):
 
         Parameters
         ----------
-        *args : strings
-            A list of the event data names to save, if you want to save a
-            subset. Otherwise save all data to disk. For example, imagine
-            you had called SmallData.event(a=..., b=...). Then smldata.save('b')
-            would not save data labelled 'a'. smldata.save() would save both
-            'a' and 'b'.
-
         *args : dictionaries
             In direct analogy to the SmallData.event call, you can also pass
             HDF5 group heirarchies using nested dictionaries. Each level
@@ -711,87 +711,26 @@ class SmallData(object):
             singleton data (e.g. at the end of a run, to save an average over
             some quanitity).
 
-        event_data : bool
-            Special kwarg. If `False`, do not save the event data, just
-            the run summary data. If `True` (default), do.
-
         Examples
         --------
-        >>> # save all event data
-        >>> smldata.save()
-
-        >>> # save all event data AND "array_containing_sum"
+        >>> # save "array_containing_sum"
         >>> smldata.save(cspad_sum=array_containing_sum)
         
-        >>> # save 'b' event data, and no other
-        >>> smldata.save('b')
-
-        >>> # save all event data AND "/base/next_group/data"
+        >>> # save "/base/next_group/data"
         >>> smldata.save({'base': {'next_group' : data}})
         """
 
-        self._gather()
+        to_save = {}
+        to_save.update(kwargs) # deals with save(cspad_sum=array_containing_sum)
 
-        if self.master:
-            self._save(*args, **kwargs)
-
-        return
-
-
-    def _save(self, *args, **kwargs):
-
-        evt_variables_to_save = [s for s in args if type(s)==str]
+        # deals with save({'base': {'next_group' : data}}) case
         dictionaries_to_save  = [d for d in args if type(d)==dict]
-        
-
-        dict_to_save = {}
-        dict_to_save.update(kwargs)
         for d in dictionaries_to_save:
-            dict_to_save.update(_flatten_dictionary(d))
+            to_save.update(_flatten_dictionary(d))
 
-
-        if self.file_handle is None:
-            # we could accept a 'filename' argument here in the save method
-            raise IOError('no filename specified in SmallData constructor')
-
-        # if 'event_data' key is set, save event data (default True)
-        if kwargs.pop('event_data', True):
-          
-            # if the user has specified which keys to save, just
-            # save those; else, save all event data
-            if len(evt_variables_to_save) > 0:
-                keys_to_save = ['event_time', 'fiducials']
-                for k in evt_variables_to_save:
-                    if k in self._dlist_master.keys():
-                        keys_to_save.append(k)
-                    else:
-                        print('Warning: event data key %s has no '
-                              'associated event data and will not '
-                              'be saved' % k)
-            else:
-                keys_to_save = self._dlist_master.keys()
-
-            # for each item to save, write to disk
-            for k in keys_to_save:
-                if len(self._dlist_master[k]) > 0:
-
-                    # make a list of lists of arrays a single np array
-                    #     note "[]" due to gathers with no data (for any rank)
-
-                    # tjl 12/20
-                    #self._dlist_master[k] = remove_values(self._dlist_master[k], [])
-                    #self._dlist_master[k] = np.concatenate(self._dlist_master[k])
-
-                    node = self._get_node(k)
-                    node.append( self._dlist_master[k][0] ) # change tjl 12/20 add [0]
-                    self._dlist_master[k] = []
-                else:
-                    #print 'Warning: no data to save for key %s' % k
-                    pass
-        
 
         # save "accumulated" data (e.g. averages)
-        for k,v in dict_to_save.items():
+        for k,v in to_save.items():
 
             if type(v) is not np.ndarray:
                 v = np.array([v])
@@ -804,11 +743,44 @@ class SmallData(object):
         return
 
 
+
+    def save_event_data(self, dlist_master):
+
+        if self.file_handle is None:
+            # we could accept a 'filename' argument here in the save method
+            raise IOError('no filename specified in SmallData constructor')
+
+        # if the user has specified which keys to save, just
+        # save those; else, save all event data
+        if len(self.keys_to_save) > 0:
+            keys_to_save = ['event_time', 'fiducials']
+            for k in self.keys_to_save:
+                if k in dlist_master.keys():
+                    keys_to_save.append(k)
+                else:
+                    print('Warning: event data key %s has no '
+                          'associated event data and will not '
+                          'be saved' % k)
+        else:
+            keys_to_save = dlist_master.keys()
+
+        # for each item to save, write to disk
+        for k in keys_to_save:
+            if len(dlist_master[k]) > 0:
+                node = self._get_node(k, dlist_master)
+                node.append( dlist_master[k] )
+            else:
+                #print 'Warning: no data to save for key %s' % k
+                pass
+
+        return
+
+
     def close(self):
         """
         Close the HDF5 file used for writing.
         """
-        if self.master:
-            self.file_handle.close()
+        self.file_handle.close()
+        return
 
 

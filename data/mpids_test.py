@@ -111,6 +111,7 @@ class TestSmallData(object):
             if nevt == self.end_after:
                 break
 
+        self.smldata._gather()
         self.smldata.save()
         self.smldata.close()
 
@@ -174,6 +175,23 @@ class TestSmallData(object):
         return
 
 
+    def test_monitor(self):
+
+        tst = []
+        def monitor_test(dlist):
+            tst.extend(list(dlist['dset']))
+
+        self.smldata.add_monitor_function(monitor_test)
+
+        for nevt,evt in enumerate(self.dsource.events()):
+            x = rank + size * nevt # count up, each global event
+            self.smldata.event(dset=x)
+
+        np.testing.assert_array_equal( np.arange(len(tst)), np.array(tst) )
+
+        return
+
+
 class TestInt(TestSmallData):
     def dataset(self):
         return 1
@@ -202,12 +220,18 @@ class TestFloatArray(TestSmallData):
 if __name__ == '__main__':
 
     try:
+        t = TestSmallData()
+        t.setup()
+        t.test_monitor()
+        t.teardown()
+
         for Test in [TestInt, TestFloat, TestIntArray, TestFloatArray]:
             t = Test()
             t.setup()
             if rank == 0: print 'Testing: %s' % t.filename
             t.test_h5gen()
             t.teardown()
+
     except AssertionError as e:
         print e
         comm.Abort(1)

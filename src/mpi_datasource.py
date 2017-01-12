@@ -137,6 +137,8 @@ class MPIDataSource(object):
                 self._currevt = evt
                 yield evt
 
+        self.sd._gather()
+
         return
 
 
@@ -192,8 +194,8 @@ class MPIDataSource(object):
         return DetNames(which, local_env=self.__cpp_ds.env())
 
 
-    def small_data(self, filename=None, 
-                   save_on_gather=False, gather_interval=100):
+    def small_data(self, filename=None, keys_to_save=[],
+                   gather_interval=100):
         """
         Returns an object that manages small per-event data as
         well as non-event data (e.g. a sum of an image over a run)
@@ -201,11 +203,12 @@ class MPIDataSource(object):
         Parameters
         ----------
         filename : string, optional
-            A filename to use for saving the small data
+            A filename to use for saving the small data.
 
-        save_on_gather: bool, optional (default False)
-            If true, save data to HDF5 file everytime
-            results are gathered from all MPI cores
+        keys_to_save : list of strings
+            Optionally filter what data gets saved to disk by
+            providing a list of key names here. Only event
+            data matching those keys names will be saved.
 
         gather_interval: unsigned int, optional (default 100)
             If set to unsigned integer "N", gather results
@@ -233,7 +236,7 @@ class MPIDataSource(object):
 
         self.global_gather_interval = gather_interval*self.size
         self.sd = SmallData(self, filename=filename, 
-                            save_on_gather=save_on_gather)
+                            keys_to_save=keys_to_save)
 
         return self.sd
 
