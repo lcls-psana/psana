@@ -111,6 +111,8 @@ class TestSmallData(object):
             if nevt == self.end_after:
                 break
 
+        # we're breaking early, so we're not giving the final gather a chance to run,
+        # so gather by hand.
         self.smldata._gather()
         self.smldata.save()
         self.smldata.close()

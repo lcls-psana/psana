@@ -11,6 +11,14 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+2017-01-12 TJ Lane and Christopher O'Grady
+- Changes to give the user cleaner access to _dlist_master via
+  "monitor" callbacks.  Refactored SmallData into SmallData/SmallFile.
+  File saving is now done as a particular example of a callback, if
+  a filename is defined.  Eliminated save_on_gather parameter (now save
+  every gather).  Eliminate unused _sort function.  Remove
+  unnecessary extra list level in _gather.
+
 Tag: V00-13-24
 2016-12-12 Christopher O'Grady
 - Fix smalldata bug in case where users reuse the

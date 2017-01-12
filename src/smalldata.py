@@ -71,7 +71,7 @@ def remove_values(the_list, val):
    return [value for value in the_list if value != val]
 
 
-def _num_or_array(obj):
+def num_or_array(obj):
 
     data_type = type(obj)
     if ((data_type in [int, float]) or
@@ -171,24 +171,6 @@ class SmallData(object):
     def add_monitor_function(self, fxn):
         self._monitors.append(fxn)
         return
-
-
-
-    def _sort(self, obj, sort_order):
-        """
-        sort `obj`, an array or list, by `sort_order` in dim -1,
-        IN PLACE
-        """
-        
-        assert type(sort_order) == np.ndarray, 'sort_order must be array'
-        t = self._num_or_array(obj[0])
-
-        if t is 'num':
-            res = obj[sort_order]
-        elif t is 'array':
-            res = [x for (y,x) in sorted( zip(sort_order, obj) ) ]
-
-        return res
 
 
     def missing(self, key):
@@ -301,7 +283,6 @@ class SmallData(object):
                 for k in self._dlist_master.keys():
                     self._dlist_master[k] = remove_values(self._dlist_master[k], [])
                     if len(self._dlist_master[k]) > 0: # dont crash np.concatenate
-                        #self._dlist_master[k] = [ np.concatenate(self._dlist_master[k]) ]
                         self._dlist_master[k] = np.concatenate(self._dlist_master[k])
                     else:
                         self._dlist_master[k] = np.array()
@@ -627,7 +608,7 @@ class SmallData(object):
 
 
     def _mpi_reduce(self, value, function):
-        t = _num_or_array(value)
+        t = num_or_array(value)
         if t is 'num':
             s = comm.reduce(value, function)
         elif t is 'array':
@@ -658,10 +639,10 @@ class SmallFile(object):
 
             ex = dlist_master[k][0]
 
-            if _num_or_array(ex) == 'array':
+            if num_or_array(ex) == 'array':
                 a = tables.Atom.from_dtype(ex.dtype)
                 shp = tuple([0] + list(ex.shape))
-            elif _num_or_array(ex) == 'num':
+            elif num_or_array(ex) == 'num':
                 a = tables.Atom.from_dtype(np.array(ex).dtype)
                 shp = (0,)
 
@@ -693,7 +674,7 @@ class SmallFile(object):
             2. Add summary (ie. any non-event) data using key-value
                pairs (similar to SmallData.event())
             3. Add summary (ie. any non-event) data organized in a
-               heirarchy using nested dictionaries (similar to 
+               hierarchy using nested dictionaries (similar to 
                SmallData.event())
 
         These data are then saved to the file specifed in the SmallData
