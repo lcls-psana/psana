@@ -11,6 +11,7 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-13-25
 2017-01-12 TJ Lane and Christopher O'Grady
 - Changes to give the user cleaner access to _dlist_master via
   "monitor" callbacks.  Refactored SmallData into SmallData/SmallFile.
