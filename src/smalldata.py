@@ -647,9 +647,15 @@ class SmallFile(object):
                 shp = (0,)
 
             path, _, name = k.rpartition('/')
-            node = self.file_handle.create_earray(where='/'+path, name=name,
-                                                  shape=shp, atom=a,
-                                                  createparents=True)
+
+            if name.startswith('ragged_'):
+                node = self.file_handle.create_vlarray(where='/'+path, name=name,
+                                                       atom=a,
+                                                       createparents=True)
+            else:
+                node = self.file_handle.create_earray(where='/'+path, name=name,
+                                                      shape=shp, atom=a,
+                                                      createparents=True)
 
         return node
 
@@ -717,6 +723,7 @@ class SmallFile(object):
                 v = np.array([v])
 
             path, _, name = k.rpartition('/')
+
             node = self.file_handle.create_carray(where='/'+path, name=name,
                                                   obj=v,
                                                   createparents=True)
@@ -749,7 +756,11 @@ class SmallFile(object):
         for k in keys_to_save:
             if len(dlist_master[k]) > 0:
                 node = self._get_node(k, dlist_master)
-                node.append( dlist_master[k] )
+                if type(node) == tables.vlarray.VLArray:
+                    for row in dlist_master[k]:
+                        node.append(row)
+                else:
+                    node.append( dlist_master[k] )
             else:
                 #print 'Warning: no data to save for key %s' % k
                 pass
