@@ -197,14 +197,22 @@ class SmallData(object):
             shape = self._arr_send_list[key][1]
             dtype = self._arr_send_list[key][2]
 
-            missing_value = np.empty(shape, dtype=dtype)
+            leaf_name = key.split('/')[-1]
 
-            if dtype in INT_TYPES:
-                missing_value.fill(MISSING_INT)
-            elif dtype in FLOAT_TYPES:
-                missing_value.fill(MISSING_FLOAT)
+            # for vlen case, fill missing values with len 0 array
+            if leaf_name.startswith('ragged_'):
+                missing_value = np.empty(0, dtype=dtype)
+
+            # otherwise, use a fixed sized array to maintain square shape
             else:
-                raise ValueError('%s :: Invalid array type for missing data' % str(dtype))
+                missing_value = np.empty(shape, dtype=dtype)
+
+                if dtype in INT_TYPES:
+                    missing_value.fill(MISSING_INT)
+                elif dtype in FLOAT_TYPES:
+                    missing_value.fill(MISSING_FLOAT)
+                else:
+                    raise ValueError('%s :: Invalid array type for missing data' % str(dtype))
 
         else:
             raise KeyError('key %s not found in array or number send_list' % key)

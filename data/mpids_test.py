@@ -194,6 +194,27 @@ class TestSmallData(object):
         return
 
 
+    def test_vlen(self):
+
+        for nevt,evt in enumerate(self.dsource.events()):
+            self.smldata.event(a=1)   # makes sure every event gets data
+            x = rank + size * nevt    # count up, each global event
+            if x % 3 != 0:            # adds missing data...
+                self.smldata.event(ragged_dset=np.arange(x)) 
+        self.smldata.save()
+
+        if rank == 0:
+            f = h5py.File(self.filename)
+            for l,row in enumerate(f['ragged_dset']):
+                if l % 3 != 0:
+                    np.testing.assert_array_equal(np.arange(l), row)
+                else:
+                    np.testing.assert_array_equal(np.empty(0), row)
+            f.close()
+
+        return
+
+
 class TestInt(TestSmallData):
     def dataset(self):
         return 1
@@ -222,9 +243,17 @@ class TestFloatArray(TestSmallData):
 if __name__ == '__main__':
 
     try:
+
+        print 'Testing: monitor'
         t = TestSmallData()
         t.setup()
         t.test_monitor()
+        t.teardown()
+
+        print 'Testing: vlen'
+        t = TestSmallData()
+        t.setup()
+        t.test_vlen()
         t.teardown()
 
         for Test in [TestInt, TestFloat, TestIntArray, TestFloatArray]:
