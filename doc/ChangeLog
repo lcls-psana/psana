@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-13-26
+2017-01-25 TJ Lane and Christopher O'Grady
+Support for 1D ragged arrays in smalldata.
+
 Tag: V00-13-25
 2017-01-12 TJ Lane and Christopher O'Grady
 - Changes to give the user cleaner access to _dlist_master via

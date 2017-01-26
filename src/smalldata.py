@@ -52,6 +52,7 @@ INT_TYPES   = [int, np.int8, np.int16, np.int32, np.int64,
                np.int, np.uint8, np.uint16, np.uint32, np.uint64, np.uint]
 FLOAT_TYPES = [float, np.float16, np.float32, np.float64, np.float128, np.float]
 
+RAGGED_PREFIX = 'ragged_'
 
 def _flatten_dictionary(d, parent_key='', sep='/'):
     """
@@ -200,7 +201,7 @@ class SmallData(object):
             leaf_name = key.split('/')[-1]
 
             # for vlen case, fill missing values with len 0 array
-            if leaf_name.startswith('ragged_'):
+            if leaf_name.startswith(RAGGED_PREFIX):
                 missing_value = np.empty(0, dtype=dtype)
 
             # otherwise, use a fixed sized array to maintain square shape
@@ -415,6 +416,10 @@ class SmallData(object):
 
         if data_type is np.ndarray:
             value = np.atleast_1d(value)
+            if key.startswith(RAGGED_PREFIX):
+                if len(value.shape)>1:
+                    raise ValueError('Currently only support 1D ragged arrays'
+                                     'for HDF5 dataset name "'+key+'"')
             if key not in self._arr_send_list:
                 self._arr_send_list[key] = (data_type, value.shape, value.dtype)
 
@@ -655,7 +660,7 @@ class SmallFile(object):
 
             path, _, name = k.rpartition('/')
 
-            if name.startswith('ragged_'):
+            if name.startswith(RAGGED_PREFIX):
                 node = self.file_handle.create_vlarray(where='/'+path, name=name,
                                                        atom=a,
                                                        createparents=True)
@@ -767,9 +772,10 @@ class SmallFile(object):
                     for row in dlist_master[k]:
                         node.append(row)
                 else:
+                    if not all(arr.shape==node.shape[1:] for arr in dlist_master[k]):
+                        raise ValueError('Found ragged array named "'+k+'".  Prepend HDF5 dataset name with "ragged_" to avoid this error.')
                     node.append( dlist_master[k] )
             else:
-                #print 'Warning: no data to save for key %s' % k
                 pass
 
         return
