@@ -225,7 +225,6 @@ class SmallData(object):
         # for all data in our aggregated catalogue, gather
         for k in self._arr_send_list.keys():
             if k not in self._dlist.keys(): self._dlist[k] = []
-            #if k == 'a': print self._dlist[k]
             self._backfill_client(self._nevents, self._dlist[k], k)
             self._gather_arrays(self._dlist[k], k)
 
