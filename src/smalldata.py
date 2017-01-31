@@ -155,6 +155,7 @@ class SmallData(object):
                 self.close = lambda : None # ensures consistency between ranks
                 self.save  = lambda *args, **kwargs : None
 
+
         return
 
 

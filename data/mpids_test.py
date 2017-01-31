@@ -9,6 +9,7 @@ import h5py
 import psana
 import numpy as np
 from uuid import uuid4
+import sys
 
 from psana import smalldata as smalldata_mod
 
@@ -263,6 +264,6 @@ if __name__ == '__main__':
             t.test_h5gen()
             t.teardown()
 
-    except AssertionError as e:
+    except Exception as e:
         print e
         comm.Abort(1)

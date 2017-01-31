@@ -11,6 +11,16 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-13-27
+2017-01-30 TJ Lane and Christopher O'Grady
+More general exception handling in mpiDataSource-tests to avoid
+hanging when not all cores crash.  Put call to gather in save() to
+try to help the user get their data if they call "break" (which is
+not allowed because we can't guarantee that all cores will break
+at the same time ... users should use "mpi_datasource::break_after")
+Also, make gather public so people can use that instead of save
+if they use break.
+
 Tag: V00-13-26
 2017-01-25 TJ Lane and Christopher O'Grady
 Support for 1D ragged arrays in smalldata.
