@@ -105,7 +105,7 @@ class TestSmallData(object):
 
             # gather after indicated events
             if nevt == self.gather_after:
-                self.smldata._gather()
+                self.smldata.gather()
 
 
             # break after indicated events
@@ -114,7 +114,7 @@ class TestSmallData(object):
 
         # we're breaking early, so we're not giving the final gather a chance to run,
         # so gather by hand.
-        self.smldata._gather()
+        #self.smldata.gather()
         self.smldata.save()
         self.smldata.close()
 

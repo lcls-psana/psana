@@ -1,6 +1,11 @@
 
 """
-> vlen data
+Code for parallel processing of event loop data.
+
+-- Chris O'Grady and TJ Lane
+Jan 2017
+
+-------------------------------------------------------------
 
 > metadata
 -- docstrings for default values
@@ -9,12 +14,9 @@
 
 > chunking for performance?
 
-
 >>> from Silke
-- storing extra "attributes" or datasets with stuff like ROI (like summary/config field)
 - think about cube problem
 - user-controlled mode for event distribution (e.g. based on delay-time)
-- always write detectors like phasecav
 
 >>> xarray thoughts from Jason:
 - coordinates/attributes for everything, using h5netcdf
@@ -32,6 +34,7 @@
 - probably supports hierarchy of hdf5 groups in h5netcdf, but might
   make it more difficult to cut/merge/sort in xarray
 """
+
 
 import numpy as np
 import tables
@@ -69,10 +72,17 @@ def _flatten_dictionary(d, parent_key='', sep='/'):
 
 
 def remove_values(the_list, val):
-   return [value for value in the_list if value != val]
+    """
+    Remove all items with value `val` from `the_list`
+    """
+    return [value for value in the_list if value != val]
 
 
 def num_or_array(obj):
+    """
+    Returns string 'num' or 'array' if object is a number
+    (int, float) or array.
+    """
 
     data_type = type(obj)
     if ((data_type in [int, float]) or
@@ -95,14 +105,23 @@ class SynchDict(dict):
     (a.k.a. "send_list").  This dictionary is synched before every call
     to gather.
     """
+
     def synchronize(self):
+        """
+        Synchronize all keys in the dictionary (across MPI ranks)
+        """
         tot_send_list = comm.allgather(self)
         for node_send_list in tot_send_list:
             for k in node_send_list:
                 if k not in self.keys():
                     self[k] = node_send_list[k]
+        return
+
 
     def keys(self):
+        """
+        Return the dictionary keys
+        """
         # this helps ensure that we call "gather" in the right order
         # on all cores
         return sorted(self)
@@ -110,7 +129,6 @@ class SynchDict(dict):
 
 class SmallData(object):
     """
-
     On master,
       * numbers (int/float) are lists of arrays, representing workers (items
         in the list) and events (items in the array)
@@ -122,14 +140,20 @@ class SmallData(object):
 
     def __init__(self, datasource_parent, filename=None, keys_to_save=[]):
         """
-
         Parameters
         ----------
         datasource_parent : psana.DataSource
             The data source from which to generate small data
 
         filename : str
-            The path at which to save (in HDF5 format)
+            The full path filename at which to save (in HDF5 format)
+
+        keys_to_save : list of strings
+            A list of event data keys to save to disk. For example, if you
+            add only ['a'] to this list, but call SmallData.event(a=x, b=y),
+            only the values for 'a' will be saved. Hierarchical data structures
+            using dictionaries can be referenced using '/' for each level, e.g.
+            SmallData.event({'c' : {'d' : z}}) --> keys_to_save=['c/d'].
         """
 
         self._datasource_parent = datasource_parent
@@ -145,15 +169,9 @@ class SmallData(object):
             self._dlist_master = {}
             self._newkeys = []
 
-        if filename:
-            if self.master:
-                self._small_file = SmallFile(filename, keys_to_save)
-                self.add_monitor_function(self._small_file.save_event_data)
-                self.close = self._small_file.close # expose this fxn
-                self.save  = self._small_file.save  # expose this fxn
-            else: # not master
-                self.close = lambda : None # ensures consistency between ranks
-                self.save  = lambda *args, **kwargs : None
+        if filename and self.master:
+            self._small_file = SmallFile(filename, keys_to_save)
+            self.add_monitor_function(self._small_file.save_event_data)
 
         return
 
@@ -170,16 +188,94 @@ class SmallData(object):
 
 
     def add_monitor_function(self, fxn):
+        """
+        Add a monitor function that will intermittently operate on the
+        event data collected so far.
+
+        After every gather, the SmallData object calls all "monitor" functions
+        and passes them a dictionary of the event data. E.g. if you are adding
+        data with 
+
+        >>> smalldata.event(a=x, b=y)
+
+        then on gather, SmallData will automatically call
+
+        >>> fxn({a : x, b : y})
+
+        for all monitors added.
+
+        Parameters
+        ----------
+        fxn : function
+            The callback function
+        """
         self._monitors.append(fxn)
         return
 
 
-    def missing(self, key):
+    def save(self, *args, **kwargs):
         """
-        Use the send_list to figure out the correct types and fill
-        values for missing data
+        Save summary data to an HDF5 file (e.g. at the end of an event loop).
+
+            1. Add data using key-value pairs (similar to SmallData.event())
+            2. Add data organized in hierarchy using nested dictionaries (similar to 
+               SmallData.event())
+
+        These data are then saved to the file specifed in the SmallData
+        constructor.
+
+        Parameters
+        ----------
+        *args : dictionaries
+            In direct analogy to the SmallData.event call, you can also pass
+            HDF5 group heirarchies using nested dictionaries. Each level
+            of the dictionary is a level in the HDF5 group heirarchy.
+
+        **kwargs : datasetname, dataset
+            Similar to SmallData.event, it is possible to save arbitrary
+            singleton data (e.g. at the end of a run, to save an average over
+            some quanitity).
+
+        Examples
+        --------
+        >>> # save "average_over_run"
+        >>> smldata.save(average_over_run=x)
+        
+        >>> # save "/base/next_group/data"
+        >>> smldata.save({'base': {'next_group' : data}})
         """
 
+        self.gather()
+        if self.master:
+            if hasattr(self, '_small_file'):
+                self._small_file.save(*args, **kwargs)
+            else:
+                raise IOError('No filename to save to provided')
+
+        return
+
+
+    def close(self):
+        """
+        Close the HDF5 file used for writing.
+        """
+        # avoids pytables warning
+        if self.master:
+            if hasattr(self, '_small_file'):
+                self._small_file.close()
+        return
+
+
+    def _missing(self, key):
+        """
+        Return an example (single instance) of the missing data value
+        for `key`.
+
+        Parameters
+        ----------
+        key : str
+            The event data key
+        """
 
         if key in self._num_send_list.keys():
             t = self._num_send_list[key]
@@ -221,7 +317,7 @@ class SmallData(object):
         return missing_value
 
 
-    def _gather(self):
+    def gather(self):
         """
         Gather arrays and numbers from all MPI ranks.
         """
@@ -284,7 +380,7 @@ class SmallData(object):
 
                     self._dlist_master[k] = self._backfill_master(target_events, 
                                                                   self._dlist_master[k], 
-                                                                  self.missing(k))
+                                                                  self._missing(k))
                 self._newkeys = []
 
                 # (3) re-shape dlist master data into single np array (per key)
@@ -307,6 +403,9 @@ class SmallData(object):
 
 
     def _gather_numbers(self, num_list, key):
+        """
+        Gather numbers (int/float) from all workers and update master's dlist
+        """
 
         lengths = np.array(comm.gather(len(num_list))) # get list of lengths
         mysend = np.array(num_list,dtype=self._num_send_list[key])
@@ -346,10 +445,15 @@ class SmallData(object):
         # recvs in linear array
 
         if self.master:
-            worker_lens = [[np.product(shp) for shp in worker] for worker in worker_shps]  # flattened size of each array
-            worker_msg_sizes = [np.sum(lens) for lens in worker_lens]                      # size of msg from each rank
+            # flattened size of each array
+            worker_lens = [[np.product(shp) for shp in worker] for worker in worker_shps]
+
+            # size of msg from each rank
+            worker_msg_sizes = [np.sum(lens) for lens in worker_lens]                   
             recv_buff_size = np.sum(worker_msg_sizes)
-            myrecv = np.empty(recv_buff_size, mysend.dtype)                                # allocate receive buffer
+
+            # allocate receive buffer
+            myrecv = np.empty(recv_buff_size, mysend.dtype)
             recvbuf = [myrecv, worker_msg_sizes]
         else:
             recvbuf = None
@@ -375,6 +479,9 @@ class SmallData(object):
 
     @property
     def _nevents(self):
+        """
+        Number of events in memory
+        """
         if 'fiducials' in self._dlist:
             return len(self._dlist['fiducials'])
         else:
@@ -397,7 +504,7 @@ class SmallData(object):
     def _backfill_client(self, target_events, dlist_element, key):
         numfill = target_events - len(dlist_element)
         if numfill > 0:
-            fill_value = self.missing(key)
+            fill_value = self._missing(key)
             dlist_element.extend([fill_value]*numfill)
         return
 
@@ -595,6 +702,7 @@ class SmallData(object):
 
             if det.name.dev == 'Evr':
                 evr_codes = det.eventCodes(self.currevt, this_fiducial_only=True)
+
                 if evr_codes is not None:
                     for c in self._evr_cfgcodes:
                         if c in evr_codes:
@@ -608,14 +716,23 @@ class SmallData(object):
 
 
     def sum(self, value):
+        """
+        Sum `value` across ranks
+        """
         return self._mpi_reduce(value, MPI.SUM)
 
 
     def max(self, value):
+        """
+        Find the maximum of `value` across ranks
+        """
         return self._mpi_reduce(value, MPI.MAX)
 
 
     def min(self, value):
+        """
+        Find the minimum of `value` across ranks
+        """
         return self._mpi_reduce(value, MPI.MIN)
 
 
@@ -630,8 +747,24 @@ class SmallData(object):
 
 
 class SmallFile(object):
+    """
+    An interface to an HDF5 file for saving data using SmallData and MPIDataSource.
+    """
 
     def __init__(self, filename, keys_to_save=[]):
+        """
+        Parameters
+        ----------
+        filename : str
+            The full path filename to save to.
+
+        keys_to_save : list of strings
+            A list of event data keys to save to disk. For example, if you
+            add only ['a'] to this list, but call SmallData.event(a=x, b=y),
+            only the values for 'a' will be saved. Hierarchical data structures
+            using dictionaries can be referenced using '/' for each level, e.g.
+            event({'c' : {'d' : z}}) --> keys_to_save=['c/d'].
+        """
         self.file_handle = tables.File(filename, 'w')
         self.keys_to_save = keys_to_save
         return
@@ -683,16 +816,10 @@ class SmallFile(object):
 
     def save(self, *args, **kwargs):
         """
-        Save registered data to an HDF5 file.
+        Save summary data to an HDF5 file (e.g. at the end of an event loop).
 
-        There are 3 behaviors of the arguments to this function:
-
-            1. Decide what 'event data' (declared by SmallData.event())
-               should be saved
-            2. Add summary (ie. any non-event) data using key-value
-               pairs (similar to SmallData.event())
-            3. Add summary (ie. any non-event) data organized in a
-               hierarchy using nested dictionaries (similar to 
+            1. Add data using key-value pairs (similar to SmallData.event())
+            2. Add data organized in hierarchy using nested dictionaries (similar to 
                SmallData.event())
 
         These data are then saved to the file specifed in the SmallData
@@ -712,8 +839,8 @@ class SmallFile(object):
 
         Examples
         --------
-        >>> # save "array_containing_sum"
-        >>> smldata.save(cspad_sum=array_containing_sum)
+        >>> # save "average_over_run"
+        >>> smldata.save(average_over_run=x)
         
         >>> # save "/base/next_group/data"
         >>> smldata.save({'base': {'next_group' : data}})
@@ -745,6 +872,19 @@ class SmallFile(object):
 
 
     def save_event_data(self, dlist_master):
+        """
+        Save (append) all event data in memory to disk.
+
+        NOTE: This function gets called automatically on every gather
+              when using a SmallData object.
+
+        Parameters
+        ----------
+        dlist_master : dict
+            The SmallData object's dlist_master, which is a dictionary
+            where the keys are the event data keys, the values arrays
+            of the event data.
+        """
 
         if self.file_handle is None:
             # we could accept a 'filename' argument here in the save method
@@ -773,7 +913,9 @@ class SmallFile(object):
                         node.append(row)
                 else:
                     if not all(arr.shape==node.shape[1:] for arr in dlist_master[k]):
-                        raise ValueError('Found ragged array named "'+k+'".  Prepend HDF5 dataset name with "ragged_" to avoid this error.')
+                        raise ValueError('Found ragged array named "%s". ' 
+                                         'Prepend HDF5 dataset name with '
+                                         '"ragged_" to avoid this error.' % k)
                     node.append( dlist_master[k] )
             else:
                 pass
@@ -787,5 +929,4 @@ class SmallFile(object):
         """
         self.file_handle.close()
         return
-
 

@@ -131,13 +131,13 @@ class MPIDataSource(object):
             if (self.global_gather_interval is not None) and \
                (nevent > 1)                              and \
                (nevent % self.global_gather_interval==0):
-                self.sd._gather()
+                self.sd.gather()
 
             if nevent % self.size == self.rank:
                 self._currevt = evt
                 yield evt
 
-        self.sd._gather()
+        self.sd.gather()
 
         return
 
@@ -232,7 +232,7 @@ class MPIDataSource(object):
 
         # the SmallData and DataSource objects are coupled:
         # -- SmallData must know about the _currevt to "timestamp" its data
-        # -- DataSource needs to call SmallData's _gather method
+        # -- DataSource needs to call SmallData's gather method
 
         self.global_gather_interval = gather_interval*self.size
         self.sd = SmallData(self, filename=filename, 
