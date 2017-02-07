@@ -389,7 +389,7 @@ class SmallData(object):
                     if len(self._dlist_master[k]) > 0: # dont crash np.concatenate
                         self._dlist_master[k] = np.concatenate(self._dlist_master[k])
                     else:
-                        self._dlist_master[k] = np.array()
+                        self._dlist_master[k] = np.array([])
 
                 # (4) callback monitor functions (includes save, if requested)
                 for f in self._monitors:

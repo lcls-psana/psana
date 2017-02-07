@@ -114,7 +114,7 @@ class TestSmallData(object):
 
         # we're breaking early, so we're not giving the final gather a chance to run,
         # so gather by hand.
-        #self.smldata.gather()
+        self.smldata.gather() # test empty gather
         self.smldata.save()
         self.smldata.close()
 
