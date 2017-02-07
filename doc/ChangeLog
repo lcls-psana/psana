@@ -11,6 +11,10 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-13-28
+2017-02-07 TJ Lane and Christopher O'Grady
+Bug fix creating array.
+
 Tag: V00-13-27
 2017-01-30 TJ Lane and Christopher O'Grady
 More general exception handling in mpiDataSource-tests to avoid
