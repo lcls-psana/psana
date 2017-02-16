@@ -434,12 +434,15 @@ class SmallData(object):
         # tuple:       the shape of the array
         worker_shps = comm.gather([ a.shape for a in array_list ])
 
+        expected_type = self._arr_send_list[key][2]
         # workers flatten arrays and send those to master
         if len(array_list) > 0:
             mysend = np.concatenate([ x.reshape(-1) for x in array_list ])
+            if mysend.dtype is not expected_type:
+                mysend = mysend.astype(expected_type)
             mysend = np.ascontiguousarray(mysend)
         else:
-            mysend = np.array([], dtype=self._arr_send_list[key][2])
+            mysend = np.array([], dtype=expected_type)
 
         # master computes how many array elements to expect, 
         # recvs in linear array
