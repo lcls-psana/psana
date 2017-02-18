@@ -39,6 +39,7 @@ Jan 2017
 import numpy as np
 import tables
 import collections
+import warnings
 
 from _psana import EventId, Source, Bld
 from psana import Detector, DetNames
@@ -115,6 +116,15 @@ class SynchDict(dict):
             for k in node_send_list:
                 if k not in self.keys():
                     self[k] = node_send_list[k]
+        # this ensures that all ranks use the same dtype for Gatherv.
+        # the policy is that the first rank's dtype is correct and all
+        # others will use this.
+        for k in self.keys():
+            if self[k][0] != tot_send_list[0][k][0]:
+                warnings.warn('changing data type of key %s '
+                              'from %s to %s on rank %d' %
+                              (k,self[k][0],tot_send_list[0][k][0],rank))
+                self[k][0] = tot_send_list[0][k][0]
         return
 
 
@@ -278,21 +288,20 @@ class SmallData(object):
         """
 
         if key in self._num_send_list.keys():
-            t = self._num_send_list[key]
+            dtype = self._num_send_list[key][0]
 
-            if t in INT_TYPES:
+            if dtype in INT_TYPES:
                 missing_value = MISSING_INT
-            elif t in FLOAT_TYPES:
+            elif dtype in FLOAT_TYPES:
                 missing_value = MISSING_FLOAT
             else:
-                raise ValueError('%s :: Invalid num type for missing data' % str(t))
+                raise ValueError('%s :: Invalid num type for missing data' % str(dtype))
 
 
         elif key in self._arr_send_list.keys():
 
-            t     = self._arr_send_list[key][0]
+            dtype = self._arr_send_list[key][0]
             shape = self._arr_send_list[key][1]
-            dtype = self._arr_send_list[key][2]
 
             leaf_name = key.split('/')[-1]
 
@@ -408,13 +417,16 @@ class SmallData(object):
         """
 
         lengths = np.array(comm.gather(len(num_list))) # get list of lengths
-        mysend = np.array(num_list,dtype=self._num_send_list[key])
+        mysend = np.array(num_list,dtype=self._num_send_list[key][0])
         myrecv = None
 
         if self.master:
             myrecv = np.empty((sum(lengths)),mysend.dtype) # allocate receive buffer
 
-        comm.Gatherv(sendbuf=mysend, recvbuf=[myrecv, lengths])
+        try:
+            comm.Gatherv(sendbuf=mysend, recvbuf=[myrecv, lengths])
+        except Exception:
+            raise Exception('smalldata.py:_gather_numbers Gatherv exception: rank %d with key %s.' % (rank,key))
 
         if self.master:
             self._dlist_append(self._dlist_master, key, myrecv)
@@ -434,7 +446,7 @@ class SmallData(object):
         # tuple:       the shape of the array
         worker_shps = comm.gather([ a.shape for a in array_list ])
 
-        expected_type = self._arr_send_list[key][2]
+        expected_type = self._arr_send_list[key][0]
         # workers flatten arrays and send those to master
         if len(array_list) > 0:
             mysend = np.concatenate([ x.reshape(-1) for x in array_list ])
@@ -461,7 +473,10 @@ class SmallData(object):
         else:
             recvbuf = None
 
-        comm.Gatherv(sendbuf=mysend, recvbuf=recvbuf)
+        try:
+            comm.Gatherv(sendbuf=mysend, recvbuf=recvbuf)
+        except Exception:
+            raise Exception('smalldata.py:_gather_arrays Gatherv exception: rank %d with key %s.' % (rank,key))
         
         # master re-shapes linear received message into a list of well-shaped arrays
         # the array shapes were communicated previously
@@ -531,11 +546,12 @@ class SmallData(object):
                     raise ValueError('Currently only support 1D ragged arrays'
                                      'for HDF5 dataset name "'+key+'"')
             if key not in self._arr_send_list:
-                self._arr_send_list[key] = (data_type, value.shape, value.dtype)
+                # this may get over-ruled by the SynchDict
+                self._arr_send_list[key] = [value.dtype, value.shape]
 
         else:
             if key not in self._num_send_list:
-                self._num_send_list[key] = data_type
+                self._num_send_list[key] = [data_type]
 
         if key not in self._dlist.keys():
             self._dlist[key] = []
@@ -780,7 +796,6 @@ class SmallFile(object):
         """
 
         try:
-            #print 'trying to get node: %s' % k
             node = self.file_handle.get_node('/'+k)
 
         except tables.NoSuchNodeError as e: # --> create node
@@ -901,9 +916,9 @@ class SmallFile(object):
                 if k in dlist_master.keys():
                     keys_to_save.append(k)
                 else:
-                    print('Warning: event data key %s has no '
-                          'associated event data and will not '
-                          'be saved' % k)
+                    warnings.warn('event data key %s has no '
+                                  'associated event data and will not '
+                                  'be saved' % k)
         else:
             keys_to_save = dlist_master.keys()
 
