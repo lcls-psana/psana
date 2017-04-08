@@ -44,6 +44,12 @@ import warnings
 from _psana import EventId, Source, Bld
 from psana import Detector, DetNames
 
+try:
+    from pscache import publisher
+    _PSCACHE_AVAILABLE = True
+except ImportError as e:
+    _PSCACHE_AVAILABLE = False
+
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -197,6 +203,11 @@ class SmallData(object):
         return self._datasource_parent._currevt
 
 
+    @property
+    def currrun(self):
+        return self._datasource_parent._currrun
+
+
     def add_monitor_function(self, fxn):
         """
         Add a monitor function that will intermittently operate on the
@@ -273,6 +284,61 @@ class SmallData(object):
         if self.master:
             if hasattr(self, '_small_file'):
                 self._small_file.close()
+        return
+
+
+    def connect_redis(self, keys=None):
+        """
+        Connect the smalldata object to LCLS's redis database, where
+        all event data will be sent.
+        
+        Every gather, all event data obtained will be added to a
+        database on psdb3, where it is accessible through a pscache
+        client.
+
+        NOTE: Using this feature may affect your performance. There
+        are two things to worry about:
+
+            1. If you send big data over the network, it may take a
+               while... you will notice your MPIDataSource iteration
+               rate slowing down.
+
+           2. The redis database has limited memory. You can interact
+              with the redis db through pscache to optimize e.g. how
+              long it keeps things in memory to squeeze the most out
+              of this hard limit.
+
+        Parameters
+        ----------
+        keys : list
+            A list of the subset of keys to send to redis. Useful
+            to filter out big data that may cause performance issues
+            either by taking up a lot of memory in the redis DB or
+            by taking a long time to send over the wire. `None`
+            (default) means send all.
+        """
+
+        if not _PSCACHE_AVAILABLE:
+            raise ImportError('package `pscache` needs to be installed'
+                              ' to use the redis feature!')
+
+        # TODO / Note
+        # Right now we set the experiment id, but then we don't even
+        # really use it. Later we will need to use it to send to a 
+        # unique redis DB for each expt.
+
+        # ALSO: it may be better to have the MPIDataSource provide
+        # an interface telling us what experiment it is using...
+
+        expt = self._datasource_parent.experiment
+        run = self._datasource_parent._currrun
+
+        self._redispub = publisher.ExptPublisher(expt, host='psdb3')
+        self._redismon = self._redispub.smalldata_monitor(run,
+                                                          keys=keys)
+
+        self.add_monitor_function(self._redismon)
+
         return
 
 

@@ -105,6 +105,21 @@ class MPIDataSource(object):
         return
 
 
+    def _currrun(self):
+        """
+        Get the current run number
+        """
+        if hasattr(self._currevt, 'run'):
+            return self._currevt.run()
+        else:
+            return None
+
+
+    @property
+    def experiment(self):
+        return self.env().experiment()
+
+
     def events(self):
         """
         Returns a python generator of events.
