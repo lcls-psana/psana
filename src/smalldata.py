@@ -530,8 +530,8 @@ class SmallData(object):
             worker_lens = [[np.product(shp) for shp in worker] for worker in worker_shps]
 
             # size of msg from each rank
-            worker_msg_sizes = [np.sum(lens) for lens in worker_lens]                   
-            recv_buff_size = np.sum(worker_msg_sizes)
+            worker_msg_sizes = [np.sum(lens,dtype=np.int) for lens in worker_lens]
+            recv_buff_size = np.sum(worker_msg_sizes,dtype=np.int)
 
             # allocate receive buffer
             myrecv = np.empty(recv_buff_size, mysend.dtype)
