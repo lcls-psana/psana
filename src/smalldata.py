@@ -122,15 +122,17 @@ class SynchDict(dict):
             for k in node_send_list:
                 if k not in self.keys():
                     self[k] = node_send_list[k]
-        # this ensures that all ranks use the same dtype for Gatherv.
-        # the policy is that the first rank's dtype is correct and all
-        # others will use this.
+        # now that all ranks have everybody's keys, update all ranks
+        # with the "correct" dtypes from rank0 (other ranks may have
+        # different dtypes) this ensures that all ranks use the same
+        # dtype for Gatherv.
+        master_send_list = comm.bcast(self)
         for k in self.keys():
-            if self[k][0] != tot_send_list[0][k][0]:
+            if self[k][0] != master_send_list[k][0]:
                 warnings.warn('changing data type of key %s '
                               'from %s to %s on rank %d' %
-                              (k,self[k][0],tot_send_list[0][k][0],rank))
-                self[k][0] = tot_send_list[0][k][0]
+                              (k,self[k][0],master_send_list[k][0],rank))
+                self[k][0] = master_send_list[k][0]
         return
 
 
