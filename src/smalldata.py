@@ -706,8 +706,7 @@ class SmallData(object):
                 # if the list is as long as the # evts seen, 
                 # user has tried to add key twice
                 if len( self._dlist.get(k, []) ) == events_seen:        # False if key not in dlist
-                    raise RuntimeError("Event data already added for "
-                                       "key '%s' this event!" % k)
+                    warnings.warn('Found duplicate key %s for event with time/fiducials %d/%d. Could be caused by DAQ split event.' % (k,time,fid))
 
         # --> otherwise this is a new event
         else:
