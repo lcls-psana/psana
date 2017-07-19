@@ -218,6 +218,11 @@ Index& EventLoop::index()
   return  m_inputModule->index();
 }
 
+RandomAccess& EventLoop::randomAccess()
+{
+  return  m_inputModule->randomAccess();
+}
+
 bool EventLoop::liveAvail(int numEvents) {
   return m_inputModule->liveAvail(numEvents);
 }

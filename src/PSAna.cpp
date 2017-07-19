@@ -49,7 +49,7 @@ namespace {
 
   const char* logger = "PSAna";
 
-  enum FileType { Unknown=-1, Mixed=0, XTC, HDF5, SHMEM, IDX, SMALLDATA };
+  enum FileType { Unknown=-1, Mixed=0, XTC, HDF5, SHMEM, IDX, SMALLDATA, RAX };
 
   std::map<std::string, FileType> getDsetInputKeys() {
     std::map<std::string, FileType> dsetInputKeys;
@@ -58,6 +58,7 @@ namespace {
     dsetInputKeys["shmem"]=SHMEM;
     dsetInputKeys["idx"]=IDX;
     dsetInputKeys["smd"]=SMALLDATA;
+    dsetInputKeys["rax"]=RAX;
     return dsetInputKeys;
   }
 
@@ -250,6 +251,7 @@ PSAna::dataSource(const std::vector<std::string>& input)
   case XTC:
   case SHMEM:
   case SMALLDATA:
+  case RAX:
     // OK
     break;
   case Unknown:
@@ -376,6 +378,9 @@ PSAna::dataSource(const std::vector<std::string>& input)
     break;
   case IDX:
     iname = "PSXtcInput.XtcIndexInputModule";
+    break;
+  case RAX:
+    iname = "PSXtcInput.XtcRandomAccessInputModule";
     break;
   case Unknown:
   case Mixed:

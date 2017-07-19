@@ -26,6 +26,7 @@
 // Collaborating Class Headers --
 //-------------------------------
 #include "psana/Index.h"
+#include "psana/RandomAccess.h"
 #include "PSEnv/Env.h"
 #include "PSEvt/Event.h"
 
@@ -132,6 +133,8 @@ public:
   virtual Status event(Event& evt, Env& env) = 0;
   
   virtual Index& index();
+
+  virtual RandomAccess& randomAccess();
   /**
    *  @brief Method which is called once at the end of the job
    *  

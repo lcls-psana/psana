@@ -27,6 +27,7 @@
 #include "psana/EventLoop.h"
 #include "psana/RunIter.h"
 #include "psana/StepIter.h"
+#include "psana/RandomAccess.h"
 #include "PSEnv/Env.h"
 
 //------------------------------------
@@ -102,6 +103,8 @@ public:
 
   // Add PSANA module to list of modules in eventloop
   void addmodule(boost::shared_ptr<Module> module){ m_evtLoop->addmodule(module);}
+
+  RandomAccess& randomAccess() { return m_evtLoop->randomAccess(); }
 
   // Returns True if live mode and the available events > numEvents arg
   // Used to skip events and catch up with latest for live data.
