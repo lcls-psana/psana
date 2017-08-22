@@ -29,6 +29,7 @@
 #include "psana/Module.h"
 #include "psana/Index.h"
 #include "psana/InputModule.h"
+#include "psana/RandomAccess.h"
 #include "PSEnv/Env.h"
 #include "PSEvt/Event.h"
 
@@ -133,6 +134,8 @@ public:
   bool liveAvail(int numEvents);
 
   Index& index();
+
+  RandomAccess& randomAccess();
 
 
 protected:

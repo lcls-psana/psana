@@ -53,6 +53,10 @@ Index& InputModule::index() {
   throw ExceptionAbort(ERR_LOC, "Index not supported by this input module");
 }
 
+RandomAccess& InputModule::randomAccess() {
+  throw ExceptionAbort(ERR_LOC, "RandomAccess not supported by this input module");
+}
+
 // formatting for enum
 std::ostream&
 operator<<(std::ostream& out, InputModule::Status stat)
