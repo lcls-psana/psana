@@ -23,7 +23,7 @@ class RandomAccess {
 public:
   RandomAccess() {}
   virtual ~RandomAccess() {}
-  virtual int      jump(const std::vector<std::string>& filenames, const std::vector<int64_t> &offsets, const std::string &lastBeginCalibCycleDgram)  = 0;
+  virtual int      jump(const std::vector<std::string>& filenames, const std::vector<int64_t> &offsets, const std::string &lastBeginCalibCycleDgram, uintptr_t runtime, uintptr_t ctx)  = 0;
   virtual void     setrun(int run)                                    = 0;
 };
 
