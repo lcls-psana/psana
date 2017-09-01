@@ -29,4 +29,5 @@ Import('*')
 LIBS="dl"
 DOCGEN = {'psana-doxy': 'psana psana/doc/mainpage.dox-main',
           'doxy-all': 'psana'}
+CCFLAGS="-fabi-version=2"
 standardSConscript(**locals())
