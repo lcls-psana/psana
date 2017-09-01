@@ -29,5 +29,5 @@ Import('*')
 LIBS="dl"
 DOCGEN = {'psana-doxy': 'psana psana/doc/mainpage.dox-main',
           'doxy-all': 'psana'}
-CCFLAGS="-std=c++98 -fabi-version=2"
+CCFLAGS="-std=c++98 -fabi-version=2 -D_GLIBCXX_USE_CXX11_ABI=0"
 standardSConscript(**locals())
