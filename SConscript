@@ -26,8 +26,12 @@ Import('*')
 # PYEXTMOD - name of the Python extension module, package name used by default
 #
 #
+
+import os
+
 LIBS="dl"
 DOCGEN = {'psana-doxy': 'psana psana/doc/mainpage.dox-main',
           'doxy-all': 'psana'}
-CCFLAGS="-std=c++98 -fabi-version=2 -D_GLIBCXX_USE_CXX11_ABI=0"
+if "PSANA_LEGION_DIR" in os.environ:
+    CCFLAGS="-std=c++98 -fabi-version=2 -D_GLIBCXX_USE_CXX11_ABI=0 -DPSANA_USE_LEGION"
 standardSConscript(**locals())
