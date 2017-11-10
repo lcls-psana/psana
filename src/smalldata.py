@@ -765,7 +765,9 @@ class SmallData(object):
                     default['ebeam/charge']        = ebeam_ddl.ebeamCharge()
                     default['ebeam/dump_charge']   = ebeam_ddl.ebeamDumpCharge()
                     default['ebeam/L3_energy']     = ebeam_ddl.ebeamL3Energy()
-                    default['ebeam/photon_energy'] = ebeam_ddl.ebeamPhotonEnergy()
+                    # check existence of this for old data
+                    if hasattr(ebeam_ddl,'ebeamPhotonEnergy'):
+                        default['ebeam/photon_energy'] = ebeam_ddl.ebeamPhotonEnergy()
                     default['ebeam/pk_curr_bc2']   = ebeam_ddl.ebeamPkCurrBC2()
 
             if det.name.dev == 'PhaseCavity':
@@ -783,8 +785,10 @@ class SmallData(object):
                     default['gas_detector/f_12_ENRC'] = gdet_ddl.f_12_ENRC()
                     default['gas_detector/f_21_ENRC'] = gdet_ddl.f_21_ENRC()
                     default['gas_detector/f_22_ENRC'] = gdet_ddl.f_22_ENRC()
-                    default['gas_detector/f_63_ENRC'] = gdet_ddl.f_63_ENRC()
-                    default['gas_detector/f_64_ENRC'] = gdet_ddl.f_64_ENRC()
+                    # check existence of this for old data
+                    if hasattr(gdet_ddl,'f_63_ENRC'):
+                        default['gas_detector/f_63_ENRC'] = gdet_ddl.f_63_ENRC()
+                        default['gas_detector/f_64_ENRC'] = gdet_ddl.f_64_ENRC()
 
             if det.name.dev == 'Evr':
                 evr_codes = det.eventCodes(self.currevt, this_fiducial_only=True)
