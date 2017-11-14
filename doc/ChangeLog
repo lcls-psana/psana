@@ -11,6 +11,13 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V00-13-39
+2017-11-14 Mikhail Dubrovin
+- mpi_datasource.py - add method MPIDataSource.event_number
+
+Tags: V00-13-31 through V00-13-38
+	unknown changes...
+
 Tag: V00-13-30
 2017-02-17 TJ Lane and Christopher O'Grady
 smalldata bug fix: synchronize the data types across cores to make sure
@@ -159,16 +166,16 @@ Tag:V00-13-01
 2015-4-9 Christopher O'Grady
 - use env variable SIT_PSDM_DATA to determine default calib-dir,
   but default to /reg/d/psdm in env variable doesn't exist.
-	
+
 Tag:V00-13-00
 2015-4-7 David Schneider
 - remove strong dependency on root JIRA issue PSAS-131.
 - completely deprecate the roothistomanager, users must use the pshist manager
-	
+
 Tag: V00-12-11
 2015-3-3 David Schneider
 - small data JIRA issue PSAS-85
-- add smalldata type to PSAna file types. 
+- add smalldata type to PSAna file types.
 - check for more than one input source in dataset
 - add smalldata file type to PSXtcInput.XtcInput modue
 - note - small data not supported for parallel mode
@@ -176,8 +183,8 @@ Tag: V00-12-11
 Tag: V00-12-10
 2015-01-09 David Schneider
 - improve diagnostic about modules loaded.
-- related to Jira issue PSAS-86	
-	
+- related to Jira issue PSAS-86
+
 Tag: V00-12-09
 2014-09-24 Christopher O'Grady
 - eliminate warning message about invalid experiment number, which
@@ -188,12 +195,12 @@ Tag: V00-12-08
 - in EventKeys add flag-pars to print in event() info about env.configStore().keys() and env.calibStore().keys()
 
 Tag: V00-12-07
-2014-08-27 David Schneider
-- Changes to make it easier to write a C++ driver program - see comments  
+2014-08-27 David Schneide
+- Changes to make it easier to write a C++ driver program - see comments
   in Jira PSAS-15 - specifically:
 - add method nextWithEvent to StepIter and RunIter that returns
   same event that psana modules get in BeginCalibCycle and BeginRun
-- refactor PSAnaApp runApp. Add new methods setConfigFileAndOptions 
+- refactor PSAnaApp runApp. Add new methods setConfigFileAndOptions
   and inputDataSets for a C++ driver.
 
 Tag: V00-12-06
@@ -234,8 +241,8 @@ Tag: V00-11-03
 
 Tag: V00-11-02
 2014-02-28 Andy Salnikov
-- last big change introduces a bug where dataset is not recognized 
-  as XTC input type 
+- last big change introduces a bug where dataset is not recognized
+  as XTC input type
 
 Tag: V00-11-01
 2014-02-27 Andy Salnikov
@@ -244,7 +251,7 @@ Tag: V00-11-01
 Tag: V00-11-00
 2014-02-26 Andy Salnikov
 - first implementation of multi-processing support
-- pyana-style multiprocessing with a master process reading the 
+- pyana-style multiprocessing with a master process reading the
   data and sending it do one of several worker processes
 - works with XTC data only, relies on special input modules from
   PSXtcMPInput package
@@ -319,7 +326,7 @@ Tag: V00-08-04
 
 Tag: V00-08-03
 2013-03-08 Andy Salnikov
-- Configurable::config() fix for the case when default value type is 
+- Configurable::config() fix for the case when default value type is
   different from result type
 
 Tag: V00-08-02
@@ -333,8 +340,8 @@ Tag: V00-08-01
 Tag: V00-08-00
 2013-02-12 Andy Salnikov
 - add support for multiple instances of framework, main issue is to allow
-  multiple configuration service instances and selecting right instance 
-  when configuring all modules, this is done through special Context 
+  multiple configuration service instances and selecting right instance
+  when configuring all modules, this is done through special Context
   class (non-thread safe for now)
 - replace ExpNameFromXtc with ExpNameFromDs whci does the same job based 
   on new IData/dataset functionality
@@ -419,7 +426,7 @@ Tag: V00-06-04
 - PSAna class has new method modules() which returns the list module names
 - PSAnaApp: check that list of modules is non-empty
 - in PSAnaApp - use psana.cfg when -c option is not specified and file
-  is in the current dir (before it always used psana.cfg if -m option 
+  is in the current dir (before it always used psana.cfg if -m option
   is not given)
 
 Tag: V00-06-03
@@ -430,7 +437,7 @@ Tag: V00-06-03
 Tag: V00-06-02
 2012-06-11 Andy Salnikov
 - first version of the python wrapper module for psana
-- evnet iterator implementation is not complete, need to return 
+- evnet iterator implementation is not complete, need to return
   python event object from iterator
 - same goes for env object returned from run/scan/source objects
 
@@ -444,11 +451,11 @@ Tag: V00-06-01
 Tag: V00-06-00
 2012-06-08 Andy Salnikov
 - refactoring and event loop inversion
-- split PSAnaApp into a bunch of classes (PSAna, EventLoop, DataSource, 
+- split PSAnaApp into a bunch of classes (PSAna, EventLoop, DataSource,
   EventIter)
 - inverted event loop, clients can use event iterator to step through
   events and get access to event data from "outside" framework modules
-- only event iteration implemented for now, will add run/scan 
+- only event iteration implemented for now, will add run/scan
   iterators as well
 
 Tag: V00-05-03
@@ -457,7 +464,7 @@ Tag: V00-05-03
 
 Tag: V00-05-02
 2012-05-01 Andy Salnikov
-- upgrading to boost 1.49.0, some return types have changed in 
+- upgrading to boost 1.49.0, some return types have changed in
   boost::filesystem
 
 Tag: V00-05-01
@@ -479,14 +486,14 @@ Tag: V00-05-00
   by default, if it returns true then psana calls module's event() 
   method for all events including skipped. Module can check 
   "__psana_skip_event__" flag in event to see if event is skipped.
-- above changes are needed to support new module for XTC output 
-- reimplement ExpNameFromXtc and ExpNameFromConfig with new 
+- above changes are needed to support new module for XTC output
+- reimplement ExpNameFromXtc and ExpNameFromConfig with new
   class ExpNameDb/ExpNameDatabase, both classes have new method
   expNum() which returns experiment number
 
 Tag: V00-04-01
 2012-02-14 Andy Salnikov
-- update comments in Module class 
+- update comments in Module class
 
 Tag: V00-04-00
 2012-01-09 Andy Salnikov
@@ -512,7 +519,7 @@ Tag: V00-03-00
 Tag: V00-02-00
 2011-10-13 Andy Salnikov
 - correct implementation of event skipping and max event number
-- all job is actually done by input module itself, psana logic 
+- all job is actually done by input module itself, psana logic
   is simplified
 - EventKeys module now print event keys in all methods
 
@@ -530,7 +537,7 @@ Tag: V00-01-05
 
 Tag: V00-01-04
 2011-09-01 Andy Salnikov
-- add an option to specify calibration directory name on the command line 
+- add an option to specify calibration directory name on the command line
   (with -b or --calib-dir) or in config file (psana.calib-dir)
 - default value for calib dir is "/reg/d/psdm/{instr}/{exp}/calib"
 - pass this name to the environment's constructor
@@ -606,4 +613,4 @@ Tag: V00-00-01
 - first commit to repository
 - functionality currently here: dynamic loader, base class for module
   (not finished)
- 
+

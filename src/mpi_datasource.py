@@ -102,6 +102,8 @@ class MPIDataSource(object):
         self._currevt     = None   # the current event
         self._break_after = 2**62  # max num events
 
+        self.nevent = -1
+
         return
 
 
@@ -135,26 +137,30 @@ class MPIDataSource(object):
         # this code keeps track of the global (total) number of events
         # seen, and contains logic for when to call MPI gather
 
-        nevent = -1
-        while nevent < self._break_after-1:
+        self.nevent = -1
+        while self.nevent < self._break_after-1:
 
-            nevent += 1
+            self.nevent += 1
 
             evt = psana_level.events().next()
 
             # logic for regular gathers
             if (self.global_gather_interval is not None) and \
-               (nevent > 1)                              and \
-               (nevent % self.global_gather_interval==0):
+               (self.nevent > 1)                              and \
+               (self.nevent % self.global_gather_interval==0):
                 self.sd.gather()
 
-            if nevent % self.size == self.rank:
+            if self.nevent % self.size == self.rank:
                 self._currevt = evt
                 yield evt
 
         self.sd.gather()
 
         return
+
+
+    def event_number(self):
+        return self.nevent
 
 
     def env(self):
