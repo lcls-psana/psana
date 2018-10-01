@@ -83,21 +83,22 @@ class MPIDataSource(object):
 
         if not ':smd' in ds_string:
             ds_string += ':smd'
-
-        self.global_gather_interval = None
         self.ds_string = ds_string
-        self.__cpp_ds = DataSource(ds_string, **kwargs)
 
         if ':idx' in self.ds_string:
             self._ds_type = 'idx'
             raise RuntimeError('idx mode not supported')
-        elif ':smd' in self.ds_string:
-            self._ds_type = 'smd'
         elif 'shmem' in self.ds_string:
             self._ds_type = 'shmem'
             raise NotImplementedError('shmem not supported')
+        elif ':smd' in self.ds_string:
+            self._ds_type = 'smd'
         else:
-            self._ds_type = 'std'
+            raise RuntimeError('did not find smd mode on')
+            #self._ds_type = 'std'
+
+        self.global_gather_interval = None
+        self.__cpp_ds = DataSource(ds_string, **kwargs)
 
         self._currevt     = None   # the current event
         self._break_after = 2**62  # max num events
@@ -154,7 +155,8 @@ class MPIDataSource(object):
                 self._currevt = evt
                 yield evt
 
-        self.sd.gather()
+        if hasattr(self, 'sd'):
+            self.sd.gather()
 
         return
 
