@@ -763,7 +763,8 @@ class SmallData(object):
                 ebeam_ddl = det.get(self.currevt)
                 if ebeam_ddl is not None:
                     default['ebeam/charge']        = ebeam_ddl.ebeamCharge()
-                    default['ebeam/dump_charge']   = ebeam_ddl.ebeamDumpCharge()
+                    if hasattr(ebeam_ddl,'ebeamDumpCharge'):
+                        default['ebeam/dump_charge']   = ebeam_ddl.ebeamDumpCharge()
                     default['ebeam/L3_energy']     = ebeam_ddl.ebeamL3Energy()
                     # check existence of this for old data
                     if hasattr(ebeam_ddl,'ebeamPhotonEnergy'):
