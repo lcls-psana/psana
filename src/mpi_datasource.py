@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 from datasource import DataSource
 from det_interface import DetNames
@@ -275,13 +276,13 @@ if __name__ == '__main__':
     import psana
     ds = DataSource('exp=xpptut15:run=210')
     for ie, evt in enumerate(ds.events()):
-        print ie
-        print evt.get(psana.EventId)
+        print(ie)
+        print(evt.get(psana.EventId))
         if ie>5: break
 
     ds = DataSource('exp=xpptut15:run=210')
     for ix, step in enumerate(ds.steps()):
       for ie, evt in enumerate(step.events()):
-        print ix,ie
-        print evt.get(psana.EventId)
+        print(ix,ie)
+        print(evt.get(psana.EventId))
         if ie>5: break

@@ -2,6 +2,7 @@
 """
 Note: expects to be called with 1 or 4 cores, though any number should work...
 """
+from __future__ import print_function
 
 import os
 import abc
@@ -245,13 +246,13 @@ if __name__ == '__main__':
 
     try:
 
-        print 'Testing: monitor'
+        print('Testing: monitor')
         t = TestSmallData()
         t.setup()
         t.test_monitor()
         t.teardown()
 
-        print 'Testing: vlen'
+        print('Testing: vlen')
         t = TestSmallData()
         t.setup()
         t.test_vlen()
@@ -260,10 +261,10 @@ if __name__ == '__main__':
         for Test in [TestInt, TestFloat, TestIntArray, TestFloatArray]:
             t = Test()
             t.setup()
-            if rank == 0: print 'Testing: %s' % t.filename
+            if rank == 0: print('Testing: %s' % t.filename)
             t.test_h5gen()
             t.teardown()
 
     except Exception as e:
-        print e
+        print(e)
         comm.Abort(1)
