@@ -34,6 +34,7 @@ part of it, please give an appropriate acknowledgment.
 
 @author Andy Salnikov
 """
+from __future__ import absolute_import
 
 # We believe there is some non-ideal dependency behavior in this package.
 # the psana __init__.py depends on psana_python by importing _psana.
@@ -65,9 +66,9 @@ else:
     import _psana
 del sys
 
-from datasource import DataSource, setOption, setOptions, setConfigFile
-from mpi_datasource import MPIDataSource
-from det_interface import Detector, DetNames
+from .datasource import DataSource, setOption, setOptions, setConfigFile
+from .mpi_datasource import MPIDataSource
+from .det_interface import Detector, DetNames
 
 #
 # import everything from _psana

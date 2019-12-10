@@ -1,7 +1,8 @@
 from __future__ import print_function
+from __future__ import absolute_import
 
-from datasource import DataSource
-from det_interface import DetNames
+from .datasource import DataSource
+from .det_interface import DetNames
 
 
 class Step(object):
@@ -144,7 +145,7 @@ class MPIDataSource(object):
 
             self.nevent += 1
 
-            evt = psana_level.events().next()
+            evt = next(psana_level.events())
 
             # logic for regular gathers
             if (self.global_gather_interval is not None) and \
@@ -252,7 +253,7 @@ class MPIDataSource(object):
 
         # defer the import because cctbx gets unhappy with
         # a floating-point-exception from the pytables import
-        from smalldata import SmallData
+        from .smalldata import SmallData
 
         # the SmallData and DataSource objects are coupled:
         # -- SmallData must know about the _currevt to "timestamp" its data

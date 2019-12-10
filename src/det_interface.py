@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from Detector.PyDetector import detector_factory as _detector_factory
-import datasource
+from . import datasource
 
 def _getEnv(local_env=None):
     if local_env is None:
