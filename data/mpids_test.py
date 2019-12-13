@@ -153,7 +153,7 @@ class TestSmallData(object):
                                         np.array(expected_c),
                                         err_msg='mismatch in c' )
 
-            if 'd' in f.keys():
+            if 'd' in list(f.keys()):
                 np.testing.assert_allclose( np.array(f['d']),
                                             np.array(expected_d),
                                             err_msg='mismatch in d' )

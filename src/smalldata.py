@@ -72,7 +72,7 @@ def _flatten_dictionary(d, parent_key='', sep='/'):
     for k, v in d.items():
         new_key = parent_key + sep + k if parent_key else k
         if isinstance(v, collections.MutableMapping):
-            items.extend(_flatten_dictionary(v, new_key, sep=sep).items())
+            items.extend(list(_flatten_dictionary(v, new_key, sep=sep).items()))
         else:
             items.append((new_key, v))
     return dict(items)
@@ -120,7 +120,7 @@ class SynchDict(dict):
         tot_send_list = comm.allgather(self)
         for node_send_list in tot_send_list:
             for k in node_send_list:
-                if k not in self.keys():
+                if k not in list(self.keys()):
                     self[k] = node_send_list[k]
         # now that all ranks have everybody's keys, update all ranks
         # with the "correct" dtypes from rank0 (other ranks may have
@@ -366,7 +366,7 @@ class SmallData(object):
                 raise ValueError('%s :: Invalid num type for missing data' % str(dtype))
 
 
-        elif key in self._arr_send_list.keys():
+        elif key in list(self._arr_send_list.keys()):
 
             dtype = self._arr_send_list[key][0]
             shape = self._arr_send_list[key][1]
@@ -406,12 +406,12 @@ class SmallData(object):
 
         # for all data in our aggregated catalogue, gather
         for k in self._arr_send_list.keys():
-            if k not in self._dlist.keys(): self._dlist[k] = []
+            if k not in list(self._dlist.keys()): self._dlist[k] = []
             self._backfill_client(self._nevents, self._dlist[k], k)
             self._gather_arrays(self._dlist[k], k)
 
         for k in self._num_send_list.keys():
-            if k not in self._dlist.keys(): self._dlist[k] = []
+            if k not in list(self._dlist.keys()): self._dlist[k] = []
             self._backfill_client(self._nevents, self._dlist[k], k)
             self._gather_numbers(self._dlist[k], k)
 
@@ -434,7 +434,7 @@ class SmallData(object):
 
         if self.master:
             # handle the case of zero events
-            if len(self._dlist_master.keys()) > 0:
+            if len(list(self._dlist_master.keys())) > 0:
 
                 # (1) sort data by time
 
@@ -621,7 +621,7 @@ class SmallData(object):
             if key not in self._num_send_list:
                 self._num_send_list[key] = [data_type]
 
-        if key not in self._dlist.keys():
+        if key not in list(self._dlist.keys()):
             self._dlist[key] = []
 
         # patch up _dlist with missing data before we add new values
@@ -641,7 +641,7 @@ class SmallData(object):
 
     def _dlist_append(self, dlist, key, value):
 
-        if key not in dlist.keys():
+        if key not in list(dlist.keys()):
             dlist[key] = [value]
             self._newkeys.append(key)
         else:
@@ -678,7 +678,7 @@ class SmallData(object):
         evt_id = self.currevt.get(EventId)
         if evt_id is None: return  # can't do anything without a timestamp
 
-        if ('event_time' in kwargs.keys()) or ('fiducials' in kwargs.keys()):
+        if ('event_time' in list(kwargs.keys())) or ('fiducials' in list(kwargs.keys())):
             raise KeyError('`event_time` and `fiducials` are special names'
                            ' reserved for timestamping -- choose a different '
                            'name')
@@ -697,7 +697,7 @@ class SmallData(object):
         fid  = evt_id.fiducials()
 
         # --> check to see if we already save the time for this event
-        if ('fiducials' in self._dlist.keys()) and (self._dlist['fiducials'][-1] == fid):
+        if ('fiducials' in list(self._dlist.keys())) and (self._dlist['fiducials'][-1] == fid):
 
             # check to see if we already added this field this event
             events_seen = len(self._dlist['fiducials'])
@@ -985,14 +985,14 @@ class SmallFile(object):
         if len(self.keys_to_save) > 0:
             keys_to_save = ['event_time', 'fiducials']
             for k in self.keys_to_save:
-                if k in dlist_master.keys():
+                if k in list(dlist_master.keys()):
                     keys_to_save.append(k)
                 else:
                     warnings.warn('event data key %s has no '
                                   'associated event data and will not '
                                   'be saved' % k)
         else:
-            keys_to_save = dlist_master.keys()
+            keys_to_save = list(dlist_master.keys())
 
         # for each item to save, write to disk
         for k in keys_to_save:
