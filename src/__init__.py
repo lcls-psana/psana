@@ -55,13 +55,13 @@ import sys
 if sys.platform.startswith('linux'):
     # on Linux with g++ one needs RTLD_GLOBAL for dlopen
     # which Python does not set by default
-    import DLFCN
+    import ctypes
     flags = sys.getdlopenflags()
-    sys.setdlopenflags( flags | DLFCN.RTLD_GLOBAL )    
+    sys.setdlopenflags( flags | ctypes.RTLD_GLOBAL )    
     import _psana
     sys.setdlopenflags( flags )    
     del flags
-    del DLFCN
+    del ctypes
 else:
     import _psana
 del sys
