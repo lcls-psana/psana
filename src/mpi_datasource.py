@@ -145,7 +145,10 @@ class MPIDataSource(object):
 
             self.nevent += 1
 
-            evt = next(psana_level.events())
+            try:
+                evt = next(psana_level.events())
+            except StopIteration:
+                return
 
             # logic for regular gathers
             if (self.global_gather_interval is not None) and \
