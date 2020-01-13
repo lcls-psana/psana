@@ -14,6 +14,7 @@
 // This Class's Header --
 //-----------------------
 #include "psana/DynLoader.h"
+#include <python/Python.h>
 
 //-----------------
 // C/C++ Headers --
@@ -76,6 +77,9 @@ DynLoader::loadModule(const std::string& name, const std::string& language) cons
     // explicitly requested non-C++ module, load libpsana_lanaguage.so
     // library, find "moduleFactory()" function in it and call it
     // giving full name of the module.
+
+    if (language == "python")
+      Py_Initialize();
 
     void* sym = loadFactoryFunction("psana_" + language + ".moduleFactory", "");
     ::mod_factory factory = (::mod_factory) sym;
