@@ -61,14 +61,9 @@ ExpNameFromDs::ExpNameFromDs (const std::vector<std::string>& files)
     IData::Dataset ds(*it);
     
     if (m_expNum == 0) {
-      if (ds.expID() == 0) {
-        // no warning msg, since shared memory has no valid exp. number (cpo)
-        break;
-      } else {
-        m_expNum = ds.expID();
-        m_instr = ds.instrument();
-        m_exp = ds.experiment();
-      }
+      m_expNum = ds.expID(); // can be zero for new 2020 filenaming - cpo
+      m_instr = ds.instrument();
+      m_exp = ds.experiment();
     } else {
       if (ds.expID() != m_expNum) {
         WithMsgLog(logger, warning, out ) {
