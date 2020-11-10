@@ -769,7 +769,27 @@ class SmallData(object):
                     # check existence of this for old data
                     if hasattr(ebeam_ddl,'ebeamPhotonEnergy'):
                         default['ebeam/photon_energy'] = ebeam_ddl.ebeamPhotonEnergy()
-                    default['ebeam/pk_curr_bc2']   = ebeam_ddl.ebeamPkCurrBC2()
+                    default['ebeam/pk_curr_bc2']  = ebeam_ddl.ebeamPkCurrBC2()
+                    default['ebeam/LTU_pos_x'] = ebeam_ddl.ebeamLTUPosX()
+                    default['ebeam/LTU_pos_y'] = ebeam_ddl.ebeamLTUPosY()
+                    default['ebeam/LTU_ang_x'] = ebeam_ddl.ebeamLTUAngX()
+                    default['ebeam/LTU_ang_y'] = ebeam_ddl.ebeamLTUAngY()
+                    if hasattr(ebeam_ddl,'ebeamUndPosX'):
+                        default['ebeam/und_pos_x'] = ebeam_ddl.ebeamUndPosX()
+                    if hasattr(ebeam_ddl,'ebeamUndPosY'):
+                        default['ebeam/und_pos_y'] = ebeam_ddl.ebeamUndPosY()
+                    if hasattr(ebeam_ddl,'ebeamUndAngX'):
+                        default['ebeam/und_ang_x'] = ebeam_ddl.ebeamUndAngX()
+                    if hasattr(ebeam_ddl,'ebeamUndAngY'):
+                        default['ebeam/und_ang_y'] = ebeam_ddl.ebeamUndAngY()
+                    if hasattr(ebeam_ddl,'ebeamXTCAVAmpl'):
+                        default['ebeam/XTCAV_ampl'] = ebeam_ddl.ebeamXTCAVAmpl()
+                    if hasattr(ebeam_ddl,'ebeamXTCAVPhase'):
+                        default['ebeam/XTCAV_phase'] = ebeam_ddl.ebeamXTCAVPhase()
+                    if hasattr(ebeam_ddl,'ebeamLTU250'):
+                        default['ebeam/LTU_250'] = ebeam_ddl.ebeamLTU250()
+                    if hasattr(ebeam_ddl,'ebeamLTU450'):
+                        default['ebeam/LTU_450'] = ebeam_ddl.ebeamLTU450()
 
             if det.name.dev == 'PhaseCavity':
                 pc_ddl = det.get(self.currevt)
