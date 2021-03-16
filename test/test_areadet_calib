@@ -1,0 +1,48 @@
+#!@PYTHON@
+ 
+import sys
+import unittest
+import psana
+import Detector
+import numpy as np
+import os
+
+class test_epix100a_calib(unittest.TestCase):
+      def test_areadetaccess(self):
+          correctanswer=np.array(([-3.34729, 0.45751953, 3.227539, 1.3175049, 1.0874023], [1.0100708, 1.6100464, -0.7050171, -5.590027, 4.524719]))
+      	  psana.setOption('psana.calib-dir','/reg/g/psdm/data_test/calib')
+    	  ds = psana.DataSource('exp=mecl8216:run=305:dir=/reg/g/psdm/data_test/multifile/test_029_mecl8216/')
+    	  det = psana.Detector('epix100a')
+    	  for nevent,evt in enumerate(ds.events()):
+              image = det.image(evt)
+              current_array=image[0][0:5]
+              assert np.allclose(correctanswer[nevent][0:5], current_array, rtol=.00001)
+
+class test_jungfrau_calib(unittest.TestCase):
+      def test_epix_calib(self):
+          psana.setOption('psana.calib-dir', '/reg/d/psdm/xpp/xpptut15/calib')
+      	  correct_answer=np.array(([-0.20019017, -0.65262175, 0.00742354, 0.01327543, 0.24580742], [0.00225716, 0.45393196, -0.22635312, 0.1017298, 0.19519132], [ 0.04673062, 0.37130964, 0.6615988, -0.06624991, -0.32271868]))
+      	  ds=psana.DataSource('exp=xpptut15:run=530')
+      	  det=psana.Detector('jungfrau4M')
+      	  for nevent,event in enumerate(ds.events()):
+              image=det.image(event)
+              current_array=image[700][700:705]
+              assert np.allclose(correct_answer[nevent][0:5], current_array, rtol=.000001)
+              if nevent==2:
+              	 break
+
+class test_epix10k2m_calib(unittest.TestCase):
+    def test_epix_calib_run540(self):
+        psana.setOption('psana.calib-dir', '/reg/d/psdm/xpp/xpptut15/calib')    
+        correct_answer=np.array(([2114.3066, 1984.1064, 1664.3066, 1928.9062, 1669.9951],[1614.3066, 1584.1064, 1864.3066, 1528.9062, 1669.9951],[1814.3066, 1584.1064, 1664.3066, 1428.9062, 1569.9951]))
+        ds=psana.DataSource('exp=xpptut15:run=540')
+        det=psana.Detector('epix10ka2m')
+        for nevent,event in enumerate(ds.events()):
+            image=det.image(event)
+            current_array=image[147][56:61]
+            assert np.allclose(correct_answer[nevent][0:5], current_array, rtol=.001)
+            if nevent==2:
+              break
+
+if __name__ == '__main__':
+    unittest.main(argv=[sys.argv[0], '-v'])
