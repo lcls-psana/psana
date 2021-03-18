@@ -94,7 +94,7 @@ def num_or_array(obj):
     data_type = type(obj)
     if ((data_type in [int, float]) or
          np.issubdtype(data_type, np.integer) or
-         np.issubdtype(data_type, np.float)):
+         np.issubdtype(data_type, np.floating)):
         s = 'num'
 
     elif data_type is np.ndarray:
