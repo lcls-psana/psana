@@ -64,7 +64,7 @@ class MPIDataSource(object):
         >>> smldata = ds.small_data('my.h5')
         >>> cspad = psana.Detector('cspad')
         >>> for evt in ds.events():
-        >>>     mu = np.mean( cspad.calib(evt)
+        >>>     mu = np.mean( cspad.calib(evt) )
         >>>     smldata.append(cspad_mean=mu)
 
         See Also
@@ -250,7 +250,7 @@ class MPIDataSource(object):
         >>> smldata = ds.small_data('my.h5')
         >>> cspad = psana.Detector('cspad')
         >>> for evt in ds.events():
-        >>>     mu = np.mean( cspad.calib(evt)
+        >>>     mu = np.mean( cspad.calib(evt) )
         >>>     smldata.append(cspad_mean=mu)
         """
 

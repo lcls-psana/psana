@@ -63,6 +63,41 @@ INT_TYPES   = [int, np.int8, np.int16, np.int32, np.int64,
 FLOAT_TYPES = [float, np.float16, np.float32, np.float64, np.float128, np.float]
 
 RAGGED_PREFIX = 'ragged_'
+VAR_PREFIX = 'var_'
+LEN_SUFFIX = '_len'
+
+# Let's just keep track of variable, length, and ragged keys.
+var_dict = {}
+len_dict = {}
+ragged_dict = {}
+
+def set_keytypes(k):
+    leaf_name = k.split('/')[-1]
+    ragged_dict[k] = leaf_name.startswith(RAGGED_PREFIX)
+    var_dict[k] = leaf_name.startswith(VAR_PREFIX)
+    len_dict[k] = var_dict[k] and leaf_name.endswith(LEN_SUFFIX)
+
+def is_len_key(k):
+    try:
+        return len_dict[k]
+    except:
+        set_keytypes(k)
+        return len_dict[k]
+
+def is_var_key(k):
+    try:
+        return var_dict[k]
+    except:
+        set_keytypes(k)
+        return var_dict[k]
+
+def is_ragged_key(k):
+    try:
+        return ragged_dict[k]
+    except:
+        set_keytypes(k)
+        return ragged_dict[k]
+
 
 def _flatten_dictionary(d, parent_key='', sep='/'):
     """
@@ -78,11 +113,11 @@ def _flatten_dictionary(d, parent_key='', sep='/'):
     return dict(items)
 
 
-def remove_values(the_list, val):
+def remove_zero_len(the_list):
     """
     Remove all items with value `val` from `the_list`
     """
-    return [value for value in the_list if value != val]
+    return [value for value in the_list if len(value) != 0]
 
 
 def num_or_array(obj):
@@ -174,6 +209,7 @@ class SmallData(object):
             SmallData.event({'c' : {'d' : z}}) --> keys_to_save=['c/d'].
         """
 
+        self.rank = rank
         self._datasource_parent = datasource_parent
         self._num_send_list     = SynchDict()
         self._arr_send_list     = SynchDict()
@@ -359,7 +395,10 @@ class SmallData(object):
             dtype = self._num_send_list[key][0]
 
             if dtype in INT_TYPES:
-                missing_value = MISSING_INT
+                if is_len_key(key):
+                    missing_value = 0
+                else:
+                    missing_value = MISSING_INT
             elif dtype in FLOAT_TYPES:
                 missing_value = MISSING_FLOAT
             else:
@@ -371,10 +410,8 @@ class SmallData(object):
             dtype = self._arr_send_list[key][0]
             shape = self._arr_send_list[key][1]
 
-            leaf_name = key.split('/')[-1]
-
             # for vlen case, fill missing values with len 0 array
-            if leaf_name.startswith(RAGGED_PREFIX):
+            if is_ragged_key(key):
                 missing_value = np.empty(0, dtype=dtype)
 
             # otherwise, use a fixed sized array to maintain square shape
@@ -441,6 +478,15 @@ class SmallData(object):
                 # get the order to sort in from the event times
                 sort_map = np.argsort(self._dlist_master['event_time'][-1])
 
+                # Backfill the variable arrays with empty arrays.
+                for k in self._dlist_master.keys():
+                    if is_var_key(k) and not is_len_key(k):
+                        l = self._dlist_master[k][-1]
+                        for i,v in enumerate(self._dlist_master[k+LEN_SUFFIX][-1]):
+                            if v == 0:
+                                l.insert(i, [])
+                        self._dlist_master[k][-1] = l
+
                 for k in self._dlist_master.keys():
 
                     # "-1" here says we are only sorting the result from the most recent gather
@@ -450,6 +496,9 @@ class SmallData(object):
                 # (2) backfill missing data
                 for k in self._newkeys:
                 
+                    if is_var_key(k) and not is_len_key(k):
+                        continue  # No need to backfill variable arrays!
+
                     events_in_mem = sum([len(x) for x in self._dlist_master['fiducials']])
                     target_events = events_in_mem
                     if hasattr(self, '_small_file'):
@@ -462,7 +511,14 @@ class SmallData(object):
 
                 # (3) re-shape dlist master data into single np array (per key)
                 for k in self._dlist_master.keys():
-                    self._dlist_master[k] = remove_values(self._dlist_master[k], [])
+                    if is_var_key(k) and not is_len_key(k):
+                        # var data needs to be concatenated right now!
+                        self._dlist_master[k][-1] = remove_zero_len(self._dlist_master[k][-1])
+                        if len(self._dlist_master[k][-1]) > 0:
+                            self._dlist_master[k][-1] = np.concatenate(self._dlist_master[k][-1])
+                        else:
+                            self._dlist_master[k][-1] = np.array([])
+                    self._dlist_master[k] = remove_zero_len(self._dlist_master[k])
                     if len(self._dlist_master[k]) > 0: # dont crash np.concatenate
                         self._dlist_master[k] = np.concatenate(self._dlist_master[k])
                     else:
@@ -588,6 +644,8 @@ class SmallData(object):
     # - (case 4) master also needs to backfill on disk and memory
 
     def _backfill_client(self, target_events, dlist_element, key):
+        if is_var_key(key) and not is_len_key(key):
+            return # No need to backfill var arrays!
         numfill = target_events - len(dlist_element)
         if numfill > 0:
             fill_value = self._missing(key)
@@ -606,33 +664,55 @@ class SmallData(object):
     def _dlist_append_client(self, key, value):
 
         data_type = type(value)
+        lenkey = None
+        is_var = False
 
         if data_type is np.ndarray:
             value = np.atleast_1d(value)
-            if key.startswith(RAGGED_PREFIX):
+            if is_ragged_key(key):
                 if len(value.shape)>1:
                     raise ValueError('Currently only support 1D ragged arrays'
                                      'for HDF5 dataset name "'+key+'"')
-            if key not in self._arr_send_list:
-                # this may get over-ruled by the SynchDict
-                self._arr_send_list[key] = [value.dtype, value.shape]
-
+            if is_var_key(key):
+                if is_len_key(key):
+                    raise ValueError('Variable arrays cannot end with "'+_LEN_PREFIX+'" for dataset name "'+key+'"')
+                if len(value) == 0: # Just skip 0 length arrays!!
+                    return
+                is_var = True
+                lenkey = key + LEN_SUFFIX
+                if key not in self._arr_send_list:
+                    # this may get over-ruled by the SynchDict.  But we assume "var" keys are variable in the first
+                    # dimension.
+                    self._arr_send_list[key] = [value.dtype, value.shape[1:]]
+                if lenkey not in self._num_send_list:
+                    self._num_send_list[lenkey] = [int]
+            else:
+                if key not in self._arr_send_list:
+                    # this may get over-ruled by the SynchDict
+                    self._arr_send_list[key] = [value.dtype, value.shape]
         else:
             if key not in self._num_send_list:
                 self._num_send_list[key] = [data_type]
 
         if key not in list(self._dlist.keys()):
             self._dlist[key] = []
+        if is_var and lenkey not in list(self._dlist.keys()):
+            self._dlist[lenkey] = []
 
         # patch up _dlist with missing data before we add new values
-        self._backfill_client(self._nevents - 1,
-                              self._dlist[key],
-                              key)
+        if is_var:
+            # Backfill the lengths with 0.  We don't need to backfill the 
+            # data, since the lengths we just filled are zero!
+            self._backfill_client(self._nevents - 1, self._dlist[lenkey], lenkey)
+        else:
+            self._backfill_client(self._nevents - 1, self._dlist[key], key)
 
         if data_type is np.ndarray:
             # save a copy of the array (not a reference) in case the
             # user reuses the same array memory for the next event
             self._dlist[key].append(np.copy(value))
+            if is_var:
+                self._dlist[lenkey].append(len(value))
         else:
             self._dlist[key].append(value)
 
@@ -903,7 +983,7 @@ class SmallFile(object):
 
             path, _, name = k.rpartition('/')
 
-            if name.startswith(RAGGED_PREFIX):
+            if is_ragged_key(name):
                 node = self.file_handle.create_vlarray(where='/'+path, name=name,
                                                        atom=a,
                                                        createparents=True)
@@ -939,7 +1019,7 @@ class SmallFile(object):
         ----------
         *args : dictionaries
             In direct analogy to the SmallData.event call, you can also pass
-            HDF5 group heirarchies using nested dictionaries. Each level
+            HDF5 group hierarchies using nested dictionaries. Each level
             of the dictionary is a level in the HDF5 group heirarchy.
 
         **kwargs : datasetname, dataset
@@ -1022,10 +1102,11 @@ class SmallFile(object):
                     for row in dlist_master[k]:
                         node.append(row)
                 else:
-                    if not all(arr.shape==node.shape[1:] for arr in dlist_master[k]):
-                        raise ValueError('Found ragged array named "%s". ' 
-                                         'Prepend HDF5 dataset name with '
-                                         '"ragged_" to avoid this error.' % k)
+                    if not (is_var_key(k) and not is_len_key(k)):
+                        if not all(arr.shape==node.shape[1:] for arr in dlist_master[k]):
+                            raise ValueError('Found ragged array named "%s". ' 
+                                             'Prepend HDF5 dataset name with '
+                                             '"ragged_" to avoid this error.' % k)
                     node.append( dlist_master[k] )
             else:
                 pass

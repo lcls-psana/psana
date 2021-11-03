@@ -142,7 +142,7 @@ class TestSmallData(object):
                     else:
                         expected_d.append( self.missing() )
 
-            f = h5py.File(self.filename)
+            f = h5py.File(self.filename, mode="r")
             np.testing.assert_allclose( np.array(f['a']),
                                         np.array(expected_a),
                                         err_msg='mismatch in a' )
@@ -203,15 +203,22 @@ class TestSmallData(object):
             x = rank + size * nevt    # count up, each global event
             if x % 3 != 0:            # adds missing data...
                 self.smldata.event(ragged_dset=np.arange(x)) 
+                self.smldata.event(var_dset=np.arange(x)) 
         self.smldata.save()
 
         if rank == 0:
-            f = h5py.File(self.filename)
+            f = h5py.File(self.filename, mode="r")
+            vlen = f['var_dset_len']
+            vd   = f['var_dset']
+            j = 0
             for l,row in enumerate(f['ragged_dset']):
                 if l % 3 != 0:
                     np.testing.assert_array_equal(np.arange(l), row)
+                    np.testing.assert_array_equal(np.arange(l), vd[j:j+vlen[l]])
                 else:
                     np.testing.assert_array_equal(np.empty(0), row)
+                    np.testing.assert_equal(vlen[l], 0)
+                j += vlen[l]
             f.close()
 
         return
