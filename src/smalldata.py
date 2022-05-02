@@ -67,15 +67,46 @@ VAR_PREFIX = 'var_'
 LEN_SUFFIX = '_len'
 
 # Let's just keep track of variable, length, and ragged keys.
+#
+# Now, in the New Regime, "var_" can appear at any level in the key.
+# We assume that the lengths of all the variables that branch from a
+# var will be the same and will share a "_len" array.
+# We add len_map to map from key to the "_len" name, and len_evt
+# which will map from "_len" name to a fiducial to size mapping.
+# (If there is no mapping, we'll know that this is the first var array
+# for that _len array.)
 var_dict = {}
 len_dict = {}
+len_map = {}     # var name to len name
+len_evt = {}     # len name to {fid: size}
 ragged_dict = {}
 
 def set_keytypes(k):
-    leaf_name = k.split('/')[-1]
-    ragged_dict[k] = leaf_name.startswith(RAGGED_PREFIX)
-    var_dict[k] = leaf_name.startswith(VAR_PREFIX)
-    len_dict[k] = var_dict[k] and leaf_name.endswith(LEN_SUFFIX)
+    parts = k.split('/')
+    ragged_dict[k] = parts[-1].startswith(RAGGED_PREFIX)
+    # New regime: any part can have "var_"!
+    for (i,p) in enumerate(parts):
+        if p.startswith(VAR_PREFIX):
+            var_dict[k] = True
+            if p.endswith(LEN_SUFFIX) and i == len(parts) - 1:
+                len_dict[k] = True
+            else:
+                m = '/'.join(parts[:i+1]) + LEN_SUFFIX
+                len_map[k] = m
+                len_dict[k] = False
+                len_dict[m] = True
+                if m not in len_evt.keys():
+                    len_evt[m] = {}
+            return
+    var_dict[k] = False
+    len_dict[k] = False
+
+def get_len_map(k):
+    try:
+        return len_map[k]
+    except:
+        set_keytypes(k)
+        return len_map[k]
 
 def is_len_key(k):
     try:
@@ -482,7 +513,7 @@ class SmallData(object):
                 for k in self._dlist_master.keys():
                     if is_var_key(k) and not is_len_key(k):
                         l = self._dlist_master[k][-1]
-                        for i,v in enumerate(self._dlist_master[k+LEN_SUFFIX][-1]):
+                        for i,v in enumerate(self._dlist_master[get_len_map(k)][-1]):
                             if v == 0:
                                 l.insert(i, [])
                         self._dlist_master[k][-1] = l
@@ -661,7 +692,7 @@ class SmallData(object):
         return dlist_element
 
 
-    def _dlist_append_client(self, key, value):
+    def _dlist_append_client(self, key, value, fid):
 
         data_type = type(value)
         lenkey = None
@@ -679,7 +710,7 @@ class SmallData(object):
                 if len(value) == 0: # Just skip 0 length arrays!!
                     return
                 is_var = True
-                lenkey = key + LEN_SUFFIX
+                lenkey = get_len_map(key)
                 if key not in self._arr_send_list:
                     # this may get over-ruled by the SynchDict.  But we assume "var" keys are variable in the first
                     # dimension.
@@ -702,8 +733,10 @@ class SmallData(object):
         # patch up _dlist with missing data before we add new values
         if is_var:
             # Backfill the lengths with 0.  We don't need to backfill the 
-            # data, since the lengths we just filled are zero!
-            self._backfill_client(self._nevents - 1, self._dlist[lenkey], lenkey)
+            # data, since the lengths we just filled are zero!  Moreover,
+            # we only need to backfill if we *haven't* backfilled previously!
+            if fid not in len_evt[lenkey].keys():
+                self._backfill_client(self._nevents - 1, self._dlist[lenkey], lenkey)
         else:
             self._backfill_client(self._nevents - 1, self._dlist[key], key)
 
@@ -712,7 +745,19 @@ class SmallData(object):
             # user reuses the same array memory for the next event
             self._dlist[key].append(np.copy(value))
             if is_var:
-                self._dlist[lenkey].append(len(value))
+                # Now, if this was a var length array, we might have to
+                # save/check the length!
+                try:
+                    s = len_evt[lenkey][fid]
+                except:
+                    s = -1
+                if s >= 0:
+                    if s != len(value):
+                        raise Exception("Key %s does not have expected size %d (actually %d)"
+                                        % (key, s, len(value)))
+                else:
+                    len_evt[lenkey][fid] = len(value)
+                    self._dlist[lenkey].append(len(value))
         else:
             self._dlist[key].append(value)
 
@@ -790,12 +835,12 @@ class SmallData(object):
 
         # --> otherwise this is a new event
         else:
-            self._dlist_append_client('event_time', time)
-            self._dlist_append_client('fiducials', fid)
+            self._dlist_append_client('event_time', time, fid)
+            self._dlist_append_client('fiducials', fid, fid)
             self._event_default()
 
         for k in event_data_dict.keys():
-            self._dlist_append_client(k, event_data_dict[k])
+            self._dlist_append_client(k, event_data_dict[k], fid)
 
         return
 
