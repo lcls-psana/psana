@@ -973,10 +973,50 @@ class SmallData(object):
 
 
     def _mpi_reduce(self, value, function):
-        t = num_or_array(value)
-        if t is 'num':
+
+        if value is None:
+            arrInfo= None
+        else:
+            t = num_or_array(value)
+            # in principle could avoid amin/amax calls here since only
+            # really needed for min/max reductions
+            if t == 'num':
+                arrInfo = [0,type(value),value,value]
+            else:
+                arrInfo = [value.shape,value.dtype,np.amin(value),np.amax(value)]
+        arrInfoAll=comm.allgather(arrInfo)
+        summaryArrInfo = None
+        for arrInfo in arrInfoAll:
+            if arrInfo is None: continue
+            if summaryArrInfo == None: summaryArrInfo = arrInfo
+            if arrInfo[:2] != summaryArrInfo[:2]: # check shape/dtype compatible
+                raise Exception('Unable to reduce incompatible shapes/types:',arrInfo,summaryArrInfo)
+            # find global min/max (only necessary for min/max reduction)
+            if arrInfo[2]<summaryArrInfo[2]: summaryArrInfo[2]=arrInfo[2]
+            if arrInfo[3]>summaryArrInfo[3]: summaryArrInfo[3]=arrInfo[3]
+        if summaryArrInfo is None:
+            raise Exception('No data found for MPI reduce')
+        (shape,dtype,amin,amax) = summaryArrInfo
+
+        # if our rank has no data manufacture some that won't affect the result
+        if value is None: # we have no data on our rank
+            if shape==0: # indicates a number
+                if function is MPI.SUM: value = 0
+                elif function is MPI.MIN: value = amax
+                elif function is MPI.MAX: value = amin
+            else: # an array
+                if function is MPI.SUM:
+                    value = np.zeros(shape,dtype=dtype)
+                elif function is MPI.MIN:
+                    value = np.empty(shape,dtype=dtype)
+                    value.fill(amax) # use global max so we don't affect min calculation
+                elif function is MPI.MAX:
+                    value = np.empty(shape,dtype=dtype)
+                    value.fill(amin) # use global min so we don't affect max calcul
+
+        if shape==0: # non-array type (float/int)
             s = comm.reduce(value, function)
-        elif t is 'array':
+        else:
             s = np.empty_like(value) # recvbuf
             comm.Reduce(value, s, function)
         return s
