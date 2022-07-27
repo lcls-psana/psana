@@ -29,7 +29,7 @@ class test_epix100a_calib(unittest.TestCase):
 
 class test_jungfrau_calib(unittest.TestCase):
       def test_epix_calib(self):
-            correct_answer=np.array(([-0.20019017, -0.65262175,  0.00742354, 0.01327543, 0.24580742], [0.04673062, 0.37130964, 0.6615988, -0.06624991, -0.32271868], [-0.17926706, -0.34179974, 0.12994072, -0.37888423, -0.06283835]))
+            correct_answer=np.array(([-0.20019017, -0.65262175,  0.00742354, 0.01811249, 0.24580742], [0.04673062, 0.37130964, 0.6615988, -0.04962459, -0.32271868], [-0.17926706, -0.34179974, 0.12994072, -0.34265924, -0.06283835]))
             my_generic_test=generic_test()
             my_generic_test.run(correct_answer, setoptionstring=testdatadir+'/test_031_xpptut15/calib', dsstring='exp=xpptut15:run=530:dir='+testdatadir+'/test_031_xpptut15/xtc', detstring='jungfrau4M', x=700, y=700)
 
