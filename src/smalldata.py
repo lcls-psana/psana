@@ -72,13 +72,13 @@ LEN_SUFFIX = '_len'
 # We assume that the lengths of all the variables that branch from a
 # var will be the same and will share a "_len" array.
 # We add len_map to map from key to the "_len" name, and len_evt
-# which will map from "_len" name to a fiducial to size mapping.
+# which will map from "_len" name to a timestamp to size mapping.
 # (If there is no mapping, we'll know that this is the first var array
 # for that _len array.)
 var_dict = {}
 len_dict = {}
 len_map = {}     # var name to len name
-len_evt = {}     # len name to {fid: size}
+len_evt = {}     # len name to {time: size}
 ragged_dict = {}
 
 def set_keytypes(k):
@@ -692,7 +692,7 @@ class SmallData(object):
         return dlist_element
 
 
-    def _dlist_append_client(self, key, value, fid):
+    def _dlist_append_client(self, key, value, fid, time):
 
         data_type = type(value)
         lenkey = None
@@ -735,7 +735,7 @@ class SmallData(object):
             # Backfill the lengths with 0.  We don't need to backfill the 
             # data, since the lengths we just filled are zero!  Moreover,
             # we only need to backfill if we *haven't* backfilled previously!
-            if fid not in len_evt[lenkey].keys():
+            if time not in len_evt[lenkey].keys():
                 self._backfill_client(self._nevents - 1, self._dlist[lenkey], lenkey)
         else:
             self._backfill_client(self._nevents - 1, self._dlist[key], key)
@@ -748,7 +748,7 @@ class SmallData(object):
                 # Now, if this was a var length array, we might have to
                 # save/check the length!
                 try:
-                    s = len_evt[lenkey][fid]
+                    s = len_evt[lenkey][time]
                 except:
                     s = -1
                 if s >= 0:
@@ -756,7 +756,7 @@ class SmallData(object):
                         raise Exception("Key %s does not have expected size %d (actually %d)"
                                         % (key, s, len(value)))
                 else:
-                    len_evt[lenkey][fid] = len(value)
+                    len_evt[lenkey][time] = len(value)
                     self._dlist[lenkey].append(len(value))
         else:
             self._dlist[key].append(value)
@@ -835,12 +835,12 @@ class SmallData(object):
 
         # --> otherwise this is a new event
         else:
-            self._dlist_append_client('event_time', time, fid)
-            self._dlist_append_client('fiducials', fid, fid)
+            self._dlist_append_client('event_time', time, fid, time)
+            self._dlist_append_client('fiducials', fid, fid, time)
             self._event_default()
 
         for k in event_data_dict.keys():
-            self._dlist_append_client(k, event_data_dict[k], fid)
+            self._dlist_append_client(k, event_data_dict[k], fid, time)
 
         return
 
