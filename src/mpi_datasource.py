@@ -82,6 +82,7 @@ class MPIDataSource(object):
         comm = MPI.COMM_WORLD
         self.rank = comm.Get_rank()
         self.size = comm.Get_size()
+        self.comm = comm
 
         if not ':smd' in ds_string:
             ds_string += ':smd'
