@@ -1045,7 +1045,7 @@ class SmallFile(object):
             using dictionaries can be referenced using '/' for each level, e.g.
             event({'c' : {'d' : z}}) --> keys_to_save=['c/d'].
 
-        filters: filters: tables.Filters
+        filters: tables.Filters
             Filter properties for the smalldata h5 file. Mainly
             used to configure compression settings.
         """
