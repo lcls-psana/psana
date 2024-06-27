@@ -1044,6 +1044,10 @@ class SmallFile(object):
             only the values for 'a' will be saved. Hierarchical data structures
             using dictionaries can be referenced using '/' for each level, e.g.
             event({'c' : {'d' : z}}) --> keys_to_save=['c/d'].
+
+        filters: filters: tables.Filters
+            Filter properties for the smalldata h5 file. Mainly
+            used to configure compression settings.
         """
         self.file_handle = tables.File(filename, 'w', filters=filters)
         self.keys_to_save = keys_to_save
