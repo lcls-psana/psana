@@ -224,7 +224,7 @@ class MPIDataSource(object):
 
 
     def small_data(self, filename=None, keys_to_save=[],
-                   gather_interval=100):
+                   gather_interval=100, filters=None):
         """
         Returns an object that manages small per-event data as
         well as non-event data (e.g. a sum of an image over a run)
@@ -244,6 +244,11 @@ class MPIDataSource(object):
             from all MPI cores every "N" events.  Events are
             counted separately on each core.  If not set,
             only gather results from all cores at end-run.
+
+        filters: tables.Filters,, optional (default None)
+            Filter properties for the smalldata h5 file. Mainly
+            used to configure compression settings.
+            See https://www.pytables.org/usersguide/libref/helper_classes.html#the-filters-class
 
         Example
         -------
@@ -265,7 +270,8 @@ class MPIDataSource(object):
 
         self.global_gather_interval = gather_interval*self.size
         self.sd = SmallData(self, filename=filename, 
-                            keys_to_save=keys_to_save)
+                            keys_to_save=keys_to_save,
+                            filters=filters)
 
         return self.sd
 
