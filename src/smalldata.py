@@ -59,8 +59,8 @@ MISSING_INT = -99999
 MISSING_FLOAT = np.nan
 
 INT_TYPES   = [int, np.int8, np.int16, np.int32, np.int64,
-               np.int, np.uint8, np.uint16, np.uint32, np.uint64, np.uint]
-FLOAT_TYPES = [float, np.float16, np.float32, np.float64, np.float128, np.float]
+               np.uint8, np.uint16, np.uint32, np.uint64, np.uint]
+FLOAT_TYPES = [float, np.float16, np.float32, np.float64, np.float128]
 
 RAGGED_PREFIX = 'ragged_'
 VAR_PREFIX = 'var_'
@@ -623,8 +623,8 @@ class SmallData(object):
             worker_lens = [[np.product(shp) for shp in worker] for worker in worker_shps]
 
             # size of msg from each rank
-            worker_msg_sizes = [np.sum(lens,dtype=np.int) for lens in worker_lens]
-            recv_buff_size = np.sum(worker_msg_sizes,dtype=np.int)
+            worker_msg_sizes = [np.sum(lens,dtype=int) for lens in worker_lens]
+            recv_buff_size = np.sum(worker_msg_sizes,dtype=int)
 
             # allocate receive buffer
             myrecv = np.empty(recv_buff_size, mysend.dtype)
