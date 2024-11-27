@@ -30,7 +30,7 @@ class TestSmallData(object):
 
         dstr = 'exp=sxrk4816:run=66:smd:dir=/reg/g/psdm/data_test/multifile/test_028_sxrk4816'
         self.dsource = psana.MPIDataSource(dstr)
-        self.smldata = self.dsource.small_data(self.filename, 
+        self.smldata = self.dsource.small_data(self.filename,
                                                gather_interval=5)
 
         self.gather_after = 3 # events (for each core)
@@ -238,13 +238,13 @@ class TestFloat(TestSmallData):
 
 class TestIntArray(TestSmallData):
     def dataset(self):
-        return np.ones((1,2,3)).astype(np.int)
+        return np.ones((1,2,3)).astype(np.int32)
     def missing(self):
-        return smalldata_mod.MISSING_INT * np.ones(self.dataset().shape, dtype=np.int)
+        return smalldata_mod.MISSING_INT * np.ones(self.dataset().shape, dtype=np.int32)
 
 class TestFloatArray(TestSmallData):
     def dataset(self):
-        return np.ones((1,2,3)).astype(np.float)
+        return np.ones((1,2,3)).astype(np.float32)
     def missing(self):
         return smalldata_mod.MISSING_FLOAT * np.zeros(self.dataset().shape)
 

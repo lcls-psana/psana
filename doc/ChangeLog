@@ -1,6 +1,6 @@
 #--------------------------------------------------------------------------
 # File and Version Information:
-#  $Id$
+#  psana
 #
 # Description:
 #  ChangeLog file for package psana
@@ -10,6 +10,28 @@ Package author: Andrei Salnikov
 
 Please describe any modifications that you made to the package in the
 reverse time order.
+
+Tag: V01-00-09
+2024-11-27 Mikhail Dubrovin
+- replace deprecated np.int > np.int32, np.float > np.float32, code cleaning
+	modified:   data/mpids_test.py
+	modified:   src/smalldata.py
+
+V00-13-40
+V00-13-41
+V00-13-42
+V00-14-00
+V01-00-00
+V01-00-01
+V01-00-02
+V01-00-03
+V01-00-04
+V01-00-05
+V01-00-06
+V01-00-07
+V01-00-08
+andy-20120418-01
+jbarrera-12-05-15
 
 Tag: V00-13-39
 2017-11-14 Mikhail Dubrovin
