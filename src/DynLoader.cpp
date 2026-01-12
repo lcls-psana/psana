@@ -32,9 +32,9 @@
 //-----------------------------------------------------------------------
 
 namespace {
-  
+
   const char logger[] = "DynLoader";
-  
+
   typedef psana::Module* (*mod_factory)(const std::string& name);
   typedef psana::InputModule* (*input_mod_factory)(const std::string& name);
 }
@@ -46,7 +46,7 @@ namespace {
 namespace psana {
 
 /**
- *  Load one user module. The name of the module has a format 
+ *  Load one user module. The name of the module has a format
  *  [Package.]Class[:name]
  */
 boost::shared_ptr<Module>
@@ -89,7 +89,7 @@ DynLoader::loadModule(const std::string& name, const std::string& language) cons
 }
 
 /**
- *  Load one user module. The name of the module has a format 
+ *  Load one user module. The name of the module has a format
  *  [py:][Package.]Class[:name]
  */
 boost::shared_ptr<Module>
@@ -122,7 +122,7 @@ DynLoader::loadModule(const std::string& name) const
     // if not specified then try to load C++ module and then python
     try {
       return loadModule(module, "c++");
-    } catch (psana::Exception ex) {
+    } catch (const psana::Exception& ex) {
       std::string cpperr = ex.what();
       try {
         return loadModule(module, "python");
@@ -137,7 +137,7 @@ DynLoader::loadModule(const std::string& name) const
 }
 
 /**
- *  Load one input module. The name of the module has a format 
+ *  Load one input module. The name of the module has a format
  *  Package.Class[:name]
  */
 boost::shared_ptr<InputModule>
@@ -154,16 +154,16 @@ DynLoader::loadInputModule(const std::string& name) const
     className = "psana." + className;
     fullName = "psana." + fullName;
   }
-  
+
   // Load function
   void* sym = loadFactoryFunction(className, "_psana_input_module_");
   ::input_mod_factory factory = (::input_mod_factory)sym;
-  
+
   // call factory function
   return boost::shared_ptr<InputModule>(factory(fullName));
 }
 
-void* 
+void*
 DynLoader::loadFactoryFunction(const std::string& name, const std::string& factory) const
 {
   // get package name and module class name
@@ -174,33 +174,33 @@ DynLoader::loadFactoryFunction(const std::string& name, const std::string& facto
 
   // load the library
   void* ldh = loadPackageLib(package);
-  
+
   // find the symbol
   std::string symname = factory + className;
   void* sym = dlsym(ldh, symname.c_str());
   if ( not sym ) {
     throw ExceptionDlerror(ERR_LOC, "failed to locate symbol "+symname);
   }
-  
+
   return sym;
 }
 
 /**
- *  Load the library for a package 
+ *  Load the library for a package
  */
-void* 
+void*
 DynLoader::loadPackageLib(const std::string& packageName) const
 {
   // build library name
   std::string lib = "lib" + packageName + ".so";
-  
+
   // load the library
   MsgLog(logger, trace, "loading library " << lib);
   void* ldh = dlopen(lib.c_str(), RTLD_NOW | RTLD_GLOBAL);
   if ( not ldh ) {
     throw ExceptionDlerror(ERR_LOC, "failed to load dynamic library "+lib);
   }
-  
+
   return ldh;
 }
 

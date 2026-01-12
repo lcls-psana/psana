@@ -11,6 +11,12 @@ Package author: Andrei Salnikov
 Please describe any modifications that you made to the package in the
 reverse time order.
 
+Tag: V01-00-10
+2026-01-12 Mikhail Dubrovin
+- src/DynLoader.cpp - catch (psana::Exception ex) > catch (const psana::Exception& ex)
+- src/RunIter.cpp - catch (ExceptionAbort e) > catch (const ExceptionAbort& e)
+  and cosmetics
+
 Tag: V01-00-09
 2024-11-27 Mikhail Dubrovin
 - replace deprecated np.int > np.int32, np.float > np.float32, code cleaning
