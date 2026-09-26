@@ -39,6 +39,7 @@ Jan 2017
 import numpy as np
 import tables
 import collections
+import collections.abc
 import warnings
 
 from _psana import EventId, Source, Bld
@@ -137,7 +138,7 @@ def _flatten_dictionary(d, parent_key='', sep='/'):
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, collections.MutableMapping):
+        if isinstance(v, collections.abc.MutableMapping):
             items.extend(list(_flatten_dictionary(v, new_key, sep=sep).items()))
         else:
             items.append((new_key, v))
@@ -620,7 +621,7 @@ class SmallData(object):
 
         if self.master:
             # flattened size of each array
-            worker_lens = [[np.product(shp) for shp in worker] for worker in worker_shps]
+            worker_lens = [[np.prod(shp) for shp in worker] for worker in worker_shps]
 
             # size of msg from each rank
             worker_msg_sizes = [np.sum(lens,dtype=int) for lens in worker_lens]
@@ -644,7 +645,7 @@ class SmallData(object):
             reshaped_recv = []
             for worker in worker_shps:
                 for shp in worker:
-                    l = np.product(shp)
+                    l = np.prod(shp)
                     reshaped_recv.append( myrecv[start:start+l].reshape(*shp) )
                     start += l
 
